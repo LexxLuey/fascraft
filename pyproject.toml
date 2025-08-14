@@ -27,11 +27,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 fastforge = "fastforge.main:app"
-lint = "ruff check ."
-lint-fix = "ruff check --fix ."
-format = "ruff format ."
-format-check = "ruff format --check ."
-all-checks = "ruff check . && ruff format --check . && black --check ."
 
 # Black configuration
 [tool.black]
