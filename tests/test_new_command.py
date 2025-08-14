@@ -4,8 +4,10 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
+from typer.testing import CliRunner
 
 from fastforge.commands.new import create_new_project
+from fastforge.main import app
 
 
 class TestNewCommand:
@@ -209,25 +211,20 @@ class TestNewCommand:
         assert project_path.exists()
         assert project_path.is_dir()
 
-    @patch("fastforge.commands.new.typer.echo")
     def test_success_messages_are_displayed(
-        self, mock_echo: Mock, temp_dir: Path, sample_project_name: str
+        self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that appropriate success messages are displayed."""
-        create_new_project(sample_project_name, temp_dir)
+        runner = CliRunner()
 
-        # Verify success messages were called
-        assert mock_echo.call_count == 2
+        with runner.isolated_filesystem(temp_dir):
+            result = runner.invoke(app, ["new", sample_project_name])
 
-        # Check first message (success)
-        first_call = mock_echo.call_args_list[0]
-        assert "Successfully created new project" in first_call[0][0]
-        assert sample_project_name in first_call[0][0]
-
-        # Check second message (next steps)
-        second_call = mock_echo.call_args_list[1]
-        assert "Run 'cd" in second_call[0][0]
-        assert "poetry install" in second_call[0][0]
+            assert result.exit_code == 0
+            assert "Successfully created new project" in result.stdout
+            assert sample_project_name in result.stdout
+            assert "Run 'cd" in result.stdout
+            assert "poetry install" in result.stdout
 
     def test_project_name_validation(self, temp_dir: Path) -> None:
         """Test project creation with various project names."""

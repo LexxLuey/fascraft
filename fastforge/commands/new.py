@@ -18,6 +18,13 @@ def create_new_project(
     ),
 ) -> None:
     """🏗️ Generates a new FastAPI project."""
+    if not project_name or not project_name.strip():
+        error_text = Text(
+            "❌ Error: Project name cannot be empty or whitespace.", style="bold red"
+        )
+        console.print(error_text, err=True)
+        raise typer.Exit(code=1)
+
     # Convert string path to Path object
     path_obj = Path(path)
     project_path = path_obj / project_name
