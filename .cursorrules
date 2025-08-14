@@ -1,0 +1,81 @@
+## FastForge Development Principles
+
+Here are specific rules and best practices for developing the **FastForge** project, based on the provided guidelines. These principles focus on creating a maintainable, scalable, and idiomatic Python application.
+
+-----
+
+### General Principles and Conventions
+
+  * **Code Style:** Adhere strictly to **PEP 8**, using **`snake_case`** for all variable, function, and file names.
+  * **Functionality:** Prefer writing pure functions and avoid classes unless they are necessary for data models (e.g., Pydantic `BaseModel`) or managing state.
+  * **Readability:** Use clear, descriptive variable names. Names should indicate intent (e.g., `project_name`, `module_path`).
+  * **Modularity:** Break down logic into small, reusable functions. A function should ideally do one thing and do it well.
+  * **`pyproject.toml`:** Use `poetry` for dependency management. All project dependencies, including `typer` and `jinja2`, must be listed in `pyproject.toml`.
+
+-----
+
+### Code Structure
+
+The project's code should be organized logically to separate concerns.
+
+  * **`fastforge/`**: This is the top-level package for the application's source code.
+  * **`fastforge/main.py`**: The entry point for the CLI. It should use `typer` to define all top-level commands (e.g., `new`, `generate`).
+  * **`fastforge/commands/`**: A directory to hold the implementation of each command. For example, `fastforge/commands/new.py` would contain the `new` command's logic.
+  * **`fastforge/templates/`**: This directory will store all the `jinja2` templates for generating files.
+      * **Structure:** Templates should mirror the target file structure. For example, the template for a new project's main file could be located at `fastforge/templates/new_project/__init__.py.jinja2`.
+
+-----
+
+### CLI and Logic
+
+  * **`typer` usage:** Use `typer.Typer()` to define the CLI application. Commands should be decorated with `@app.command()` or `@sub_app.command()`.
+  * **Type Hinting:** All function signatures must include **type hints** to improve clarity and enable static analysis.
+  * **Separation of Concerns:** The main `typer` command functions should be lean. They should primarily handle argument parsing and then delegate the heavy lifting (like file generation) to dedicated utility functions.
+  * **File Generation:** Use `jinja2.Environment` to load templates from the `fastforge/templates` directory. The rendering logic should be encapsulated in a function that takes template and context data as arguments and returns the rendered content.
+
+-----
+
+### Error Handling and Validation
+
+  * **Pre-conditions:** Use guard clauses and `early returns` to validate user input and file system states (e.g., check if a directory already exists before trying to create it).
+  * **Descriptive Errors:** Raise specific exceptions with clear error messages. For example, `typer.Exit(code=1)` is useful for exiting the program with an error message.
+  * **User Feedback:** All CLI output should be user-friendly, providing clear feedback on success or failure. Use colors and formatting with `typer.echo()` to improve readability.
+
+-----
+
+### Example Code Snippets
+
+**`fastforge/commands/new.py`**
+
+```python
+import typer
+from pathlib import Path
+
+def create_new_project(project_name: str, path: Path):
+    """Generates a new FastAPI project."""
+    project_path = path / project_name
+    if project_path.exists():
+        typer.echo(f"Error: Directory '{project_path}' already exists.")
+        raise typer.Exit(code=1)
+
+    # ... more generation logic here
+    typer.echo(f"Successfully created new project '{project_name}'.")
+```
+
+**`fastforge/main.py`**
+
+```python
+import typer
+from fastforge.commands import new
+
+app = typer.Typer(
+    help="FastForge CLI for generating modular FastAPI projects.",
+    name="fastforge"
+)
+
+# Use a separate module for commands
+app.command(name="new")(new.create_new_project)
+
+if __name__ == "__main__":
+    app()
+```

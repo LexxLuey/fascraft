@@ -1,0 +1,47 @@
+# {{ project_name }}
+
+A FastAPI project generated with FastForge.
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.10 or higher
+- Poetry (recommended) or pip
+
+### Installation
+
+1. Install dependencies:
+   ```bash
+   poetry install
+   # or
+   pip install -r requirements.txt
+   ```
+
+2. Run the application:
+   ```bash
+   poetry run uvicorn main:app --reload
+   # or
+   python main.py
+   ```
+
+3. Open your browser and navigate to [http://localhost:8000](http://localhost:8000)
+
+## API Endpoints
+
+- `GET /` - Root endpoint
+- `GET /health` - Health check
+- `GET /docs` - Interactive API documentation (Swagger UI)
+- `GET /redoc` - Alternative API documentation (ReDoc)
+
+## Development
+
+This project uses:
+- **FastAPI** - Modern, fast web framework
+- **Poetry** - Dependency management
+- **Black** - Code formatting
+- **Ruff** - Fast Python linter
+
+## License
+
+MIT
