@@ -1,0 +1,51 @@
+"""Tests for {{ module_name }} models."""
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from {{ module_name }}.models import {{ module_name_title }}
+
+
+@pytest.fixture
+def db_session():
+    """Create a test database session."""
+    engine = create_engine("sqlite:///:memory:")
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    
+    # Create tables
+    from {{ module_name }}.models import Base
+    Base.metadata.create_all(bind=engine)
+    
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+def test_create_{{ module_name }}(db_session):
+    """Test creating a {{ module_name }}."""
+    {{ module_name }} = {{ module_name_title }}(
+        name="Test {{ module_name_title }}",
+        description="Test description"
+    )
+    
+    db_session.add({{ module_name }})
+    db_session.commit()
+    
+    assert {{ module_name }}.id is not None
+    assert {{ module_name }}.name == "Test {{ module_name_title }}"
+    assert {{ module_name }}.description == "Test description"
+    assert {{ module_name }}.is_active is True
+    assert {{ module_name }}.created_at is not None
+
+
+def test_{{ module_name }}_repr(db_session):
+    """Test {{ module_name }} string representation."""
+    {{ module_name }} = {{ module_name_title }}(name="Test {{ module_name_title }}")
+    db_session.add({{ module_name }})
+    db_session.commit()
+    
+    assert "Test {{ module_name_title }}" in repr({{ module_name }})
+    assert str({{ module_name }}.id) in repr({{ module_name }})

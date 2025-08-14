@@ -1,42 +1,38 @@
-"""Main CLI application for FastForge."""
+"""Main FastForge CLI application."""
 
 import typer
-from rich.console import Console
-from rich.text import Text
 
-from fastforge.commands import new as new_cmd
-
-# Initialize rich console
-console = Console()
+from fastforge.commands import generate as generate_cmd
+from fastforge.commands import list as list_cmd
+from fastforge.commands import new
+from fastforge.commands import remove as remove_cmd
+from fastforge.commands import update as update_cmd
 
 app = typer.Typer(
-    help="🚀 FastForge CLI for generating modular FastAPI projects.", rich_markup_mode=None
+    help="FastForge CLI for generating modular FastAPI projects.",
+    name="fastforge"
 )
+
+# Register commands
+app.command(name="new")(new.create_new_project)
+app.command(name="generate")(generate_cmd.generate_module)
+app.command(name="list")(list_cmd.list_modules)
+app.command(name="remove")(remove_cmd.remove_module)
+app.command(name="update")(update_cmd.update_module)
 
 
 @app.command()
-def hello(name: str = "World"):
-    """👋 Say hello to the user."""
-    welcome_text = Text()
-    welcome_text.append("👋 ", style="bold blue")
-    welcome_text.append(f"Hello {name}! ", style="bold white")
-    welcome_text.append("Welcome to FastForge!", style="bold cyan")
-    console.print(welcome_text)
+def hello(name: str = typer.Argument("World", help="Name to greet")):
+    """Say hello to someone."""
+    typer.echo(f"Hello {name}!")
+    typer.echo("Welcome to FastForge!")
 
 
 @app.command()
 def version():
-    """📦 Show the current version of FastForge."""
-    from fastforge import __version__
+    """Show FastForge version."""
+    typer.echo("FastForge version 0.1.0")
 
-    version_text = Text()
-    version_text.append("📦 ", style="bold green")
-    version_text.append("FastForge version ", style="bold white")
-    version_text.append(f"{__version__}", style="bold yellow")
-    console.print(version_text)
-
-
-app.command(name="new")(new_cmd.create_new_project)
 
 if __name__ == "__main__":
     app()

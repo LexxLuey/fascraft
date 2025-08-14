@@ -30,4 +30,14 @@ def sample_project_name() -> str:
 @pytest.fixture
 def expected_files() -> list[str]:
     """Provide list of expected files in generated project."""
-    return ["__init__.py", "main.py", "pyproject.toml", "README.md"]
+    return [
+        "__init__.py", 
+        "main.py", 
+        "pyproject.toml", 
+        "README.md",
+        "config/__init__.py",
+        "config/settings.py",
+        "config/database.py",
+        "config/exceptions.py",
+        "config/middleware.py"
+    ]

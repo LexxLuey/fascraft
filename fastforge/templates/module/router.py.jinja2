@@ -1,0 +1,58 @@
+"""Router for {{ module_name }} module."""
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+from ..database import get_db
+from ..models.{{ module_name }} import {{ module_name_title }}
+from ..services.{{ module_name }} import {{ module_name_title }}Service
+
+router = APIRouter(prefix="/{{ module_name }}s", tags=["{{ module_name }}s"])
+
+
+@router.get("/", response_model=list[{{ module_name_title }}])
+async def get_{{ module_name }}s(
+    skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+):
+    """Get all {{ module_name }}s."""
+    return {{ module_name_title }}Service.get_{{ module_name }}s(db, skip=skip, limit=limit)
+
+
+@router.get("/{item_id}", response_model={{ module_name_title }})
+async def get_{{ module_name }}(item_id: int, db: Session = Depends(get_db)):
+    """Get a specific {{ module_name }} by ID."""
+    {{ module_name }} = {{ module_name_title }}Service.get_{{ module_name }}(db, item_id=item_id)
+    if {{ module_name }} is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="{{ module_name_title }} not found"
+        )
+    return {{ module_name }}
+
+
+@router.post("/", response_model={{ module_name_title }}, status_code=status.HTTP_201_CREATED)
+async def create_{{ module_name }}({{ module_name }}: {{ module_name_title }}, db: Session = Depends(get_db)):
+    """Create a new {{ module_name }}."""
+    return {{ module_name_title }}Service.create_{{ module_name }}(db, {{ module_name }}={{ module_name }})
+
+
+@router.put("/{item_id}", response_model={{ module_name_title }})
+async def update_{{ module_name }}(
+    item_id: int, {{ module_name }}: {{ module_name_title }}, db: Session = Depends(get_db)
+):
+    """Update an existing {{ module_name }}."""
+    updated_{{ module_name }} = {{ module_name_title }}Service.update_{{ module_name }}(db, item_id, {{ module_name }})
+    if updated_{{ module_name }} is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="{{ module_name_title }} not found"
+        )
+    return updated_{{ module_name }}
+
+
+@router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_{{ module_name }}(item_id: int, db: Session = Depends(get_db)):
+    """Delete a {{ module_name }}."""
+    success = {{ module_name_title }}Service.delete_{{ module_name }}(db, item_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="{{ module_name_title }} not found"
+        )
