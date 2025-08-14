@@ -1,138 +1,211 @@
-# FastForge
+# FastForge 🚀
 
-**FastForge** is a simple CLI tool for generating modular FastAPI project structures for you. Think of it as a project generator that sets up all the basic files you need to start building a FastAPI application.
+**FastForge** is a powerful CLI tool designed to streamline the creation and management of modular FastAPI projects. It eliminates boilerplate code and enforces best practices from the start, allowing developers to focus on business logic.
 
-## What Does FastForge Do?
+## **✨ Features**
 
-- 🚀 **Creates new FastAPI projects** with one command
-- 📁 **Sets up project structure** automatically
-- 🎯 **Uses templates** to generate consistent code
-- ⚡ **Saves time** - no more manual setup!
+- **🚀 Project Generation** - Create new FastAPI projects with domain-driven architecture
+- **🔧 Module Management** - Generate, list, update, and remove domain modules
+- **🏗️ Domain-Driven Design** - Self-contained modules with models, schemas, services, and routers
+- **⚙️ Smart Configuration** - Automatic project detection and configuration management
+- **🛡️ Safety First** - Confirmations, backups, and rollback capabilities
+- **🎨 Rich CLI** - Beautiful tables, color coding, and progress indicators
+- **🧪 Production Ready** - Comprehensive testing and error handling
 
-## Quick Start
+## **🚀 Quick Start**
 
-### 1. Install FastForge
+### **Installation**
 
-**Option A: Install from source (development)**
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/fastforge.git
-cd fastforge
-
-# Install with Poetry
-pip install poetry
-poetry install
-poetry run fastforge --help
-```
-
-**Option B: Install via pip (when published)**
-```bash
+# Install from PyPI
 pip install fastforge
+
+# Or install from source
+git clone https://github.com/yourusername/fastforge.git
+cd fastforge
+poetry install
 ```
 
-### 2. Create a New Project
+### **Create Your First Project**
+
 ```bash
-# If installed via Poetry
-poetry run fastforge new my-awesome-api
-
-# If installed via pip
+# Generate a new FastAPI project
 fastforge new my-awesome-api
+
+# Navigate to your project
+cd my-awesome-api
+
+# Start the development server
+uvicorn main:app --reload
 ```
 
-That's it! FastForge will create a new folder called `my-awesome-api` with all the basic files you need.
+### **Add Domain Modules**
 
-### 3. What You Get
+```bash
+# Generate a customers module
+fastforge generate customers
+
+# Generate a products module
+fastforge generate products
+
+# Your project now has:
+# ├── customers/
+# │   ├── models.py
+# │   ├── schemas.py
+# │   ├── services.py
+# │   ├── routers.py
+# │   └── tests/
+# └── products/
+#     ├── models.py
+#     ├── schemas.py
+#     ├── services.py
+#     ├── routers.py
+#     └── tests/
+```
+
+## **📚 Available Commands**
+
+### **Project Management**
+```bash
+fastforge new <project_name>          # Create new FastAPI project
+fastforge generate <module_name>      # Add new domain module
+```
+
+### **Module Management**
+```bash
+fastforge list                        # List all modules with health status
+fastforge remove <module_name>        # Remove module with safety confirmations
+fastforge update <module_name>        # Update module templates with backups
+```
+
+### **Utility Commands**
+```bash
+fastforge hello [name]                # Say hello
+fastforge version                     # Show version
+fastforge --help                      # Show all available commands
+```
+
+## **🏗️ Project Structure**
+
+FastForge generates projects with a clean, domain-driven architecture:
+
 ```
 my-awesome-api/
-├── __init__.py    # Project metadata and version info
-├── main.py        # FastAPI application with endpoints
-├── pyproject.toml # Poetry configuration and dependencies
-└── README.md      # Project documentation and setup guide
+├── config/                           # Configuration and shared utilities
+│   ├── __init__.py
+│   ├── settings.py                   # Pydantic settings with environment support
+│   ├── database.py                   # SQLAlchemy configuration
+│   ├── exceptions.py                 # Custom HTTP exceptions
+│   └── middleware.py                 # CORS and timing middleware
+├── customers/                        # Domain module (self-contained)
+│   ├── __init__.py
+│   ├── models.py                     # SQLAlchemy models
+│   ├── schemas.py                    # Pydantic schemas
+│   ├── services.py                   # Business logic
+│   ├── routers.py                    # FastAPI routes
+│   └── tests/                        # Module-specific tests
+├── products/                         # Another domain module
+│   ├── __init__.py
+│   ├── models.py
+│   ├── schemas.py
+│   ├── services.py
+│   ├── routers.py
+│   └── tests/
+├── main.py                           # FastAPI application entry point
+├── pyproject.toml                    # Project dependencies and metadata
+└── README.md                         # Project documentation
 ```
 
-## Available Commands
+## **🔧 Module Management**
 
-- `fastforge new <project-name>` - Create a new FastAPI project
-- `fastforge hello` - Say hello to FastForge
-- `fastforge version` - Show FastForge version
-- `fastforge --help` - Show all available commands
-
-## Examples
-
+### **List Modules**
 ```bash
-# Create a project in current directory
-fastforge new my-api
+fastforge list
+```
+Shows a beautiful table with:
+- Module health status (✅ Healthy / ⚠️ Incomplete)
+- File counts and test coverage
+- Module size and last modified date
 
-# Create a project in a specific folder
-fastforge new my-api --path /path/to/projects
+### **Remove Modules**
+```bash
+fastforge remove customers
+```
+- Shows removal preview with file counts and size
+- Asks for confirmation (use `--force` to skip)
+- Automatically cleans up main.py references
+- Cannot be undone (safety first!)
 
-# Say hello
-fastforge hello
+### **Update Modules**
+```bash
+fastforge update customers
+```
+- Creates automatic backups before updating
+- Refreshes all module templates
+- Rollback capability if update fails
+- Preserves your custom business logic
 
-# Check version
-fastforge version
+## **🎯 Use Cases**
+
+- **🚀 Rapid Prototyping** - Get a production-ready API structure in seconds
+- **🏢 Enterprise Applications** - Consistent architecture across teams
+- **📚 Learning FastAPI** - Best practices built into every template
+- **🔄 Legacy Migration** - Convert existing projects to domain-driven design
+- **👥 Team Onboarding** - Standardized project structure for new developers
+
+## **🛠️ Development**
+
+### **Prerequisites**
+- Python 3.8+
+- Poetry (for dependency management)
+- FastAPI knowledge (for customizing generated code)
+
+### **Setup Development Environment**
+```bash
+git clone https://github.com/yourusername/fastforge.git
+cd fastforge
+poetry install
+poetry run pytest  # Run all tests
 ```
 
-## Requirements
-
-- **Python**: 3.10 or higher
-- **Dependencies**: FastForge automatically handles all required packages
-- **Templates**: Uses Jinja2 for customizable project generation
-
-## How It Works
-
-FastForge uses **Jinja2 templates** to generate project files. When you run `fastforge new <project-name>`, it:
-
-1. Creates a new directory with your project name
-2. Reads templates from `fastforge/templates/`
-3. Renders templates with your project-specific data
-4. Generates all necessary files automatically
-
-## Need Help?
-
-If something goes wrong or you have questions:
-1. Check the error message - it usually tells you what's wrong
-2. Verify Python version: `python --version` (must be 3.10+)
-3. Try running `fastforge --help` to see all options
-4. Check the [Contributing Guide](CONTRIBUTING.md) for development setup
-
-## What's Next?
-
-After creating your project with FastForge:
-1. Navigate to your project folder: `cd my-awesome-api`
-2. Install FastAPI and dependencies: `pip install fastapi uvicorn`
-3. Start building your API!
-
-## Development
-
-For developers who want to contribute or modify FastForge:
-- See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions
-- Uses Poetry for dependency management
-- Includes code quality tools (Black, Ruff, Flake8)
-- Pre-commit hooks for automated code formatting
-- Makefile for common development commands
-
-## Testing
-
-FastForge has **100% test coverage** with a comprehensive test suite:
-
+### **Running Tests**
 ```bash
 # Run all tests
-poetry run pytest tests/ -v
-
-# Run specific test categories
-poetry run pytest tests/test_new_command.py -v      # Core functionality
-poetry run pytest tests/test_cli_integration.py -v  # CLI integration
-poetry run pytest tests/test_templates.py -v        # Template validation
+poetry run pytest
 
 # Run with coverage
-poetry run pytest tests/ --cov=fastforge --cov-report=html
+poetry run pytest --cov=fastforge
+
+# Run specific test file
+poetry run pytest tests/test_generate_command.py
 ```
 
-**Test Results:** ✅ 36 tests passing, 0 failed, 0 skipped
+## **📖 Documentation**
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed testing instructions and best practices.
+- **[ROADMAP.md](ROADMAP.md)** - Development phases and current status
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to FastForge
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
+
+## **🤝 Contributing**
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
+
+- Code style and standards
+- Testing requirements
+- Pull request process
+- Development setup
+
+## **📄 License**
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## **🙏 Acknowledgments**
+
+- **FastAPI** - The amazing web framework that makes this possible
+- **Typer** - Beautiful CLI framework
+- **Rich** - Rich text and beautiful formatting
+- **Jinja2** - Powerful templating engine
 
 ---
 
-**FastForge** - Making FastAPI development faster and easier! 🚀
+**Made with ❤️ for the FastAPI community**

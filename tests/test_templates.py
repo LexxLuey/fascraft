@@ -59,7 +59,8 @@ class TestTemplateRendering:
         # Check main.py template substitution
         main_content = (project_path / "main.py").read_text()
         assert sample_project_name in main_content
-        assert f'title="{sample_project_name}"' in main_content
+        assert "from config.settings import get_settings" in main_content
+        assert "title=settings.app_name" in main_content
 
         # Check pyproject.toml template substitution
         pyproject_content = (project_path / "pyproject.toml").read_text()
@@ -82,7 +83,8 @@ class TestTemplateRendering:
             # Verify main.py contains the name
             main_content = (project_path / "main.py").read_text()
             assert name in main_content
-            assert f'title="{name}"' in main_content
+            assert "from config.settings import get_settings" in main_content
+            assert "title=settings.app_name" in main_content
 
             # Verify pyproject.toml contains the name
             pyproject_content = (project_path / "pyproject.toml").read_text()

@@ -38,6 +38,9 @@ def create_new_project(
 
     project_path.mkdir(parents=True, exist_ok=True)
 
+    # Create config directory structure
+    (project_path / "config").mkdir(exist_ok=True)
+
     # Set up Jinja2 environment
     env = Environment(
         loader=PackageLoader("fastforge", "templates/new_project"),
@@ -50,6 +53,11 @@ def create_new_project(
         ("main.py.jinja2", "main.py"),
         ("pyproject.toml.jinja2", "pyproject.toml"),
         ("README.md.jinja2", "README.md"),
+        ("config/__init__.py.jinja2", "config/__init__.py"),
+        ("config/settings.py.jinja2", "config/settings.py"),
+        ("config/database.py.jinja2", "config/database.py"),
+        ("config/exceptions.py.jinja2", "config/exceptions.py"),
+        ("config/middleware.py.jinja2", "config/middleware.py"),
     ]
 
     # Render all templates
@@ -58,7 +66,9 @@ def create_new_project(
         content = template.render(
             project_name=project_name, author_name="Lutor Iyornumbe"
         )
-        (project_path / output_name).write_text(content)
+        output_path = project_path / output_name
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(content)
 
     success_text = Text()
     success_text.append("✅ ", style="bold green")
@@ -75,3 +85,16 @@ def create_new_project(
     next_steps_text.append(f"'cd {project_name} && poetry install' ", style="bold cyan")
     next_steps_text.append("to get started.", style="white")
     console.print(next_steps_text)
+
+    config_info_text = Text()
+    config_info_text.append("⚙️ ", style="bold blue")
+    config_info_text.append("Project includes configuration: ", style="white")
+    config_info_text.append("config/settings.py, config/database.py", style="bold cyan")
+    console.print(config_info_text)
+
+    generate_info_text = Text()
+    generate_info_text.append("🔧 ", style="bold yellow")
+    generate_info_text.append("Use ", style="white")
+    generate_info_text.append("'fastforge generate <module_name>' ", style="bold cyan")
+    generate_info_text.append("to add new domain modules.", style="white")
+    console.print(generate_info_text)

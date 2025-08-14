@@ -1,0 +1,52 @@
+"""Data models for {{ module_name }} module."""
+
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
+from sqlalchemy import Column, DateTime, Integer, String, Text
+from sqlalchemy.sql import func
+
+from ..database import Base
+
+
+# SQLAlchemy Model
+class {{ module_name_title }}Model(Base):
+    """SQLAlchemy model for {{ module_name }}s."""
+    
+    __tablename__ = "{{ module_name }}s"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+# Pydantic Models
+class {{ module_name_title }}Base(BaseModel):
+    """Base {{ module_name }} model."""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    name: str
+    description: Optional[str] = None
+
+
+class {{ module_name_title }}Create({{ module_name_title }}Base):
+    """Model for creating a new {{ module_name }}."""
+    pass
+
+
+class {{ module_name_title }}Update({{ module_name_title }}Base):
+    """Model for updating an existing {{ module_name }}."""
+    
+    name: Optional[str] = None
+
+
+class {{ module_name_title }}({{ module_name_title }}Base):
+    """Complete {{ module_name }} model."""
+    
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None

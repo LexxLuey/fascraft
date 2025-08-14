@@ -2,23 +2,41 @@
 
 from fastapi import FastAPI
 
+from config.settings import get_settings
+from config.middleware import setup_middleware
+
+# Get application settings
+settings = get_settings()
+
+# Create FastAPI application
 app = FastAPI(
-    title="{{ project_name }}",
+    title=settings.app_name,
     description="A FastAPI project generated with FastForge",
-    version="0.1.0"
+    version=settings.app_version,
+    debug=settings.debug
 )
 
+# Setup middleware
+setup_middleware(app)
+
+# Import routers (will be added as modules are generated)
+# from customers import routers as customer_routers
+# from products import routers as product_routers
+
+# Include routers (uncomment as modules are generated)
+# app.include_router(customer_routers.router, prefix="/api/v1/customers", tags=["customers"])
+# app.include_router(product_routers.router, prefix="/api/v1/products", tags=["products"])
 
 @app.get("/")
 async def root():
     """Root endpoint."""
-    return {"message": "Hello from {{ project_name }}!"}
+    return {"message": f"Hello from {settings.app_name}!"}
 
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {"status": "healthy"}
+    return {"status": "healthy", "version": settings.app_version}
 
 
 if __name__ == "__main__":

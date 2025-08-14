@@ -91,7 +91,8 @@ class TestNewCommand:
         # Verify FastAPI imports and setup
         assert "from fastapi import FastAPI" in content
         assert "app = FastAPI(" in content
-        assert f'title="{sample_project_name}"' in content
+        assert "from config.settings import get_settings" in content
+        assert "title=settings.app_name" in content
 
         # Verify endpoints
         assert '@app.get("/")' in content

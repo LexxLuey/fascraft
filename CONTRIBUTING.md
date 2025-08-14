@@ -1,503 +1,234 @@
-# Contributing to FastForge
+# Contributing to FastForge 🤝
 
-**Welcome!** 🎉 We're excited you want to help make FastForge better. This guide is written for beginners - no experience required!
+Thank you for your interest in contributing to FastForge! This guide will help you get started with development and contributing to the project.
 
-## What is FastForge?
+## **🎯 Project Status**
 
-FastForge is a CLI tool that helps developers create new FastAPI projects quickly using Jinja2 templates. It's like a "project starter kit" that saves time and ensures consistency.
+**Current Phase: Phase 2 - Module Management** ✅ **COMPLETED**
 
-## How Can I Help?
+FastForge has successfully completed its first two phases:
+- **Phase 1**: Module Templates and project generation ✅
+- **Phase 2**: Complete module management system ✅
 
-### 🐛 **Report Bugs**
-Found something that doesn't work? Tell us about it!
+**Next Phase: Phase 3 - Advanced Project Detection** 🔄
 
-**What to include:**
-- What you were trying to do
-- What happened instead
-- What you expected to happen
-- Your operating system (Windows, Mac, Linux)
-- Python version (`python --version`)
-- FastForge version (`fastforge version`)
+## **🚀 Quick Start for Contributors**
 
-**Example:**
-```
-I tried to create a new project with "fastforge new my-api"
-But I got an error: "Permission denied"
-I expected it to create a new folder
-I'm on Windows 10, Python 3.11, FastForge 0.1.0
-```
+### **Prerequisites**
+- Python 3.8 or higher
+- Poetry (for dependency management)
+- Git
+- Basic knowledge of FastAPI, Typer, and Jinja2
 
-### 💡 **Suggest Features**
-Have an idea for something new? We want to hear it!
+### **Setup Development Environment**
 
-**What to include:**
-- What you want FastForge to do
-- Why it would be helpful
-- Any examples of how it might work
-
-**Example:**
-```
-I'd like FastForge to create a basic FastAPI app.py file
-This would save me from writing boilerplate code
-It could work like: fastforge new my-api --with-app
-```
-
-### 🔧 **Fix Code**
-Want to help write code? Great! Here's how to get started.
-
-## Setting Up Your Development Environment
-
-### 1. Get the Code
 ```bash
-# Download FastForge to your computer
-git clone https://github.com/your-username/fastforge.git
-
-# Go into the folder
+# Clone the repository
+git clone https://github.com/yourusername/fastforge.git
 cd fastforge
-```
 
-### 2. Install Python Tools
-```bash
-# Install Poetry (manages dependencies)
-pip install poetry
-
-# Install all the tools FastForge needs
+# Install dependencies
 poetry install
-```
 
-### 3. Test Your Setup
-```bash
-# Make sure everything works
+# Verify installation
 poetry run fastforge --help
-poetry run fastforge hello
+poetry run pytest  # Run all tests
 ```
 
-## How FastForge Works (Simple Version)
+## **🏗️ Project Architecture**
 
-### 📁 **Project Structure**
+FastForge follows a clean, modular architecture:
+
 ```
 fastforge/
-├── fastforge/           # The main code
-│   ├── main.py         # Command line interface
-│   ├── commands/       # Different commands (new, hello, etc.)
-│   └── templates/      # Jinja2 templates for generating projects
-├── pyproject.toml      # Project settings and dependencies
-└── README.md          # This file
+├── commands/                 # CLI command implementations
+│   ├── __init__.py
+│   ├── new.py               # Create new projects
+│   ├── generate.py           # Generate domain modules
+│   ├── list.py               # List existing modules
+│   ├── remove.py             # Remove modules
+│   └── update.py             # Update module templates
+├── templates/                # Jinja2 templates
+│   ├── new_project/          # New project templates
+│   └── module/               # Domain module templates
+├── main.py                   # CLI application entry point
+└── tests/                    # Comprehensive test suite
 ```
 
-### 🎯 **Key Concepts**
-- **Commands**: Functions that do things (like `new`, `hello`)
-- **Templates**: Jinja2 files that get rendered and customized for new projects
-- **CLI**: Command Line Interface - how users interact with FastForge
+## **🧪 Testing**
 
-## Testing
+FastForge maintains **100% test coverage** with a comprehensive test suite.
 
-### 🧪 **Running Tests**
-
-FastForge has **100% test coverage** with a comprehensive test suite to ensure everything works correctly. Before making any changes, make sure all tests pass.
-
-**Current Test Status:** ✅ 36 tests passing, 0 failed, 0 skipped
-
-#### **Run All Tests**
-```bash
-# Activate the poetry environment
-poetry shell
-
-# Run all tests with verbose output
-poetry run pytest tests/ -v
-
-# Run tests with short traceback for failures
-poetry run pytest tests/ -v --tb=short
-
-# Run tests and stop on first failure
-poetry run pytest tests/ -x
-```
-
-#### **Run Specific Test Files**
-```bash
-# Test only the new command functionality
-poetry run pytest tests/test_new_command.py -v
-
-# Test only CLI integration
-poetry run pytest tests/test_cli_integration.py -v
-
-# Test only template rendering
-poetry run pytest tests/test_templates.py -v
-```
-
-#### **Run Specific Test Functions**
-```bash
-# Run a specific test function
-poetry run pytest tests/test_new_command.py::TestNewCommand::test_create_new_project_success -v
-
-# Run tests matching a pattern
-poetry run pytest tests/ -k "template" -v
-```
-
-#### **Test Coverage**
-```bash
-# Install pytest-cov for coverage reporting
-poetry add --group dev pytest-cov
-
-# Run tests with coverage report
-poetry run pytest tests/ --cov=fastforge --cov-report=html
-
-# View coverage report in browser
-# Open htmlcov/index.html
-```
-
-### 📝 **Writing New Tests**
-
-When adding new features or fixing bugs, always write tests to ensure your changes work correctly and don't break existing functionality.
-
-#### **Test Structure**
-```
-tests/
-├── conftest.py              # Shared fixtures and configuration
-├── test_new_command.py      # Tests for the new command
-├── test_cli_integration.py  # CLI integration tests
-├── test_templates.py        # Template validation tests
-└── test_utils.py            # Utility function tests
-```
-
-#### **Test Naming Conventions**
-- **Files**: `test_*.py` (e.g., `test_new_command.py`)
-- **Classes**: `Test*` (e.g., `TestNewCommand`)
-- **Functions**: `test_*` (e.g., `test_create_new_project_success`)
-
-#### **Writing Test Functions**
-```python
-def test_function_name(self, fixture_name: Type) -> None:
-    """Test description of what this test verifies."""
-    # Arrange - set up test data
-    test_data = "example"
-    
-    # Act - call the function being tested
-    result = function_being_tested(test_data)
-    
-    # Assert - verify the result
-    assert result == "expected_value"
-```
-
-#### **Using Fixtures**
-```python
-def test_with_fixtures(self, temp_dir: Path, sample_project_name: str) -> None:
-    """Test using shared fixtures."""
-    # temp_dir provides a temporary directory that gets cleaned up
-    # sample_project_name provides a consistent test project name
-    
-    project_path = temp_dir / sample_project_name
-    # ... test logic here
-```
-
-#### **Testing CLI Commands**
-```python
-def test_cli_command(self, cli_runner: CliRunner) -> None:
-    """Test CLI command execution."""
-    result = cli_runner.invoke(app, ["command", "arg"])
-    
-    assert result.exit_code == 0
-    assert "expected output" in result.output
-```
-
-#### **Testing Error Conditions**
-```python
-def test_error_handling(self) -> None:
-    """Test that errors are handled correctly."""
-    with pytest.raises(ExpectedException) as exc_info:
-        function_that_should_fail()
-    
-    assert exc_info.value.code == 1
-```
-
-#### **Testing File Generation**
-```python
-def test_file_creation(self, temp_dir: Path) -> None:
-    """Test that files are created correctly."""
-    # Create project
-    create_new_project("test-project", temp_dir)
-    
-    # Verify files exist
-    project_path = temp_dir / "test-project"
-    assert (project_path / "main.py").exists()
-    assert (project_path / "pyproject.toml").exists()
-    
-    # Verify file contents
-    content = (project_path / "main.py").read_text()
-    assert "from fastapi import FastAPI" in content
-```
-
-### 🔧 **Test Best Practices**
-
-1. **Test One Thing**: Each test should verify one specific behavior
-2. **Use Descriptive Names**: Test names should clearly describe what they test
-3. **Arrange-Act-Assert**: Structure tests with clear setup, execution, and verification
-4. **Use Fixtures**: Reuse common test setup with pytest fixtures
-5. **Test Edge Cases**: Include tests for error conditions and boundary cases
-6. **Clean Up**: Use temporary directories that get cleaned up automatically
-7. **Mock External Dependencies**: Use mocking to isolate the code being tested
-
-## Making Changes
-
-### 1. **Pick Something Small**
-Start with something simple:
-- Fix a typo in a message
-- Add a new example to the help text
-- Change a default value
-
-### 2. **Make Your Change**
-- Edit the file you want to change
-- Test your change: `poetry run fastforge --help`
-- Make sure it still works!
-
-### 3. **Test Your Changes**
-```bash
-# Run the tool to make sure it works
-poetry run fastforge hello
-poetry run fastforge version
-
-# If you added a new command, test it
-poetry run fastforge your-new-command
-```
-
-## Adding a New Command
-
-Want to add a new feature? Here's how:
-
-### 1. **Create a New File**
-Create `fastforge/commands/your_command.py`:
-
-```python
-"""Your new command description."""
-
-import typer
-
-def your_new_command():
-    """What your command does."""
-    typer.echo("Hello from your new command!")
-
-# Add this to main.py:
-# app.command(name="your-command")(your_new_command)
-```
-
-### 2. **Add It to Main**
-In `fastforge/main.py`, add:
-```python
-from fastforge.commands import your_command
-
-app.command(name="your-command")(your_command.your_new_command)
-```
-
-### 3. **Test It**
-```bash
-poetry run fastforge your-command
-```
-
-## Code Style (Don't Panic!)
-
-We use tools to make code look nice automatically:
+### **Running Tests**
 
 ```bash
-# Format your code (makes it look pretty)
-poetry run black .
+# Run all tests
+poetry run pytest
 
-# Sort imports and format code (organizes import statements)
-poetry run ruff format .
+# Run with coverage
+poetry run pytest --cov=fastforge --cov-report=html
 
-# Check for problems
-poetry run ruff check .
-
-# Auto-fix many issues
-poetry run ruff check --fix .
-
-# Run all checks at once
-poetry run ruff check . && poetry run ruff format --check . && poetry run black --check .
+# Run specific test categories
+poetry run pytest tests/test_new_command.py      # Project generation
+poetry run pytest tests/test_generate_command.py # Module generation
+poetry run pytest tests/test_list_command.py     # Module listing
+poetry run pytest tests/test_remove_command.py   # Module removal
+poetry run pytest tests/test_update_command.py   # Module updates
+poetry run pytest tests/test_cli_integration.py  # CLI integration
 ```
 
-**Don't worry about this too much** - these tools fix most formatting issues automatically!
+### **Test Structure**
 
-### Using the Makefile (Optional)
+- **Unit Tests**: Test individual functions and classes
+- **Integration Tests**: Test CLI commands end-to-end
+- **Template Tests**: Validate Jinja2 template rendering
+- **Mock Tests**: Test external dependencies safely
 
-For even easier development, you can use the included Makefile:
+### **Writing Tests**
+
+When adding new features, ensure you:
+
+1. **Write unit tests** for all new functions
+2. **Add integration tests** for new CLI commands
+3. **Maintain 100% coverage** for new code
+4. **Follow existing patterns** in the test suite
+
+## **📝 Code Style and Standards**
+
+### **Python Standards**
+- **PEP 8** compliance
+- **Type hints** for all function signatures
+- **Docstrings** for all public functions
+- **Snake_case** for variables and functions
+- **PascalCase** for classes
+
+### **CLI Standards**
+- **Typer** for command definitions
+- **Rich** for beautiful output formatting
+- **Consistent error handling** with `typer.Exit`
+- **Helpful error messages** with actionable guidance
+
+### **Template Standards**
+- **Jinja2** for all template rendering
+- **Consistent variable naming** across templates
+- **Production-ready code** in generated files
+- **Best practices** built into every template
+
+## **🔧 Development Workflow**
+
+### **1. Create a Feature Branch**
 
 ```bash
-# Show all available commands
-make help
-
-# Run all code quality checks
-make all-checks
-
-# Format and lint code
-make format
-make lint
-
-# Run tests
-make test
-```
-
-## Git Workflow and Commit Strategy
-
-### 1. **Create a Feature Branch**
-Never work directly on the main branch:
-
-```bash
-# Make sure you're on main and it's up to date
-git checkout main
-git pull origin main
-
-# Create a new branch for your changes
 git checkout -b feature/your-feature-name
-
-# Example branch names:
-git checkout -b fix/typo-in-readme
-git checkout -b feature/add-generate-command
-git checkout -b docs/improve-contributing-guide
 ```
 
-### 2. **Make Your Changes**
-- Edit files as needed
-- Test your changes thoroughly
-- Run code quality tools: `poetry run black . && poetry run isort .`
+### **2. Make Your Changes**
 
-### 3. **Commit Your Changes**
-Use clear, descriptive commit messages:
+- Write your code following the style guidelines
+- Add comprehensive tests
+- Update documentation if needed
+
+### **3. Run Tests**
 
 ```bash
-# See what you changed
-git status
+# Run all tests
+poetry run pytest
 
-# Add your changes
+# Run with coverage
+poetry run pytest --cov=fastforge
+
+# Fix any failing tests
+```
+
+### **4. Commit Your Changes**
+
+```bash
 git add .
+git commit -m "feat: add your feature description
 
-# Commit with a clear message
-git commit -m "feat: add new generate command for creating API endpoints
-
-- Add generate.py command file
-- Implement endpoint generation logic
-- Add tests for new functionality
-- Update help text and documentation"
+- Detailed description of changes
+- Any breaking changes
+- Related issue numbers"
 ```
 
-### 4. **Commit Message Format**
-Follow this pattern: `type: brief description`
+### **5. Push and Create Pull Request**
 
-**Types:**
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `docs:` - Documentation changes
-- `style:` - Code formatting, missing semicolons, etc.
-- `refactor:` - Code refactoring
-- `test:` - Adding or updating tests
-- `chore:` - Maintenance tasks
-
-**Examples:**
 ```bash
-git commit -m "fix: resolve help command crash on Python 3.13"
-git commit -m "docs: add contributing guide for beginners"
-git commit -m "feat: add --template option to new command"
-git commit -m "style: format code with black and isort"
-```
-
-### 5. **Push Your Branch**
-```bash
-# Push your feature branch to GitHub
 git push origin feature/your-feature-name
+# Create PR on GitHub
 ```
 
-## Creating a Pull Request
+## **🎯 Current Development Priorities**
 
-### 1. **Go to GitHub**
-- Navigate to the FastForge repository
-- You should see a banner suggesting to create a PR for your branch
-- Click "Compare & pull request"
+### **Phase 3: Advanced Project Detection** (Next)
+- [ ] Migration support for old modular projects
+- [ ] Project structure analysis and recommendations
+- [ ] Configuration file support (`.fastforge.toml`)
+- [ ] Environment detection (dev vs production)
 
-### 2. **Fill Out the PR Template**
-```markdown
-## Description
-Brief description of what this PR does.
+### **Areas Needing Contributors**
+- **Project Analysis**: Detect and analyze existing FastAPI projects
+- **Migration Tools**: Convert old projects to domain-driven architecture
+- **Configuration Management**: Project-specific settings and overrides
+- **Documentation**: User guides and API documentation
 
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Documentation update
-- [ ] Code refactoring
+## **🐛 Bug Reports and Feature Requests**
 
-## Testing
-- [ ] I have tested my changes locally
-- [ ] I have run the test suite
-- [ ] I have formatted code with black/isort
+### **Bug Reports**
+When reporting bugs, please include:
 
-## Checklist
-- [ ] My code follows the project's style guidelines
-- [ ] I have updated documentation if needed
-- [ ] My changes generate no new warnings
-```
+1. **FastForge version**: `fastforge version`
+2. **Python version**: `python --version`
+3. **Operating system**: Windows/macOS/Linux
+4. **Steps to reproduce**: Clear, step-by-step instructions
+5. **Expected vs actual behavior**: What you expected vs what happened
+6. **Error messages**: Full error output and stack traces
 
-### 3. **Submit and Wait for Review**
-- Submit the PR
-- Wait for maintainers to review
-- Respond to any feedback or requested changes
-- Once approved, your changes will be merged!
+### **Feature Requests**
+For new features, please describe:
 
-## Responding to PR Feedback
+1. **Use case**: What problem does this solve?
+2. **Proposed solution**: How should it work?
+3. **Alternatives considered**: What other approaches were considered?
+4. **Impact**: How will this benefit users?
 
-### 1. **Address Review Comments**
-- Read each comment carefully
-- Make the requested changes
-- Test your changes again
+## **📚 Learning Resources**
 
-### 2. **Update Your Branch**
-```bash
-# Make your changes
-git add .
-git commit -m "fix: address PR review feedback
+### **FastForge Internals**
+- **Commands**: Study `fastforge/commands/` for command patterns
+- **Templates**: Review `fastforge/templates/` for template structure
+- **Tests**: Examine `tests/` for testing patterns and examples
 
-- Fix typo in error message
-- Add missing docstring
-- Update test case"
-git push origin feature/your-feature-name
-```
+### **Technologies Used**
+- **[FastAPI](https://fastapi.tiangolo.com/)**: Web framework for APIs
+- **[Typer](https://typer.tiangolo.com/)**: CLI framework
+- **[Rich](https://rich.readthedocs.io/)**: Rich text and formatting
+- **[Jinja2](https://jinja.palletsprojects.com/)**: Template engine
+- **[Pydantic](https://pydantic-docs.helpmanual.io/)**: Data validation
 
-### 3. **The PR Updates Automatically**
-- GitHub automatically updates your PR with new commits
-- Maintainers will review the updated code
-- Repeat until approved!
+## **🤝 Community Guidelines**
 
-## Need Help?
+- **Be respectful** and inclusive
+- **Help newcomers** get started
+- **Share knowledge** and best practices
+- **Provide constructive feedback** on contributions
+- **Celebrate successes** and contributions
 
-**Don't be afraid to ask questions!** We were all beginners once.
+## **📞 Getting Help**
 
-**Ways to get help:**
-- Open an issue on GitHub
-- Ask in discussions
-- Join our community chat (if we have one)
-- Comment on your PR if you're stuck
+- **GitHub Issues**: For bugs and feature requests
+- **GitHub Discussions**: For questions and general discussion
+- **Pull Requests**: For code contributions
+- **Documentation**: Check README.md and ROADMAP.md first
 
-## What Makes a Good Contribution?
+## **🎉 Recognition**
 
-✅ **Good:**
-- Fixes a real problem
-- Makes something easier to use
-- Adds helpful documentation
-- Improves error messages
-- Follows existing code patterns
-- Includes tests for new functionality
-
-❌ **Not so good:**
-- Changes that break existing features
-- Adding complexity without clear benefit
-- Changing things just because you can
-- Ignoring code style guidelines
-- Not testing your changes
-
-## Remember
-
-- **Start small** - tiny changes are perfect!
-- **Ask questions** - we're here to help
-- **Test your changes** - make sure they work
-- **Be patient** - learning takes time
-- **Follow the workflow** - it helps everyone
+Contributors are recognized in:
+- **README.md** contributors section
+- **Release notes** for each version
+- **GitHub contributors** page
+- **Project documentation**
 
 ---
 
-**Thank you for wanting to help!** 🚀 Every contribution, no matter how small, makes FastForge better for everyone.
+**Thank you for contributing to FastForge! Together, we're making FastAPI development faster and easier for everyone.** 🚀

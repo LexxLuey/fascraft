@@ -1,0 +1,46 @@
+"""Pydantic schemas for {{ module_name }} domain."""
+
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
+
+
+class {{ module_name_title }}Base(BaseModel):
+    """Base {{ module_name }} schema."""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    name: str
+    description: Optional[str] = None
+    is_active: bool = True
+
+
+class {{ module_name_title }}Create({{ module_name_title }}Base):
+    """Schema for creating a new {{ module_name }}."""
+    pass
+
+
+class {{ module_name_title }}Update({{ module_name_title }}Base):
+    """Schema for updating an existing {{ module_name }}."""
+    
+    name: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class {{ module_name_title }}({{ module_name_title }}Base):
+    """Complete {{ module_name }} schema."""
+    
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+
+class {{ module_name_title }}List(BaseModel):
+    """Schema for {{ module_name }} list response."""
+    
+    items: list[{{ module_name_title }}]
+    total: int
+    page: int
+    size: int
