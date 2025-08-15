@@ -83,7 +83,7 @@ def update_module(
     # Confirm update
     if not force:
         if not confirm_update(module_name):
-            console.print("❌ Module update cancelled.", style="bold yellow")
+            console.print("⏹️ Module update cancelled.", style="bold yellow")
             return
 
     # Create backup if requested
@@ -96,7 +96,7 @@ def update_module(
         update_module_files(module_path, module_name, path_obj.name)
         
         success_text = Text()
-        success_text.append("✅ ", style="bold green")
+        success_text.append("🔄 ", style="bold green")
         success_text.append("Successfully updated module ", style="bold white")
         success_text.append(f"'{module_name}' ", style="bold cyan")
         success_text.append("in ", style="white")
@@ -246,7 +246,7 @@ def update_module_files(module_path: Path, module_name: str, project_name: str) 
     """Update the module files with latest templates."""
     # Set up Jinja2 environment for module templates
     env = Environment(
-        loader=PackageLoader("fastforge", "templates/module"),
+        loader=PackageLoader("fastcraft", "templates/module"),
         autoescape=select_autoescape(),
     )
 

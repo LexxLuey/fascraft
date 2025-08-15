@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "fastforge"
+name = "fastcraft"
 version = "0.1.0"
 description = "A CLI for generating modular FastAPI projects"
 authors = ["Lutor Iyornumbe <biggestluey@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "fastforge"}]
+packages = [{include = "fastcraft"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -20,13 +20,14 @@ ruff = "^0.2.0"
 isort = "^5.13.0"
 flake8 = "^7.0.0"
 pre-commit = "^3.6.0"
+twine = "^6.1.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-fastforge = "fastforge.main:app"
+fastcraft = "fastcraft.main:app"
 
 # Black configuration
 [tool.black]
@@ -73,7 +74,7 @@ ignore = [
 "tests/*" = ["E501", "B011"]  # line length and assert in tests
 
 [tool.ruff.isort]
-known-first-party = ["fastforge"]
+known-first-party = ["fastcraft"]
 known-third-party = ["typer", "jinja2", "pytest", "pathlib"]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 

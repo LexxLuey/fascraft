@@ -43,7 +43,7 @@ def create_new_project(
 
     # Set up Jinja2 environment
     env = Environment(
-        loader=PackageLoader("fastforge", "templates/new_project"),
+        loader=PackageLoader("fastcraft", "templates/new_project"),
         autoescape=select_autoescape(),
     )
 
@@ -71,7 +71,7 @@ def create_new_project(
         output_path.write_text(content)
 
     success_text = Text()
-    success_text.append("✅ ", style="bold green")
+    success_text.append("🎉 ", style="bold green")
     success_text.append("Successfully created new project ", style="bold white")
     success_text.append(f"'{project_name}' ", style="bold cyan")
     success_text.append("at ", style="white")
@@ -80,21 +80,21 @@ def create_new_project(
     console.print(success_text)
 
     next_steps_text = Text()
-    next_steps_text.append("🚀 ", style="bold yellow")
+    next_steps_text.append("⚡ ", style="bold yellow")
     next_steps_text.append("Run ", style="white")
     next_steps_text.append(f"'cd {project_name} && poetry install' ", style="bold cyan")
     next_steps_text.append("to get started.", style="white")
     console.print(next_steps_text)
 
     config_info_text = Text()
-    config_info_text.append("⚙️ ", style="bold blue")
+    config_info_text.append("🔧 ", style="bold blue")
     config_info_text.append("Project includes configuration: ", style="white")
     config_info_text.append("config/settings.py, config/database.py", style="bold cyan")
     console.print(config_info_text)
 
     generate_info_text = Text()
-    generate_info_text.append("🔧 ", style="bold yellow")
+    generate_info_text.append("✨ ", style="bold yellow")
     generate_info_text.append("Use ", style="white")
-    generate_info_text.append("'fastforge generate <module_name>' ", style="bold cyan")
+    generate_info_text.append("'fastcraft generate <module_name>' ", style="bold cyan")
     generate_info_text.append("to add new domain modules.", style="white")
     console.print(generate_info_text)

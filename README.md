@@ -1,6 +1,6 @@
-# FastForge 🚀
+# FastCraft 🚀
 
-**FastForge** is a powerful CLI tool designed to streamline the creation and management of modular FastAPI projects. It eliminates boilerplate code and enforces best practices from the start, allowing developers to focus on business logic.
+**FastCraft** is a powerful CLI tool designed to streamline the creation and management of modular FastAPI projects. It eliminates boilerplate code and enforces best practices from the start, allowing developers to focus on business logic.
 
 ## **✨ Features**
 
@@ -18,11 +18,11 @@
 
 ```bash
 # Install from PyPI
-pip install fastforge
+pip install fastcraft
 
 # Or install from source
-git clone https://github.com/yourusername/fastforge.git
-cd fastforge
+git clone https://github.com/yourusername/fastcraft.git
+cd fastcraft
 poetry install
 ```
 
@@ -30,7 +30,7 @@ poetry install
 
 ```bash
 # Generate a new FastAPI project
-fastforge new my-awesome-api
+fastcraft new my-awesome-api
 
 # Navigate to your project
 cd my-awesome-api
@@ -43,10 +43,10 @@ uvicorn main:app --reload
 
 ```bash
 # Generate a customers module
-fastforge generate customers
+fastcraft generate customers
 
 # Generate a products module
-fastforge generate products
+fastcraft generate products
 
 # Your project now has:
 # ├── customers/
@@ -67,27 +67,27 @@ fastforge generate products
 
 ### **Project Management**
 ```bash
-fastforge new <project_name>          # Create new FastAPI project
-fastforge generate <module_name>      # Add new domain module
+fastcraft new <project_name>          # Create new FastAPI project
+fastcraft generate <module_name>      # Add new domain module
 ```
 
 ### **Module Management**
 ```bash
-fastforge list                        # List all modules with health status
-fastforge remove <module_name>        # Remove module with safety confirmations
-fastforge update <module_name>        # Update module templates with backups
+fastcraft list                        # List all modules with health status
+fastcraft remove <module_name>        # Remove module with safety confirmations
+fastcraft update <module_name>        # Update module templates with backups
 ```
 
 ### **Utility Commands**
 ```bash
-fastforge hello [name]                # Say hello
-fastforge version                     # Show version
-fastforge --help                      # Show all available commands
+fastcraft hello [name]                # Say hello
+fastcraft version                     # Show version
+fastcraft --help                      # Show all available commands
 ```
 
 ## **🏗️ Project Structure**
 
-FastForge generates projects with a clean, domain-driven architecture:
+FastCraft generates projects with a clean, domain-driven architecture:
 
 ```
 my-awesome-api/
@@ -120,7 +120,7 @@ my-awesome-api/
 
 ### **List Modules**
 ```bash
-fastforge list
+fastcraft list
 ```
 Shows a beautiful table with:
 - Module health status (✅ Healthy / ⚠️ Incomplete)
@@ -129,7 +129,7 @@ Shows a beautiful table with:
 
 ### **Remove Modules**
 ```bash
-fastforge remove customers
+fastcraft remove customers
 ```
 - Shows removal preview with file counts and size
 - Asks for confirmation (use `--force` to skip)
@@ -138,7 +138,7 @@ fastforge remove customers
 
 ### **Update Modules**
 ```bash
-fastforge update customers
+fastcraft update customers
 ```
 - Creates automatic backups before updating
 - Refreshes all module templates
@@ -162,8 +162,8 @@ fastforge update customers
 
 ### **Setup Development Environment**
 ```bash
-git clone https://github.com/yourusername/fastforge.git
-cd fastforge
+git clone https://github.com/yourusername/fastcraft.git
+cd fastcraft
 poetry install
 poetry run pytest  # Run all tests
 ```
@@ -174,7 +174,7 @@ poetry run pytest  # Run all tests
 poetry run pytest
 
 # Run with coverage
-poetry run pytest --cov=fastforge
+poetry run pytest --cov=fastcraft
 
 # Run specific test file
 poetry run pytest tests/test_generate_command.py
@@ -183,7 +183,7 @@ poetry run pytest tests/test_generate_command.py
 ## **📖 Documentation**
 
 - **[ROADMAP.md](ROADMAP.md)** - Development phases and current status
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to FastForge
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to FastCraft
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
 
 ## **🤝 Contributing**

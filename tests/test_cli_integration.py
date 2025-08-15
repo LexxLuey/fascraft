@@ -1,11 +1,11 @@
-"""Integration tests for the FastForge CLI."""
+"""Integration tests for the FastCraft CLI."""
 
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
-from fastforge.main import app
+from fastcraft.main import app
 
 
 class TestCLIIntegration:
@@ -16,20 +16,20 @@ class TestCLIIntegration:
         result = cli_runner.invoke(app, ["hello"])
         assert result.exit_code == 0
         assert "Hello World!" in result.stdout
-        assert "Welcome to FastForge!" in result.stdout
+        assert "Welcome to FastCraft!" in result.stdout
 
     def test_hello_command_with_name(self, cli_runner: CliRunner) -> None:
         """Test the hello command with custom name."""
         result = cli_runner.invoke(app, ["hello", "Alice"])
         assert result.exit_code == 0
         assert "Hello Alice!" in result.stdout
-        assert "Welcome to FastForge!" in result.stdout
+        assert "Welcome to FastCraft!" in result.stdout
 
     def test_version_command(self, cli_runner: CliRunner) -> None:
         """Test the version command."""
         result = cli_runner.invoke(app, ["version"])
         assert result.exit_code == 0
-        assert "FastForge version" in result.stdout
+        assert "FastCraft version" in result.stdout
 
     def test_new_command_help(self, cli_runner: CliRunner) -> None:
         """Test the new command help."""
@@ -65,7 +65,7 @@ class TestCLIIntegration:
         """Test the main help command."""
         result = cli_runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert "FastForge CLI for generating modular FastAPI projects" in result.stdout
+        assert "FastCraft CLI for generating modular FastAPI projects" in result.stdout
         assert "new" in result.stdout
         assert "generate" in result.stdout
         assert "list" in result.stdout

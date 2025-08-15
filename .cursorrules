@@ -1,6 +1,6 @@
-## FastForge Development Principles
+## FastCraft Development Principles
 
-Here are specific rules and best practices for developing the **FastForge** project, based on the provided guidelines. These principles focus on creating a maintainable, scalable, and idiomatic Python application.
+Here are specific rules and best practices for developing the **FastCraft** project, based on the provided guidelines. These principles focus on creating a maintainable, scalable, and idiomatic Python application.
 
 -----
 
@@ -18,11 +18,11 @@ Here are specific rules and best practices for developing the **FastForge** proj
 
 The project's code should be organized logically to separate concerns.
 
-  * **`fastforge/`**: This is the top-level package for the application's source code.
-  * **`fastforge/main.py`**: The entry point for the CLI. It should use `typer` to define all top-level commands (e.g., `new`, `generate`).
-  * **`fastforge/commands/`**: A directory to hold the implementation of each command. For example, `fastforge/commands/new.py` would contain the `new` command's logic.
-  * **`fastforge/templates/`**: This directory will store all the `jinja2` templates for generating files.
-      * **Structure:** Templates should mirror the target file structure. For example, the template for a new project's main file could be located at `fastforge/templates/new_project/__init__.py.jinja2`.
+  * **`fastcraft/`**: This is the top-level package for the application's source code.
+  * **`fastcraft/main.py`**: The entry point for the CLI. It should use `typer` to define all top-level commands (e.g., `new`, `generate`).
+  * **`fastcraft/commands/`**: A directory to hold the implementation of each command. For example, `fastcraft/commands/new.py` would contain the `new` command's logic.
+  * **`fastcraft/templates/`**: This directory will store all the `jinja2` templates for generating files.
+      * **Structure:** Templates should mirror the target file structure. For example, the template for a new project's main file could be located at `fastcraft/templates/new_project/__init__.py.jinja2`.
 
 -----
 
@@ -31,7 +31,7 @@ The project's code should be organized logically to separate concerns.
   * **`typer` usage:** Use `typer.Typer()` to define the CLI application. Commands should be decorated with `@app.command()` or `@sub_app.command()`.
   * **Type Hinting:** All function signatures must include **type hints** to improve clarity and enable static analysis.
   * **Separation of Concerns:** The main `typer` command functions should be lean. They should primarily handle argument parsing and then delegate the heavy lifting (like file generation) to dedicated utility functions.
-  * **File Generation:** Use `jinja2.Environment` to load templates from the `fastforge/templates` directory. The rendering logic should be encapsulated in a function that takes template and context data as arguments and returns the rendered content.
+  * **File Generation:** Use `jinja2.Environment` to load templates from the `fastcraft/templates` directory. The rendering logic should be encapsulated in a function that takes template and context data as arguments and returns the rendered content.
 
 -----
 
@@ -45,7 +45,7 @@ The project's code should be organized logically to separate concerns.
 
 ### Example Code Snippets
 
-**`fastforge/commands/new.py`**
+**`fastcraft/commands/new.py`**
 
 ```python
 import typer
@@ -62,15 +62,15 @@ def create_new_project(project_name: str, path: Path):
     typer.echo(f"Successfully created new project '{project_name}'.")
 ```
 
-**`fastforge/main.py`**
+**`fastcraft/main.py`**
 
 ```python
 import typer
-from fastforge.commands import new
+from fastcraft.commands import new
 
 app = typer.Typer(
-    help="FastForge CLI for generating modular FastAPI projects.",
-    name="fastforge"
+    help="FastCraft CLI for generating modular FastAPI projects.",
+    name="fastcraft"
 )
 
 # Use a separate module for commands

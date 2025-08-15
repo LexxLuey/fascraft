@@ -1,4 +1,4 @@
-"""Utility tests and helper functions for FastForge testing."""
+"""Utility tests and helper functions for FastCraft testing."""
 
 import tempfile
 from pathlib import Path

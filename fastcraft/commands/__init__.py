@@ -1,4 +1,4 @@
-"""FastForge CLI commands package."""
+"""FastCraft CLI commands package."""
 
 from . import generate, list, new, remove, update
 
