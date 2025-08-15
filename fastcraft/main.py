@@ -49,7 +49,7 @@ def version():
     version_text.append("📦 ", style="bold yellow")
     version_text.append("FastCraft ", style="bold cyan")
     version_text.append("version ", style="white")
-    version_text.append("0.1.0", style="bold green")
+    version_text.append("0.2.0", style="bold green")
     console.print(version_text)
 
 

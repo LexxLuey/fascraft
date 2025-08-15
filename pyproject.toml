@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "fastcraft"
-version = "0.1.0"
-description = "A CLI for generating modular FastAPI projects"
+version = "0.2.0"
+description = "A CLI for generating modular FastAPI projects with environment and dependency management"
 authors = ["Lutor Iyornumbe <biggestluey@gmail.com>"]
 license = "MIT"
 readme = "README.md"

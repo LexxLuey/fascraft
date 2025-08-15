@@ -53,6 +53,11 @@ def create_new_project(
         ("main.py.jinja2", "main.py"),
         ("pyproject.toml.jinja2", "pyproject.toml"),
         ("README.md.jinja2", "README.md"),
+        ("env.jinja2", ".env"),
+        ("env.sample.jinja2", ".env.sample"),
+        ("requirements.txt.jinja2", "requirements.txt"),
+        ("requirements.dev.txt.jinja2", "requirements.dev.txt"),
+        ("requirements.prod.txt.jinja2", "requirements.prod.txt"),
         ("config/__init__.py.jinja2", "config/__init__.py"),
         ("config/settings.py.jinja2", "config/settings.py"),
         ("config/database.py.jinja2", "config/database.py"),
@@ -82,15 +87,33 @@ def create_new_project(
     next_steps_text = Text()
     next_steps_text.append("⚡ ", style="bold yellow")
     next_steps_text.append("Run ", style="white")
-    next_steps_text.append(f"'cd {project_name} && poetry install' ", style="bold cyan")
+    next_steps_text.append(f"'cd {project_name} && pip install -r requirements.txt' ", style="bold cyan")
     next_steps_text.append("to get started.", style="white")
     console.print(next_steps_text)
+
+    dev_deps_text = Text()
+    dev_deps_text.append("🛠️ ", style="bold blue")
+    dev_deps_text.append("For development, run: ", style="white")
+    dev_deps_text.append("'pip install -r requirements.dev.txt'", style="bold cyan")
+    console.print(dev_deps_text)
 
     config_info_text = Text()
     config_info_text.append("🔧 ", style="bold blue")
     config_info_text.append("Project includes configuration: ", style="white")
     config_info_text.append("config/settings.py, config/database.py", style="bold cyan")
     console.print(config_info_text)
+
+    env_info_text = Text()
+    env_info_text.append("🌍 ", style="bold green")
+    env_info_text.append("Environment files created: ", style="white")
+    env_info_text.append(".env, .env.sample", style="bold cyan")
+    console.print(env_info_text)
+
+    deps_info_text = Text()
+    deps_info_text.append("📦 ", style="bold yellow")
+    deps_info_text.append("Dependency files created: ", style="white")
+    deps_info_text.append("requirements.txt, requirements.dev.txt, requirements.prod.txt", style="bold cyan")
+    console.print(deps_info_text)
 
     generate_info_text = Text()
     generate_info_text.append("✨ ", style="bold yellow")

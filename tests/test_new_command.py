@@ -153,7 +153,7 @@ class TestNewCommand:
         # Verify development tools
         assert "## Development" in content
         assert "**FastAPI**" in content
-        assert "**Poetry**" in content
+        assert "**Pip**" in content
 
     def test_generated_init_py_content(
         self, temp_dir: Path, sample_project_name: str
@@ -193,6 +193,42 @@ class TestNewCommand:
         readme_content = (project_path / "README.md").read_text()
         assert sample_project_name in readme_content
 
+    def test_new_files_are_created(
+        self, temp_dir: Path, sample_project_name: str
+    ) -> None:
+        """Test that all new files (env, requirements) are created."""
+        create_new_project(sample_project_name, temp_dir)
+
+        project_path = temp_dir / sample_project_name
+
+        # Check that new files exist
+        assert (project_path / ".env").exists()
+        assert (project_path / ".env.sample").exists()
+        assert (project_path / "requirements.txt").exists()
+        assert (project_path / "requirements.dev.txt").exists()
+        assert (project_path / "requirements.prod.txt").exists()
+
+        # Check that .env contains project name
+        env_content = (project_path / ".env").read_text()
+        assert sample_project_name in env_content
+        assert "MONGODB_DATABASE=" + sample_project_name in env_content
+        assert "POSTGRES_DATABASE=" + sample_project_name in env_content
+        assert "MYSQL_DATABASE=" + sample_project_name in env_content
+        assert "SQLITE_DATABASE=./" + sample_project_name + ".db" in env_content
+
+        # Check that requirements files contain expected content
+        requirements_content = (project_path / "requirements.txt").read_text()
+        assert "fastapi>=" in requirements_content
+        assert "uvicorn[standard]>=" in requirements_content
+
+        requirements_dev_content = (project_path / "requirements.dev.txt").read_text()
+        assert "-r requirements.txt" in requirements_dev_content
+        assert "pytest>=" in requirements_dev_content
+
+        requirements_prod_content = (project_path / "requirements.prod.txt").read_text()
+        assert "fastapi>=" in requirements_prod_content
+        assert "gunicorn>=" in requirements_prod_content
+
     def test_create_new_project_creates_parent_directories(
         self, temp_dir: Path
     ) -> None:
@@ -225,7 +261,8 @@ class TestNewCommand:
             assert "Successfully created new project" in result.stdout
             assert sample_project_name in result.stdout
             assert "Run 'cd" in result.stdout
-            assert "poetry install" in result.stdout
+            assert "pip install -r requirements.txt" in result.stdout
+            assert "pip install -r requirements.dev.txt" in result.stdout
 
     def test_project_name_validation(self, temp_dir: Path) -> None:
         """Test project creation with various project names."""

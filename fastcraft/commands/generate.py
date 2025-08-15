@@ -142,7 +142,7 @@ def generate_module(
     next_steps_text.append("🚀 ", style="bold yellow")
     next_steps_text.append("Next steps:", style="white")
     next_steps_text.append(f"\n  1. Import the new {module_name} module in main.py", style="bold cyan")
-    next_steps_text.append(f"\n  2. Run 'poetry install' to install dependencies", style="bold cyan")
+    next_steps_text.append(f"\n  2. Run 'pip install -r requirements.txt' to install dependencies", style="bold cyan")
     next_steps_text.append(f"\n  3. Test your new module with 'pytest {module_name}/tests/'", style="bold cyan")
     console.print(next_steps_text)
 

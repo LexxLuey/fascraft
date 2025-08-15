@@ -61,8 +61,8 @@ pip install fastcraft
 Before publishing, I recommend:
 
 1. **Update Version Number**
-   - Current version is 0.1.0 in `pyproject.toml`
-   - Consider bumping to 0.2.0 since Phase 2 is complete
+   - Current version is 0.2.0 in `pyproject.toml`
+   - Version updated to reflect Phase 2.5 completion with environment management
 
 2. **Verify Dependencies**
    - All dependencies are properly specified in `pyproject.toml`
@@ -89,5 +89,13 @@ The project follows modern Python packaging standards and uses Poetry, which is 
 2. **TestPyPI**: Upload to TestPyPI first for testing
 3. **PyPI Release**: Publish to the main PyPI repository
 4. **Documentation**: Update README with PyPI installation instructions
+
+## **🎯 Development Roadmap**
+
+After this release, the next major phase will be **Phase 3: Advanced Project Detection**, focusing on:
+- Migration tools for existing projects
+- Project structure analysis and recommendations
+- Configuration file support (`.fastcraft.toml`)
+- Environment-specific optimizations
 
 FastCraft is in excellent shape for its first PyPI release and represents a mature, well-tested CLI tool that the Python community would benefit from!
