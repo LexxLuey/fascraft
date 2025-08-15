@@ -13,9 +13,14 @@ A FastAPI project generated with FastCraft.
 
 1. Install dependencies:
    ```bash
-   poetry install
-   # or
+   # For production
    pip install -r requirements.txt
+   
+   # For development
+   pip install -r requirements.dev.txt
+   
+   # For production deployment
+   pip install -r requirements.prod.txt
    ```
 
 2. Run the application:
@@ -38,7 +43,7 @@ A FastAPI project generated with FastCraft.
 
 This project uses:
 - **FastAPI** - Modern, fast web framework
-- **Poetry** - Dependency management
+- **Pip** - Dependency management
 - **Black** - Code formatting
 - **Ruff** - Fast Python linter
 

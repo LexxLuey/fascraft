@@ -12,6 +12,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migration support for existing projects
 - Project structure analysis and recommendations
 - Configuration file support (`.fastcraft.toml`)
+- Project setup wizards for existing codebases
+
+## [0.2.0] - 2024-12-19
+
+### Added
+- **Environment & Dependency Management** 🌍📦
+  - Complete `.env` templates with database configurations (MongoDB, PostgreSQL, MySQL, SQLite)
+  - `.env.sample` files for team collaboration
+  - `requirements.txt` for core production dependencies
+  - `requirements.dev.txt` for development tools and testing frameworks
+  - `requirements.prod.txt` for production-optimized dependencies with Gunicorn
+  - Redis and Celery configuration templates
+  - JWT authentication and CORS configuration
+  - Comprehensive logging and monitoring setup
+
+- **Enhanced Project Generation**
+  - Production-ready project structure with environment management
+  - Database service configurations with default ports
+  - Service integration templates (Redis, Celery, JWT, CORS)
+  - Updated installation instructions using pip instead of poetry
+  - Enhanced README templates with new file documentation
+
+### Changed
+- **Dependency Management**
+  - Switched from poetry to pip-based dependency management
+  - Updated all templates to use pip install commands
+  - Enhanced README.md templates with new installation options
+  - Updated success messages to reflect new file creation
+
+- **Template System**
+  - Added new environment and requirements file templates
+  - Updated project generation to include all new files
+  - Enhanced success messages and user guidance
+
+### Technical Improvements
+- **Code Quality**
+  - Added comprehensive tests for new file generation
+  - Updated test expectations to match new functionality
+  - Enhanced template validation and testing
+  - Improved user feedback and success messages
 
 ## [0.2.0] - 2024-12-19
 

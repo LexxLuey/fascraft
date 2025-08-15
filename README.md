@@ -1,5 +1,9 @@
 # FastCraft 🚀
 
+[![PyPI version](https://badge.fury.io/py/fastcraft.svg)](https://badge.fury.io/py/fastcraft)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **FastCraft** is a powerful CLI tool designed to streamline the creation and management of modular FastAPI projects. It eliminates boilerplate code and enforces best practices from the start, allowing developers to focus on business logic.
 
 ## **✨ Features**
@@ -11,6 +15,10 @@
 - **🛡️ Safety First** - Confirmations, backups, and rollback capabilities
 - **🎨 Rich CLI** - Beautiful tables, color coding, and progress indicators
 - **🧪 Production Ready** - Comprehensive testing and error handling
+- **🌍 Environment Management** - Complete .env templates with database configurations
+- **📦 Dependency Management** - Production-ready requirements files for development and production
+- **🗄️ Database Support** - MongoDB, PostgreSQL, MySQL, and SQLite configurations
+- **⚡ Service Integration** - Redis, Celery, JWT, and CORS configurations
 
 ## **🚀 Quick Start**
 
@@ -113,7 +121,40 @@ my-awesome-api/
 │   └── tests/
 ├── main.py                           # FastAPI application entry point
 ├── pyproject.toml                    # Project dependencies and metadata
+├── .env                              # Environment configuration (database, Redis, etc.)
+├── .env.sample                       # Sample environment file
+├── requirements.txt                  # Core dependencies
+├── requirements.dev.txt              # Development dependencies
+├── requirements.prod.txt             # Production dependencies
 └── README.md                         # Project documentation
+```
+
+## **🌍 Environment & Dependency Management**
+
+FastCraft generates comprehensive environment and dependency files for production-ready applications:
+
+### **Environment Configuration**
+- **`.env`** - Complete environment configuration with database connections
+- **`.env.sample`** - Template for team collaboration
+- **Database Support** - MongoDB, PostgreSQL, MySQL, SQLite configurations
+- **Service Integration** - Redis, Celery, JWT, CORS settings
+- **Production Ready** - Optimized for different deployment environments
+
+### **Dependency Management**
+- **`requirements.txt`** - Core dependencies for production
+- **`requirements.dev.txt`** - Development tools and testing frameworks
+- **`requirements.prod.txt`** - Production-optimized dependencies with Gunicorn
+
+### **Quick Setup**
+```bash
+# Install production dependencies
+pip install -r requirements.txt
+
+# Install development dependencies
+pip install -r requirements.dev.txt
+
+# Install production dependencies
+pip install -r requirements.prod.txt
 ```
 
 ## **🔧 Module Management**
@@ -182,7 +223,7 @@ poetry run pytest tests/test_generate_command.py
 
 ## **📖 Documentation**
 
-- **[ROADMAP.md](ROADMAP.md)** - Development phases and current status
+- **[ROADMAP.md](ROADMAP.md)** - Development phases and current status (Phase 3: Advanced Project Detection next)
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to FastCraft
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
 

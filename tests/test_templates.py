@@ -37,6 +37,11 @@ class TestTemplateRendering:
             "main.py.jinja2",
             "pyproject.toml.jinja2",
             "README.md.jinja2",
+            "env.jinja2",
+            "env.sample.jinja2",
+            "requirements.txt.jinja2",
+            "requirements.dev.txt.jinja2",
+            "requirements.prod.txt.jinja2",
         ]
 
         for template_name in required_templates:

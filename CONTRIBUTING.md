@@ -4,11 +4,12 @@ Thank you for your interest in contributing to FastCraft! This guide will help y
 
 ## **🎯 Project Status**
 
-**Current Phase: Phase 2 - Module Management** ✅ **COMPLETED**
+**Current Phase: Phase 2.5 - Environment & Dependency Management** ✅ **COMPLETED**
 
-FastCraft has successfully completed its first two phases:
+FastCraft has successfully completed multiple phases:
 - **Phase 1**: Module Templates and project generation ✅
 - **Phase 2**: Complete module management system ✅
+- **Phase 2.5**: Environment and dependency management ✅
 
 **Next Phase: Phase 3 - Advanced Project Detection** 🔄
 
@@ -49,7 +50,7 @@ fastcraft/
 │   ├── remove.py             # Remove modules
 │   └── update.py             # Update module templates
 ├── templates/                # Jinja2 templates
-│   ├── new_project/          # New project templates
+│   ├── new_project/          # New project templates (including env & requirements)
 │   └── module/               # Domain module templates
 ├── main.py                   # CLI application entry point
 └── tests/                    # Comprehensive test suite
@@ -83,6 +84,8 @@ poetry run pytest tests/test_cli_integration.py  # CLI integration
 - **Integration Tests**: Test CLI commands end-to-end
 - **Template Tests**: Validate Jinja2 template rendering
 - **Mock Tests**: Test external dependencies safely
+- **File Generation Tests**: Verify new environment and requirements files
+- **Template Validation Tests**: Ensure all templates exist and are loadable
 
 ### **Writing Tests**
 
