@@ -1,4 +1,4 @@
-# Ruff configuration for FastForge project
+# Ruff configuration for FastCraft project
 # Ruff is a fast Python linter written in Rust
 
 # Target Python version
@@ -32,7 +32,7 @@ ignore = [
 
 # Import sorting configuration
 [tool.ruff.isort]
-known-first-party = ["fastforge"]
+known-first-party = ["fastcraft"]
 known-third-party = ["typer", "jinja2", "pytest", "pathlib"]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 

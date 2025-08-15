@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to FastForge will be documented in this file.
+All notable changes to FastCraft will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -11,15 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Phase 3: Advanced Project Detection
 - Migration support for existing projects
 - Project structure analysis and recommendations
-- Configuration file support (`.fastforge.toml`)
+- Configuration file support (`.fastcraft.toml`)
 
 ## [0.2.0] - 2024-12-19
 
 ### Added
 - **Complete Module Management System** 🎉
-  - `fastforge list` command to display all domain modules with health status
-  - `fastforge remove <module_name>` command to safely remove modules
-  - `fastforge update <module_name>` command to update module templates
+  - `fastcraft list` command to display all domain modules with health status
+  - `fastcraft remove <module_name>` command to safely remove modules
+  - `fastcraft update <module_name>` command to update module templates
   - Rich CLI output with tables, color coding, and progress indicators
   - Automatic backup creation before updates with rollback capability
   - Safety confirmations for destructive operations
@@ -88,11 +88,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2024-12-18
 
 ### Added
-- **Initial FastForge CLI** 🚀
-  - `fastforge new <project_name>` command to create new FastAPI projects
-  - `fastforge generate <module_name>` command to add domain modules
-  - `fastforge hello [name]` command for testing
-  - `fastforge version` command to show version
+- **Initial FastCraft CLI** 🚀
+  - `fastcraft new <project_name>` command to create new FastAPI projects
+  - `fastcraft generate <module_name>` command to add domain modules
+  - `fastcraft hello [name]` command for testing
+  - `fastcraft version` command to show version
 
 - **Project Generation**
   - Complete FastAPI project structure
@@ -132,7 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation**: Complete documentation overhaul
 
 ### **Phase 1 (v0.1.0)**
-- **Initial Development**: FastForge CLI foundation
+- **Initial Development**: FastCraft CLI foundation
 - **Project Generation**: New project creation system
 - **Template System**: Jinja2 template infrastructure
 - **Testing**: Initial test suite implementation
@@ -142,8 +142,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## **Version History**
 
 - **v0.2.0** - Complete Module Management System ✅
-- **v0.1.0** - Initial FastForge CLI ✅
+- **v0.1.0** - Initial FastCraft CLI ✅
 
 ---
 
-**FastForge - Making FastAPI development faster and easier!** 🚀
+**FastCraft - Making FastAPI development faster and easier!** 🚀

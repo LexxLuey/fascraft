@@ -1,12 +1,12 @@
-# Contributing to FastForge 🤝
+# Contributing to FastCraft 🤝
 
-Thank you for your interest in contributing to FastForge! This guide will help you get started with development and contributing to the project.
+Thank you for your interest in contributing to FastCraft! This guide will help you get started with development and contributing to the project.
 
 ## **🎯 Project Status**
 
 **Current Phase: Phase 2 - Module Management** ✅ **COMPLETED**
 
-FastForge has successfully completed its first two phases:
+FastCraft has successfully completed its first two phases:
 - **Phase 1**: Module Templates and project generation ✅
 - **Phase 2**: Complete module management system ✅
 
@@ -24,23 +24,23 @@ FastForge has successfully completed its first two phases:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/fastforge.git
-cd fastforge
+git clone https://github.com/yourusername/fastcraft.git
+cd fastcraft
 
 # Install dependencies
 poetry install
 
 # Verify installation
-poetry run fastforge --help
+poetry run fastcraft --help
 poetry run pytest  # Run all tests
 ```
 
 ## **🏗️ Project Architecture**
 
-FastForge follows a clean, modular architecture:
+FastCraft follows a clean, modular architecture:
 
 ```
-fastforge/
+fastcraft/
 ├── commands/                 # CLI command implementations
 │   ├── __init__.py
 │   ├── new.py               # Create new projects
@@ -57,7 +57,7 @@ fastforge/
 
 ## **🧪 Testing**
 
-FastForge maintains **100% test coverage** with a comprehensive test suite.
+FastCraft maintains **100% test coverage** with a comprehensive test suite.
 
 ### **Running Tests**
 
@@ -66,7 +66,7 @@ FastForge maintains **100% test coverage** with a comprehensive test suite.
 poetry run pytest
 
 # Run with coverage
-poetry run pytest --cov=fastforge --cov-report=html
+poetry run pytest --cov=fastcraft --cov-report=html
 
 # Run specific test categories
 poetry run pytest tests/test_new_command.py      # Project generation
@@ -135,7 +135,7 @@ git checkout -b feature/your-feature-name
 poetry run pytest
 
 # Run with coverage
-poetry run pytest --cov=fastforge
+poetry run pytest --cov=fastcraft
 
 # Fix any failing tests
 ```
@@ -163,7 +163,7 @@ git push origin feature/your-feature-name
 ### **Phase 3: Advanced Project Detection** (Next)
 - [ ] Migration support for old modular projects
 - [ ] Project structure analysis and recommendations
-- [ ] Configuration file support (`.fastforge.toml`)
+- [ ] Configuration file support (`.fastcraft.toml`)
 - [ ] Environment detection (dev vs production)
 
 ### **Areas Needing Contributors**
@@ -177,7 +177,7 @@ git push origin feature/your-feature-name
 ### **Bug Reports**
 When reporting bugs, please include:
 
-1. **FastForge version**: `fastforge version`
+1. **FastCraft version**: `fastcraft version`
 2. **Python version**: `python --version`
 3. **Operating system**: Windows/macOS/Linux
 4. **Steps to reproduce**: Clear, step-by-step instructions
@@ -194,9 +194,9 @@ For new features, please describe:
 
 ## **📚 Learning Resources**
 
-### **FastForge Internals**
-- **Commands**: Study `fastforge/commands/` for command patterns
-- **Templates**: Review `fastforge/templates/` for template structure
+### **FastCraft Internals**
+- **Commands**: Study `fastcraft/commands/` for command patterns
+- **Templates**: Review `fastcraft/templates/` for template structure
 - **Tests**: Examine `tests/` for testing patterns and examples
 
 ### **Technologies Used**
@@ -231,4 +231,4 @@ Contributors are recognized in:
 
 ---
 
-**Thank you for contributing to FastForge! Together, we're making FastAPI development faster and easier for everyone.** 🚀
+**Thank you for contributing to FastCraft! Together, we're making FastAPI development faster and easier for everyone.** 🚀

@@ -80,7 +80,7 @@ def remove_module(
     # Confirm removal
     if not force:
         if not confirm_removal(module_name):
-            console.print("❌ Module removal cancelled.", style="bold yellow")
+            console.print("⏹️ Module removal cancelled.", style="bold yellow")
             return
 
     # Remove the module
@@ -89,7 +89,7 @@ def remove_module(
         update_main_py_after_removal(path_obj, module_name)
         
         success_text = Text()
-        success_text.append("✅ ", style="bold green")
+        success_text.append("🗑️ ", style="bold green")
         success_text.append("Successfully removed module ", style="bold white")
         success_text.append(f"'{module_name}' ", style="bold cyan")
         success_text.append("from ", style="white")

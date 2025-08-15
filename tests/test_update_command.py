@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from fastforge.commands.update import (
+from fastcraft.commands.update import (
     analyze_module,
     confirm_update,
     create_backup,
@@ -133,7 +133,7 @@ class TestCreateBackup:
 class TestUpdateModuleFiles:
     """Test the update_module_files function."""
 
-    @patch("fastforge.commands.update.Environment")
+    @patch("fastcraft.commands.update.Environment")
     def test_update_module_files(self, mock_env, tmp_path):
         """Test that module files are updated."""
         # Mock Jinja2 environment
@@ -194,13 +194,13 @@ class TestRestoreFromBackup:
 class TestUpdateModule:
     """Test the update_module function."""
 
-    @patch("fastforge.commands.update.is_fastapi_project")
-    @patch("fastforge.commands.update.is_domain_module")
-    @patch("fastforge.commands.update.analyze_module")
-    @patch("fastforge.commands.update.display_update_preview")
-    @patch("fastforge.commands.update.confirm_update")
-    @patch("fastforge.commands.update.create_backup")
-    @patch("fastforge.commands.update.update_module_files")
+    @patch("fastcraft.commands.update.is_fastapi_project")
+    @patch("fastcraft.commands.update.is_domain_module")
+    @patch("fastcraft.commands.update.analyze_module")
+    @patch("fastcraft.commands.update.display_update_preview")
+    @patch("fastcraft.commands.update.confirm_update")
+    @patch("fastcraft.commands.update.create_backup")
+    @patch("fastcraft.commands.update.update_module_files")
     def test_update_module_success(
         self, mock_update_files, mock_create_backup, mock_confirm, 
         mock_display, mock_analyze, mock_is_domain, mock_is_fastapi, tmp_path

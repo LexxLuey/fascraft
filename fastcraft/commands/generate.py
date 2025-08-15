@@ -1,4 +1,4 @@
-"""Command for generating new domain modules in existing FastForge projects."""
+"""Command for generating new domain modules in existing FastCraft projects."""
 
 from pathlib import Path
 from typing import Optional
@@ -34,7 +34,7 @@ def ensure_config_structure(project_path: Path) -> None:
     config_dir = project_path / "config"
     
     if not config_dir.exists():
-        console.print("📁 Creating config directory...", style="yellow")
+        console.print("📁 Creating config directory...", style="bold yellow")
         config_dir.mkdir(exist_ok=True)
         
         # Create basic config files if they don't exist
@@ -98,7 +98,7 @@ def generate_module(
 
     # Set up Jinja2 environment for module templates
     env = Environment(
-        loader=PackageLoader("fastforge", "templates/module"),
+        loader=PackageLoader("fastcraft", "templates/module"),
         autoescape=select_autoescape(),
     )
 
@@ -130,7 +130,7 @@ def generate_module(
     update_main_py(path_obj, module_name)
 
     success_text = Text()
-    success_text.append("✅ ", style="bold green")
+    success_text.append("🎯 ", style="bold green")
     success_text.append("Successfully generated domain module ", style="bold white")
     success_text.append(f"'{module_name}' ", style="bold cyan")
     success_text.append("in ", style="white")
@@ -141,9 +141,9 @@ def generate_module(
     next_steps_text = Text()
     next_steps_text.append("🚀 ", style="bold yellow")
     next_steps_text.append("Next steps:", style="white")
-    next_steps_text.append(f"\n  1. Import the new {module_name} module in main.py", style="cyan")
-    next_steps_text.append(f"\n  2. Run 'poetry install' to install dependencies", style="cyan")
-    next_steps_text.append(f"\n  3. Test your new module with 'pytest {module_name}/tests/'", style="cyan")
+    next_steps_text.append(f"\n  1. Import the new {module_name} module in main.py", style="bold cyan")
+    next_steps_text.append(f"\n  2. Run 'poetry install' to install dependencies", style="bold cyan")
+    next_steps_text.append(f"\n  3. Test your new module with 'pytest {module_name}/tests/'", style="bold cyan")
     console.print(next_steps_text)
 
 
@@ -205,4 +205,4 @@ def update_main_py(project_path: Path, module_name: str) -> None:
     
     # Write updated content
     main_py_path.write_text(content)
-    console.print(f"📝 Updated main.py to include {module_name} router", style="green")
+    console.print(f"📝 Updated main.py to include {module_name} router", style="bold green")
