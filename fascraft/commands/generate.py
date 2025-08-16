@@ -1,4 +1,4 @@
-"""Command for generating new domain modules in existing FastCraft projects."""
+"""Command for generating new domain modules in existing FasCraft projects."""
 
 from pathlib import Path
 from typing import Optional
@@ -98,7 +98,7 @@ def generate_module(
 
     # Set up Jinja2 environment for module templates
     env = Environment(
-        loader=PackageLoader("fastcraft", "templates/module"),
+        loader=PackageLoader("fascraft", "templates/module"),
         autoescape=select_autoescape(),
     )
 

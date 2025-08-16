@@ -246,7 +246,7 @@ def update_module_files(module_path: Path, module_name: str, project_name: str) 
     """Update the module files with latest templates."""
     # Set up Jinja2 environment for module templates
     env = Environment(
-        loader=PackageLoader("fastcraft", "templates/module"),
+        loader=PackageLoader("fascraft", "templates/module"),
         autoescape=select_autoescape(),
     )
 

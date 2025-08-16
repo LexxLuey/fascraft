@@ -1,20 +1,20 @@
-# FastCraft Development Roadmap 🚀
+# FasCraft Development Roadmap 🚀
 
-This document outlines the development phases for FastCraft, a CLI tool for generating modular FastAPI projects.
+This document outlines the development phases for FasCraft, a CLI tool for generating modular FastAPI projects.
 
 ## **Phase Overview**
 
 ### **Phase 1: Module Templates (Week 1)** ✅ **COMPLETED**
 - [x] Create domain module template structure
-- [x] Implement `fastcraft generate <module_name>`
+- [x] Implement `fascraft generate <module_name>`
 - [x] Basic project detection
 - [x] Domain-driven architecture implementation
 - [x] Config directory structure with settings, database, exceptions, and middleware
 
 ### **Phase 2: Module Management (Week 2)** ✅ **COMPLETED**
-- [x] List existing modules - `fastcraft list` command
-- [x] Remove modules - `fastcraft remove <module_name>` command
-- [x] Update modules - `fastcraft update <module_name>` command
+- [x] List existing modules - `fascraft list` command
+- [x] Remove modules - `fascraft remove <module_name>` command
+- [x] Update modules - `fascraft update <module_name>` command
 - [x] Module validation - Check for missing dependencies, broken imports
 - [x] Module health checks - Verify all files exist and are valid
 - [x] Rich CLI output with tables and color coding
@@ -33,7 +33,7 @@ This document outlines the development phases for FastCraft, a CLI tool for gene
 ### **Phase 3: Advanced Project Detection (Week 4)** 🔄 **NEXT**
 - [ ] Migration support - Convert old modular projects to domain-driven
 - [ ] Project analysis - Detect project structure and suggest improvements
-- [ ] Configuration file support - `.fastcraft.toml` for project-specific settings
+- [ ] Configuration file support - `.fascraft.toml` for project-specific settings
 - [ ] Environment detection - Development vs production configurations
 
 ### **Phase 4: Interactive Experience (Week 5)** 📋 **PLANNED**
@@ -60,29 +60,29 @@ The final phase is about building a community and ensuring the project's long-te
 
 * **Comprehensive Documentation:** Develop a full documentation site covering every command, template, and customization option.
 * **Community Templates:** Create a registry or a process for the community to contribute new templates.
-* **Release Management:** Set up a Continuous Integration/Continuous Deployment (CI/CD) pipeline for testing and publishing new versions of FastCraft.
+* **Release Management:** Set up a Continuous Integration/Continuous Deployment (CI/CD) pipeline for testing and publishing new versions of FasCraft.
 * **Refinement:** Based on user feedback, refine the CLI commands, improve error handling, and optimize the templates for even better performance and readability.
 
 ## **Current Status**
 
 **🎯 Phase 2.5: Environment & Dependency Management - COMPLETED!**
 
-FastCraft now provides a complete module management system with comprehensive environment and dependency management:
+FasCraft now provides a complete module management system with comprehensive environment and dependency management:
 
 ### **✅ Available Commands**
 ```bash
 # Project Management
-fastcraft new <project_name>          # Create new FastAPI project
-fastcraft generate <module_name>      # Add new domain module
+fascraft new <project_name>          # Create new FastAPI project
+fascraft generate <module_name>      # Add new domain module
 
 # Module Management  
-fastcraft list                        # List all modules with health status
-fastcraft remove <module_name>        # Remove module with safety confirmations
-fastcraft update <module_name>        # Update module templates with backups
+fascraft list                        # List all modules with health status
+fascraft remove <module_name>        # Remove module with safety confirmations
+fascraft update <module_name>        # Update module templates with backups
 
 # Utility Commands
-fastcraft hello [name]                # Say hello
-fastcraft version                     # Show version
+fascraft hello [name]                # Say hello
+fascraft version                     # Show version
 ```
 
 ### **✨ Key Features Achieved**
@@ -105,7 +105,7 @@ fastcraft version                     # Show version
 The next phase will focus on:
 - Migration tools for existing projects
 - Project structure analysis and recommendations
-- Configuration file support (`.fastcraft.toml`)
+- Configuration file support (`.fascraft.toml`)
 - Environment-specific optimizations
 - Project setup wizards for existing codebases
 

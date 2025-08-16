@@ -1,11 +1,11 @@
-# FastCraft Development Makefile
+# FasCraft Development Makefile
 # Simple commands for common development tasks
 
 .PHONY: help install test lint format clean
 
 # Default target
 help:
-	@echo "FastCraft Development Commands:"
+	@echo "FasCraft Development Commands:"
 	@echo ""
 	@echo "Installation:"
 	@echo "  install     Install dependencies with Poetry"
@@ -25,7 +25,7 @@ help:
 	@echo ""
 	@echo "Development:"
 	@echo "  clean       Clean up generated files and caches"
-	@echo "  cli         Run FastCraft CLI"
+	@echo "  cli         Run FasCraft CLI"
 	@echo "  cli-help    Show CLI help"
 
 # Installation
@@ -43,7 +43,7 @@ test-verbose:
 	poetry run pytest tests/ -vv
 
 test-cov:
-	poetry run pytest tests/ --cov=fastcraft --cov-report=html
+	poetry run pytest tests/ --cov=fascraft --cov-report=html
 
 # Code Quality
 lint:
@@ -74,7 +74,7 @@ clean:
 	find . -type f -name "*.pyc" -delete
 
 cli:
-	poetry run fastcraft --help
+	poetry run fascraft --help
 
 cli-help:
-	poetry run fastcraft new --help
+	poetry run fascraft new --help

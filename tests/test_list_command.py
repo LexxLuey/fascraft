@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from fastcraft.commands.list import (
+from fascraft.commands.list import (
     analyze_module,
     find_domain_modules,
     is_domain_module,
@@ -127,8 +127,8 @@ class TestFindDomainModules:
 class TestListModules:
     """Test the list_modules function."""
 
-    @patch("fastcraft.commands.list.is_fastapi_project")
-    @patch("fastcraft.commands.list.find_domain_modules")
+    @patch("fascraft.commands.list.is_fastapi_project")
+    @patch("fascraft.commands.list.find_domain_modules")
     def test_list_modules_success(self, mock_find_modules, mock_is_fastapi, tmp_path):
         """Test successful module listing."""
         mock_is_fastapi.return_value = True

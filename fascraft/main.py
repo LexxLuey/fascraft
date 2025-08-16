@@ -1,21 +1,21 @@
-"""Main FastCraft CLI application."""
+"""Main FasCraft CLI application."""
 
 import typer
 from rich.console import Console
 from rich.text import Text
 
-from fastcraft.commands import generate as generate_cmd
-from fastcraft.commands import list as list_cmd
-from fastcraft.commands import new
-from fastcraft.commands import remove as remove_cmd
-from fastcraft.commands import update as update_cmd
+from fascraft.commands import generate as generate_cmd
+from fascraft.commands import list as list_cmd
+from fascraft.commands import new
+from fascraft.commands import remove as remove_cmd
+from fascraft.commands import update as update_cmd
 
 # Initialize rich console
 console = Console()
 
 app = typer.Typer(
-    help="FastCraft CLI for generating modular FastAPI projects.",
-    name="fastcraft"
+    help="FasCraft CLI for generating modular FastAPI projects.",
+    name="fascraft"
 )
 
 # Register commands
@@ -34,22 +34,22 @@ def hello(name: str = typer.Argument("World", help="Name to greet")):
     welcome_text.append(f"Hello {name}!", style="bold white")
     console.print(welcome_text)
     
-    fastcraft_text = Text()
-    fastcraft_text.append("🚀 ", style="bold green")
-    fastcraft_text.append("Welcome to ", style="white")
-    fastcraft_text.append("FastCraft", style="bold cyan")
-    fastcraft_text.append("!", style="white")
-    console.print(fastcraft_text)
+    fascraft_text = Text()
+    fascraft_text.append("🚀 ", style="bold green")
+    fascraft_text.append("Welcome to ", style="white")
+    fascraft_text.append("FasCraft", style="bold cyan")
+    fascraft_text.append("!", style="white")
+    console.print(fascraft_text)
 
 
 @app.command()
 def version():
-    """Show FastCraft version."""
+    """Show FasCraft version."""
     version_text = Text()
     version_text.append("📦 ", style="bold yellow")
-    version_text.append("FastCraft ", style="bold cyan")
+    version_text.append("FasCraft ", style="bold cyan")
     version_text.append("version ", style="white")
-    version_text.append("0.2.0", style="bold green")
+    version_text.append("0.3.1", style="bold green")
     console.print(version_text)
 
 

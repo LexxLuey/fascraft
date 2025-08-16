@@ -1,12 +1,12 @@
-# Contributing to FastCraft 🤝
+# Contributing to FasCraft 🤝
 
-Thank you for your interest in contributing to FastCraft! This guide will help you get started with development and contributing to the project.
+Thank you for your interest in contributing to FasCraft! This guide will help you get started with development and contributing to the project.
 
 ## **🎯 Project Status**
 
 **Current Phase: Phase 2.5 - Environment & Dependency Management** ✅ **COMPLETED**
 
-FastCraft has successfully completed multiple phases:
+FasCraft has successfully completed multiple phases:
 - **Phase 1**: Module Templates and project generation ✅
 - **Phase 2**: Complete module management system ✅
 - **Phase 2.5**: Environment and dependency management ✅
@@ -25,23 +25,23 @@ FastCraft has successfully completed multiple phases:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/fastcraft.git
-cd fastcraft
+git clone https://github.com/yourusername/fascraft.git
+cd fascraft
 
 # Install dependencies
 poetry install
 
 # Verify installation
-poetry run fastcraft --help
+poetry run fascraft --help
 poetry run pytest  # Run all tests
 ```
 
 ## **🏗️ Project Architecture**
 
-FastCraft follows a clean, modular architecture:
+FasCraft follows a clean, modular architecture:
 
 ```
-fastcraft/
+fascraft/
 ├── commands/                 # CLI command implementations
 │   ├── __init__.py
 │   ├── new.py               # Create new projects
@@ -58,7 +58,7 @@ fastcraft/
 
 ## **🧪 Testing**
 
-FastCraft maintains **100% test coverage** with a comprehensive test suite.
+FasCraft maintains **100% test coverage** with a comprehensive test suite.
 
 ### **Running Tests**
 
@@ -67,7 +67,7 @@ FastCraft maintains **100% test coverage** with a comprehensive test suite.
 poetry run pytest
 
 # Run with coverage
-poetry run pytest --cov=fastcraft --cov-report=html
+poetry run pytest --cov=fascraft --cov-report=html
 
 # Run specific test categories
 poetry run pytest tests/test_new_command.py      # Project generation
@@ -138,7 +138,7 @@ git checkout -b feature/your-feature-name
 poetry run pytest
 
 # Run with coverage
-poetry run pytest --cov=fastcraft
+poetry run pytest --cov=fascraft
 
 # Fix any failing tests
 ```
@@ -166,7 +166,7 @@ git push origin feature/your-feature-name
 ### **Phase 3: Advanced Project Detection** (Next)
 - [ ] Migration support for old modular projects
 - [ ] Project structure analysis and recommendations
-- [ ] Configuration file support (`.fastcraft.toml`)
+- [ ] Configuration file support (`.fascraft.toml`)
 - [ ] Environment detection (dev vs production)
 
 ### **Areas Needing Contributors**
@@ -180,7 +180,7 @@ git push origin feature/your-feature-name
 ### **Bug Reports**
 When reporting bugs, please include:
 
-1. **FastCraft version**: `fastcraft version`
+1. **FasCraft version**: `fascraft version`
 2. **Python version**: `python --version`
 3. **Operating system**: Windows/macOS/Linux
 4. **Steps to reproduce**: Clear, step-by-step instructions
@@ -197,9 +197,9 @@ For new features, please describe:
 
 ## **📚 Learning Resources**
 
-### **FastCraft Internals**
-- **Commands**: Study `fastcraft/commands/` for command patterns
-- **Templates**: Review `fastcraft/templates/` for template structure
+### **FasCraft Internals**
+- **Commands**: Study `fascraft/commands/` for command patterns
+- **Templates**: Review `fascraft/templates/` for template structure
 - **Tests**: Examine `tests/` for testing patterns and examples
 
 ### **Technologies Used**
@@ -234,4 +234,4 @@ Contributors are recognized in:
 
 ---
 
-**Thank you for contributing to FastCraft! Together, we're making FastAPI development faster and easier for everyone.** 🚀
+**Thank you for contributing to FasCraft! Together, we're making FastAPI development faster and easier for everyone.** 🚀

@@ -3,8 +3,8 @@
 from fastapi import HTTPException, status
 
 
-class FastcraftException(HTTPException):
-    """Base exception for FastCraft applications."""
+class FasCraftException(HTTPException):
+    """Base exception for FasCraft applications."""
     
     def __init__(
         self,
@@ -15,7 +15,7 @@ class FastcraftException(HTTPException):
         super().__init__(status_code=status_code, detail=detail, headers=headers)
 
 
-class ValidationError(FastcraftException):
+class ValidationError(FasCraftException):
     """Raised when data validation fails."""
     
     def __init__(self, detail: str):
@@ -25,7 +25,7 @@ class ValidationError(FastcraftException):
         )
 
 
-class NotFoundError(FastcraftException):
+class NotFoundError(FasCraftException):
     """Raised when a resource is not found."""
     
     def __init__(self, detail: str):
@@ -35,7 +35,7 @@ class NotFoundError(FastcraftException):
         )
 
 
-class ConflictError(FastcraftException):
+class ConflictError(FasCraftException):
     """Raised when there's a conflict with existing data."""
     
     def __init__(self, detail: str):
