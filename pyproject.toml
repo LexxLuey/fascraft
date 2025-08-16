@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "fastcraft"
-version = "0.3.0"
+name = "fascraft"
+version = "0.3.1"
 description = "A CLI for generating modular FastAPI projects with environment and dependency management"
 authors = ["Lutor Iyornumbe <biggestluey@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "fastcraft"}]
+packages = [{include = "fascraft"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -27,7 +27,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-fastcraft = "fastcraft.main:app"
+fascraft = "fascraft.main:app"
 
 # Black configuration
 [tool.black]
@@ -74,7 +74,7 @@ ignore = [
 "tests/*" = ["E501", "B011"]  # line length and assert in tests
 
 [tool.ruff.isort]
-known-first-party = ["fastcraft"]
+known-first-party = ["fascraft"]
 known-third-party = ["typer", "jinja2", "pytest", "pathlib"]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 

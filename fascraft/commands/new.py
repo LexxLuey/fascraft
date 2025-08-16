@@ -43,7 +43,7 @@ def create_new_project(
 
     # Set up Jinja2 environment
     env = Environment(
-        loader=PackageLoader("fastcraft", "templates/new_project"),
+        loader=PackageLoader("fascraft", "templates/new_project"),
         autoescape=select_autoescape(),
     )
 
@@ -129,7 +129,7 @@ def create_new_project(
     generate_info_text = Text()
     generate_info_text.append("✨ ", style="bold yellow")
     generate_info_text.append("Use ", style="white")
-    generate_info_text.append("'fastcraft generate <module_name>' ", style="bold cyan")
+    generate_info_text.append("'fascraft generate <module_name>' ", style="bold cyan")
     generate_info_text.append("to add new domain modules.", style="white")
     console.print(generate_info_text)
 

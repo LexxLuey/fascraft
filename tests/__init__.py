@@ -1,1 +1,1 @@
-"""Test package for FastCraft."""
+"""Test package for FasCraft."""

@@ -161,7 +161,7 @@ cython_debug/
 # VS Code
 .vscode/
 
-# FastCraft specific
+# FasCraft specific
 # Generated projects (for testing)
 test-*/
 my-*/

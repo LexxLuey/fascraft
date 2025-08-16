@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from fastcraft.commands.new import create_new_project
+from fascraft.commands.new import create_new_project
 
 
 class TestTemplateRendering:
@@ -14,7 +14,7 @@ class TestTemplateRendering:
     def test_jinja2_environment_setup(self) -> None:
         """Test that Jinja2 environment is properly configured."""
         env = Environment(
-            loader=PackageLoader("fastcraft", "templates/new_project"),
+            loader=PackageLoader("fascraft", "templates/new_project"),
             autoescape=select_autoescape(),
         )
 
@@ -28,7 +28,7 @@ class TestTemplateRendering:
     ) -> None:
         """Test that all required templates exist and can be loaded."""
         env = Environment(
-            loader=PackageLoader("fastcraft", "templates/new_project"),
+            loader=PackageLoader("fascraft", "templates/new_project"),
             autoescape=select_autoescape(),
         )
 

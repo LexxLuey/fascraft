@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to FastCraft will be documented in this file.
+All notable changes to FasCraft will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Phase 3: Advanced Project Detection
 - Migration support for existing projects
 - Project structure analysis and recommendations
-- Configuration file support (`.fastcraft.toml`)
+- Configuration file support (`.fascraft.toml`)
 - Project setup wizards for existing codebases
 
 ## [0.2.0] - 2024-12-19
@@ -57,9 +57,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Complete Module Management System** 🎉
-  - `fastcraft list` command to display all domain modules with health status
-  - `fastcraft remove <module_name>` command to safely remove modules
-  - `fastcraft update <module_name>` command to update module templates
+  - `fascraft list` command to display all domain modules with health status
+  - `fascraft remove <module_name>` command to safely remove modules
+  - `fascraft update <module_name>` command to update module templates
   - Rich CLI output with tables, color coding, and progress indicators
   - Automatic backup creation before updates with rollback capability
   - Safety confirmations for destructive operations
@@ -128,11 +128,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2024-12-18
 
 ### Added
-- **Initial FastCraft CLI** 🚀
-  - `fastcraft new <project_name>` command to create new FastAPI projects
-  - `fastcraft generate <module_name>` command to add domain modules
-  - `fastcraft hello [name]` command for testing
-  - `fastcraft version` command to show version
+- **Initial FasCraft CLI** 🚀
+  - `fascraft new <project_name>` command to create new FastAPI projects
+  - `fascraft generate <module_name>` command to add domain modules
+  - `fascraft hello [name]` command for testing
+  - `fascraft version` command to show version
 
 - **Project Generation**
   - Complete FastAPI project structure
@@ -172,7 +172,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation**: Complete documentation overhaul
 
 ### **Phase 1 (v0.1.0)**
-- **Initial Development**: FastCraft CLI foundation
+- **Initial Development**: FasCraft CLI foundation
 - **Project Generation**: New project creation system
 - **Template System**: Jinja2 template infrastructure
 - **Testing**: Initial test suite implementation
@@ -182,8 +182,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## **Version History**
 
 - **v0.2.0** - Complete Module Management System ✅
-- **v0.1.0** - Initial FastCraft CLI ✅
+- **v0.1.0** - Initial FasCraft CLI ✅
 
 ---
 
-**FastCraft - Making FastAPI development faster and easier!** 🚀
+**FasCraft - Making FastAPI development faster and easier!** 🚀

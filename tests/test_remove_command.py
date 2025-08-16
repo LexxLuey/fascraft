@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from fastcraft.commands.remove import (
+from fascraft.commands.remove import (
     analyze_module,
     confirm_removal,
     display_removal_preview,
@@ -158,13 +158,13 @@ app.include_router(customers_routers.router, prefix="/api/v1/customers", tags=["
 class TestRemoveModule:
     """Test the remove_module function."""
 
-    @patch("fastcraft.commands.remove.is_fastapi_project")
-    @patch("fastcraft.commands.remove.is_domain_module")
-    @patch("fastcraft.commands.remove.analyze_module")
-    @patch("fastcraft.commands.remove.display_removal_preview")
-    @patch("fastcraft.commands.remove.confirm_removal")
-    @patch("fastcraft.commands.remove.remove_module_files")
-    @patch("fastcraft.commands.remove.update_main_py_after_removal")
+    @patch("fascraft.commands.remove.is_fastapi_project")
+    @patch("fascraft.commands.remove.is_domain_module")
+    @patch("fascraft.commands.remove.analyze_module")
+    @patch("fascraft.commands.remove.display_removal_preview")
+    @patch("fascraft.commands.remove.confirm_removal")
+    @patch("fascraft.commands.remove.remove_module_files")
+    @patch("fascraft.commands.remove.update_main_py_after_removal")
     def test_remove_module_success(
         self, mock_update_main, mock_remove_files, mock_confirm, 
         mock_display, mock_analyze, mock_is_domain, mock_is_fastapi, tmp_path

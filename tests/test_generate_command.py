@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from fastcraft.commands.generate import (
+from fascraft.commands.generate import (
     ensure_config_structure,
     generate_module,
     is_fastapi_project,
@@ -79,7 +79,7 @@ class TestEnsureConfigStructure:
 class TestGenerateModule:
     """Test the generate_module function."""
 
-    @patch("fastcraft.commands.generate.Environment")
+    @patch("fascraft.commands.generate.Environment")
     def test_generate_module_success(self, mock_env, tmp_path):
         """Test successful domain module generation."""
         # Create a valid FastAPI project
@@ -210,7 +210,7 @@ app = FastAPI()
 """)
         
         # Mock the Jinja2 environment to avoid template loading issues
-        with patch("fastcraft.commands.generate.Environment") as mock_env:
+        with patch("fascraft.commands.generate.Environment") as mock_env:
             mock_template = MagicMock()
             mock_template.render.return_value = "rendered content"
             mock_env_instance = MagicMock()

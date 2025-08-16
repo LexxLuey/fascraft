@@ -6,8 +6,8 @@ from unittest.mock import Mock, patch
 import pytest
 from typer.testing import CliRunner
 
-from fastcraft.commands.new import create_new_project
-from fastcraft.main import app
+from fascraft.commands.new import create_new_project
+from fascraft.main import app
 
 
 class TestNewCommand:
@@ -116,7 +116,7 @@ class TestNewCommand:
         # Verify project metadata
         assert f'name = "{sample_project_name}"' in content
         assert 'version = "0.1.0"' in content
-        assert 'description = "A FastAPI project generated with FastCraft"' in content
+        assert 'description = "A FastAPI project generated with FasCraft"' in content
 
         # Verify dependencies
         assert 'fastapi = "^0.104.0"' in content
@@ -138,7 +138,7 @@ class TestNewCommand:
 
         # Verify project title
         assert f"# {sample_project_name}" in content
-        assert "A FastAPI project generated with FastCraft" in content
+        assert "A FastAPI project generated with FasCraft" in content
 
         # Verify setup instructions
         assert "## Getting Started" in content
@@ -168,7 +168,7 @@ class TestNewCommand:
         # Verify package metadata
         expected_docstring = (
             f'"""\n{sample_project_name} - A FastAPI project '
-            f'generated with FastCraft.\n"""'
+            f'generated with FasCraft.\n"""'
         )
         assert expected_docstring in content
         assert '__version__ = "0.1.0"' in content

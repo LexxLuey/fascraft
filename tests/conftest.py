@@ -1,4 +1,4 @@
-"""Pytest configuration and fixtures for FastCraft tests."""
+"""Pytest configuration and fixtures for FasCraft tests."""
 
 import tempfile
 from pathlib import Path

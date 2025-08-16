@@ -1,4 +1,4 @@
-"""FastCraft CLI commands package."""
+"""FasCraft CLI commands package."""
 
 from . import generate, list, new, remove, update
 
