@@ -4,14 +4,14 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import Column, DateTime, Integer, String, Text
+from sqlalchemy import Column, DateTime, Integer, String, Text, Boolean
 from sqlalchemy.sql import func
 
-from ..database import Base
+from config.database import Base
 
 
 # SQLAlchemy Model
-class {{ module_name_title }}Model(Base):
+class {{ module_name_title }}(Base):
     """SQLAlchemy model for {{ module_name }}s."""
     
     __tablename__ = "{{ module_name }}s"
@@ -19,6 +19,7 @@ class {{ module_name_title }}Model(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False, index=True)
     description = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -31,6 +32,7 @@ class {{ module_name_title }}Base(BaseModel):
     
     name: str
     description: Optional[str] = None
+    is_active: bool = True
 
 
 class {{ module_name_title }}Create({{ module_name_title }}Base):
@@ -42,6 +44,8 @@ class {{ module_name_title }}Update({{ module_name_title }}Base):
     """Model for updating an existing {{ module_name }}."""
     
     name: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
 
 
 class {{ module_name_title }}({{ module_name_title }}Base):

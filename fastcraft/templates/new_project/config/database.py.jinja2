@@ -35,3 +35,8 @@ def get_db():
 def create_tables():
     """Create all database tables."""
     Base.metadata.create_all(bind=engine)
+
+
+def get_database_url() -> str:
+    """Get the current database URL."""
+    return settings.database_url

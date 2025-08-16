@@ -27,10 +27,193 @@ A FastAPI project generated with FastCraft.
    ```bash
    poetry run uvicorn main:app --reload
    # or
-   python main.py
+   uvicorn main:app --reload
    ```
 
 3. Open your browser and navigate to [http://localhost:8000](http://localhost:8000)
+
+## Database Setup and Migrations
+
+### Initial Database Setup
+
+1. **Configure your database connection** in `.env`:
+   ```bash
+   # For SQLite (default)
+   DATABASE_URL=sqlite:///./{{ project_name }}.db
+   
+   # For PostgreSQL
+   DATABASE_URL=postgresql://user:password@localhost:5432/{{ project_name }}
+   
+   # For MySQL
+   DATABASE_URL=mysql://user:password@localhost:3306/{{ project_name }}
+   ```
+
+2. **Initialize Alembic** (database migration tool):
+   ```bash
+   alembic init alembic
+   ```
+
+3. **Configure Alembic** to work with your project:
+   
+   Edit `alembic.ini`:
+   ```ini
+   # Find and update this line:
+   sqlalchemy.url = sqlite:///./{{ project_name }}.db
+   ```
+   
+   **Replace the entire content of `alembic/env.py`** with this working example:
+   ```python
+   from logging.config import fileConfig
+
+   from sqlalchemy import engine_from_config
+   from sqlalchemy import pool
+
+   from alembic import context
+   import sys
+   from pathlib import Path
+
+   # Add the project root to Python path
+   sys.path.append(str(Path(__file__).parent.parent))
+
+   # this is the Alembic Config object, which provides
+   # access to the values within the .ini file in use.
+   config = context.config
+
+   # Interpret the config file for Python logging.
+   # This line sets up loggers basically.
+   if config.config_file_name is not None:
+       fileConfig(config.config_file_name)
+
+   # Update the config section to use your database URL:
+   from config.settings import get_settings
+   settings = get_settings()
+   config.set_main_option("sqlalchemy.url", settings.database_url)
+
+   # add your model's MetaData object here
+   # for 'autogenerate' support
+   from config.database import Base
+   
+   # Import your models here (uncomment as you create them):
+   # from users.models import UserModel
+   # from products.models import ProductModel
+   # from orders.models import OrderModel
+
+   # Update the target_metadata line:
+   target_metadata = Base.metadata
+
+   # other values from the config, defined by the needs of env.py,
+   # can be acquired:
+   # my_important_option = config.get_main_option("my_important_option")
+   # ... etc.
+
+   def run_migrations_offline() -> None:
+       """Run migrations in 'offline' mode."""
+       url = config.get_main_option("sqlalchemy.url")
+       context.configure(
+           url=url,
+           target_metadata=target_metadata,
+           literal_binds=True,
+           dialect_opts={"paramstyle": "named"},
+       )
+
+       with context.begin_transaction():
+           context.run_migrations()
+
+   def run_migrations_online() -> None:
+       """Run migrations in 'online' mode."""
+       connectable = engine_from_config(
+           config.get_section(config.config_ini_section, {}),
+           prefix="sqlalchemy.",
+           poolclass=pool.NullPool,
+       )
+
+       with connectable.connect() as connection:
+           context.configure(
+               connection=connection, target_metadata=target_metadata
+           )
+
+           with context.begin_transaction():
+               context.run_migrations()
+
+   if context.is_offline_mode():
+       run_migrations_offline()
+   else:
+       run_migrations_online()
+   ```
+
+4. **Register your models** in `alembic/env.py`:
+   - Uncomment the model imports as you create them
+   - For example, after running `fastcraft generate user`, uncomment `# from users.models import UserModel`
+
+### Running Migrations
+
+1. **Generate a migration** after making model changes:
+   ```bash
+   alembic revision --autogenerate -m "Description of changes"
+   ```
+
+2. **Apply migrations** to update your database:
+   ```bash
+   alembic upgrade head
+   ```
+
+3. **Check migration status**:
+   ```bash
+   alembic current
+   alembic history
+   ```
+
+4. **Rollback migrations** if needed:
+   ```bash
+   alembic downgrade -1  # Go back one migration
+   alembic downgrade base  # Go back to beginning
+   ```
+
+### Complete Workflow Example
+
+Here's the complete workflow after creating a new module:
+
+```bash
+# 1. Generate a new module
+fastcraft generate user
+
+# 2. Import the model in alembic/env.py (uncomment the line):
+# from users.models import UserModel
+
+# 3. Generate migration
+alembic revision --autogenerate -m "Add user model"
+
+# 4. Apply migration
+alembic upgrade head
+
+# 5. Verify the table was created
+alembic current
+```
+
+### Common Migration Commands
+
+```bash
+# Initialize alembic (run once)
+alembic init alembic
+
+# Generate migration from model changes
+alembic revision --autogenerate -m "Add user table"
+
+# Apply all pending migrations
+alembic upgrade head
+
+# Check current migration
+alembic current
+
+# View migration history
+alembic history
+
+# Rollback one migration
+alembic downgrade -1
+
+# Rollback to specific migration
+alembic downgrade <revision_id>
+```
 
 ## API Endpoints
 
@@ -43,7 +226,9 @@ A FastAPI project generated with FastCraft.
 
 This project uses:
 - **FastAPI** - Modern, fast web framework
-- **Pip** - Dependency management
+- **SQLAlchemy** - SQL toolkit and ORM
+- **Alembic** - Database migration tool
+- **Poetry** - Dependency management
 - **Black** - Code formatting
 - **Ruff** - Fast Python linter
 
