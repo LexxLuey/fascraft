@@ -146,6 +146,18 @@ def generate_module(
     next_steps_text.append(f"\n  3. Test your new module with 'pytest {module_name}/tests/'", style="bold cyan")
     console.print(next_steps_text)
 
+    module_info_text = Text()
+    module_info_text.append("✨ ", style="bold green")
+    module_info_text.append("Module includes: ", style="white")
+    module_info_text.append("Working routers, services, models, and schemas", style="bold cyan")
+    console.print(module_info_text)
+
+    db_info_text = Text()
+    db_info_text.append("🗄️ ", style="bold blue")
+    db_info_text.append("Database ready: ", style="white")
+    db_info_text.append("Models are properly configured for SQLAlchemy and Alembic", style="bold cyan")
+    console.print(db_info_text)
+
 
 def update_main_py(project_path: Path, module_name: str) -> None:
     """Update main.py to include the new module router."""

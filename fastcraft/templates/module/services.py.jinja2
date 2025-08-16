@@ -4,7 +4,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from .models import {{ module_name_title }}
+from .models import {{ module_name_title }} as {{ module_name_title }}Model
 from .schemas import {{ module_name_title }}Create, {{ module_name_title }}Update
 from config.exceptions import NotFoundError, ConflictError
 
@@ -13,10 +13,10 @@ class {{ module_name_title }}Service:
     """Service class for {{ module_name }} operations."""
     
     @staticmethod
-    def get_{{ module_name }}(db: Session, {{ module_name }}_id: int) -> {{ module_name_title }}:
+    def get_{{ module_name }}(db: Session, {{ module_name }}_id: int) -> {{ module_name_title }}Model:
         """Get a {{ module_name }} by ID."""
-        {{ module_name }} = db.query({{ module_name_title }}).filter(
-            and_({{ module_name_title }}.id == {{ module_name }}_id, {{ module_name_title }}.is_active == True)
+        {{ module_name }} = db.query({{ module_name_title }}Model).filter(
+            and_({{ module_name_title }}Model.id == {{ module_name }}_id, {{ module_name_title }}Model.is_active == True)
         ).first()
         
         if not {{ module_name }}:
@@ -30,30 +30,30 @@ class {{ module_name_title }}Service:
         skip: int = 0, 
         limit: int = 100,
         active_only: bool = True
-    ) -> List[{{ module_name_title }}]:
+    ) -> List[{{ module_name_title }}Model]:
         """Get all {{ module_name }}s with pagination."""
-        query = db.query({{ module_name_title }})
+        query = db.query({{ module_name_title }}Model)
         
         if active_only:
-            query = query.filter({{ module_name_title }}.is_active == True)
+            query = query.filter({{ module_name_title }}Model.is_active == True)
         
         return query.offset(skip).limit(limit).all()
     
     @staticmethod
-    def create_{{ module_name }}(db: Session, {{ module_name }}_data: {{ module_name_title }}Create) -> {{ module_name_title }}:
+    def create_{{ module_name }}(db: Session, {{ module_name }}_data: {{ module_name_title }}Create) -> {{ module_name_title }}Model:
         """Create a new {{ module_name }}."""
         # Check if {{ module_name }} with same name already exists
-        existing_{{ module_name }} = db.query({{ module_name_title }}).filter(
+        existing_{{ module_name }} = db.query({{ module_name_title }}Model).filter(
             and_(
-                {{ module_name_title }}.name == {{ module_name }}_data.name,
-                {{ module_name_title }}.is_active == True
+                {{ module_name_title }}Model.name == {{ module_name }}_data.name,
+                {{ module_name_title }}Model.is_active == True
             )
         ).first()
         
         if existing_{{ module_name }}:
             raise ConflictError(f"{{ module_name_title }} with name '{ {{ module_name }}_data.name }' already exists")
         
-        db_{{ module_name }} = {{ module_name_title }}(**{{ module_name }}_data.model_dump())
+        db_{{ module_name }} = {{ module_name_title }}Model(**{{ module_name }}_data.model_dump())
         db.add(db_{{ module_name }})
         db.commit()
         db.refresh(db_{{ module_name }})
@@ -64,17 +64,17 @@ class {{ module_name_title }}Service:
         db: Session, 
         {{ module_name }}_id: int, 
         {{ module_name }}_data: {{ module_name_title }}Update
-    ) -> {{ module_name_title }}:
+    ) -> {{ module_name_title }}Model:
         """Update an existing {{ module_name }}."""
         db_{{ module_name }} = {{ module_name_title }}Service.get_{{ module_name }}(db, {{ module_name }}_id)
         
         # Check for name conflicts if name is being updated
         if {{ module_name }}_data.name and {{ module_name }}_data.name != db_{{ module_name }}.name:
-            existing_{{ module_name }} = db.query({{ module_name_title }}).filter(
+            existing_{{ module_name }} = db.query({{ module_name_title }}Model).filter(
                 and_(
-                    {{ module_name_title }}.name == {{ module_name }}_data.name,
-                    {{ module_name_title }}.id != {{ module_name }}_id,
-                    {{ module_name_title }}.is_active == True
+                    {{ module_name_title }}Model.name == {{ module_name }}_data.name,
+                    {{ module_name_title }}Model.id != {{ module_name }}_id,
+                    {{ module_name_title }}Model.is_active == True
                 )
             ).first()
             

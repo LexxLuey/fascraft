@@ -115,9 +115,25 @@ def create_new_project(
     deps_info_text.append("requirements.txt, requirements.dev.txt, requirements.prod.txt", style="bold cyan")
     console.print(deps_info_text)
 
+    db_setup_text = Text()
+    db_setup_text.append("🗄️ ", style="bold green")
+    db_setup_text.append("Database setup: ", style="white")
+    db_setup_text.append("Run 'alembic init alembic' to initialize migrations", style="bold cyan")
+    console.print(db_setup_text)
+
+    db_config_text = Text()
+    db_config_text.append("⚙️ ", style="bold blue")
+    db_config_text.append("Configure alembic/env.py to import your models and use your database URL", style="white")
+    console.print(db_config_text)
+
     generate_info_text = Text()
     generate_info_text.append("✨ ", style="bold yellow")
     generate_info_text.append("Use ", style="white")
     generate_info_text.append("'fastcraft generate <module_name>' ", style="bold cyan")
     generate_info_text.append("to add new domain modules.", style="white")
     console.print(generate_info_text)
+
+    readme_text = Text()
+    readme_text.append("📖 ", style="bold yellow")
+    readme_text.append("See README.md for detailed database setup and migration instructions", style="white")
+    console.print(readme_text)

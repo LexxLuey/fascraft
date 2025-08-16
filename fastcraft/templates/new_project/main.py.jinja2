@@ -39,6 +39,11 @@ async def health_check():
     return {"status": "healthy", "version": settings.app_version}
 
 
+# Database setup note:
+# After creating models, run 'alembic init alembic' to initialize migrations
+# Then configure alembic/env.py to import your models and use your database URL
+# See README.md for detailed setup instructions
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -123,7 +123,7 @@ class TestNewCommand:
         assert 'uvicorn = {extras = ["standard"], version = "^0.24.0"}' in content
 
         # Verify development dependencies
-        assert 'pytest = "^7.4.0"' in content
+        assert 'pytest = "^7.4.3"' in content
         assert 'black = "^24.0.0"' in content
         assert 'ruff = "^0.2.0"' in content
 
@@ -153,7 +153,8 @@ class TestNewCommand:
         # Verify development tools
         assert "## Development" in content
         assert "**FastAPI**" in content
-        assert "**Pip**" in content
+        assert "**SQLAlchemy**" in content
+        assert "**Alembic**" in content
 
     def test_generated_init_py_content(
         self, temp_dir: Path, sample_project_name: str
@@ -210,11 +211,15 @@ class TestNewCommand:
 
         # Check that .env contains project name
         env_content = (project_path / ".env").read_text()
-        assert sample_project_name in env_content
-        assert "MONGODB_DATABASE=" + sample_project_name in env_content
-        assert "POSTGRES_DATABASE=" + sample_project_name in env_content
-        assert "MYSQL_DATABASE=" + sample_project_name in env_content
-        assert "SQLITE_DATABASE=./" + sample_project_name + ".db" in env_content
+        assert "FastAPI Application Configuration" in env_content
+        
+        # Check that .env.sample contains project name
+        env_sample_content = (project_path / ".env.sample").read_text()
+        assert sample_project_name in env_sample_content
+        assert "MONGODB_DATABASE=" + sample_project_name in env_sample_content
+        assert "POSTGRES_DATABASE=" + sample_project_name in env_sample_content
+        assert "MYSQL_DATABASE=" + sample_project_name in env_sample_content
+        assert "SQLITE_DATABASE=./" + sample_project_name + ".db" in env_sample_content
 
         # Check that requirements files contain expected content
         requirements_content = (project_path / "requirements.txt").read_text()

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from config.database import get_db
 from .schemas import {{ module_name_title }}, {{ module_name_title }}Create, {{ module_name_title }}Update, {{ module_name_title }}List
 from .services import {{ module_name_title }}Service
+from .models import {{ module_name_title }} as {{ module_name_title }}Model
 
 router = APIRouter(prefix="/{{ module_name }}s", tags=["{{ module_name }}s"])
 
@@ -23,7 +24,8 @@ async def get_{{ module_name }}s(
         db, skip=skip, limit=limit, active_only=active_only
     )
     
-    total = db.query({{ module_name_title }}Service.get_{{ module_name }}s(db, 0, 1000, active_only)).count()
+    # Count total records for pagination
+    total = db.query({{ module_name_title }}Model).count()
     
     return {{ module_name_title }}List(
         items={{ module_name }}s,
