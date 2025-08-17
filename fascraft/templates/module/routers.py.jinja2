@@ -9,7 +9,7 @@ from .schemas import {{ module_name_title }}, {{ module_name_title }}Create, {{ 
 from .services import {{ module_name_title }}Service
 from .models import {{ module_name_title }} as {{ module_name_title }}Model
 
-router = APIRouter(prefix="/{{ module_name }}s", tags=["{{ module_name }}s"])
+router = APIRouter(tags=["{{ module_name }}s"])
 
 
 @router.get("/", response_model={{ module_name_title }}List)

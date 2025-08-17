@@ -19,13 +19,11 @@ app = FastAPI(
 # Setup middleware
 setup_middleware(app)
 
-# Import routers (will be added as modules are generated)
-# from customers import routers as customer_routers
-# from products import routers as product_routers
+# Import base router
+from routers import base_router
 
-# Include routers (uncomment as modules are generated)
-# app.include_router(customer_routers.router, prefix="/api/v1/customers", tags=["customers"])
-# app.include_router(product_routers.router, prefix="/api/v1/products", tags=["products"])
+# Include base router (all module routers are included here)
+app.include_router(base_router)
 
 @app.get("/")
 async def root():
@@ -33,10 +31,7 @@ async def root():
     return {"message": f"Hello from {settings.app_name}!"}
 
 
-@app.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy", "version": settings.app_version}
+# Health check is now handled by base router at /api/v1/health
 
 
 # Database setup note:

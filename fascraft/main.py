@@ -9,6 +9,9 @@ from fascraft.commands import list as list_cmd
 from fascraft.commands import new
 from fascraft.commands import remove as remove_cmd
 from fascraft.commands import update as update_cmd
+from fascraft.commands import analyze
+from fascraft.commands import migrate
+from fascraft.commands import config
 
 # Initialize rich console
 console = Console()
@@ -24,6 +27,9 @@ app.command(name="generate")(generate_cmd.generate_module)
 app.command(name="list")(list_cmd.list_modules)
 app.command(name="remove")(remove_cmd.remove_module)
 app.command(name="update")(update_cmd.update_module)
+app.command(name="analyze")(analyze.analyze_project)
+app.command(name="migrate")(migrate.migrate_project)
+app.command(name="config")(config.manage_config)
 
 
 @app.command()

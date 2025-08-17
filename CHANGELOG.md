@@ -1,189 +1,195 @@
 # Changelog
 
-All notable changes to FasCraft will be documented in this file.
+All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.1] - 2025-08-17
 
-### Planned
-- Phase 3: Advanced Project Detection
-- Migration support for existing projects
-- Project structure analysis and recommendations
-- Configuration file support (`.fascraft.toml`)
-- Project setup wizards for existing codebases
+### 🚀 **Phase 3: Advanced Project Detection & Management - COMPLETED**
 
-## [0.2.0] - 2024-12-19
+#### **Added**
+- **Project Analysis Command** (`fascraft analyze`)
+  - Intelligent project structure analysis and assessment
+  - Configuration directory analysis (settings, database, exceptions, middleware)
+  - Main.py analysis (router includes, FastAPI imports)
+  - Domain module detection and health assessment
+  - Missing component identification
+  - Intelligent recommendations for project improvements
+  - Beautiful Rich-based output with tables and formatting
 
-### Added
-- **Environment & Dependency Management** 🌍📦
-  - Complete `.env` templates with database configurations (MongoDB, PostgreSQL, MySQL, SQLite)
-  - `.env.sample` files for team collaboration
-  - `requirements.txt` for core production dependencies
-  - `requirements.dev.txt` for development tools and testing frameworks
-  - `requirements.prod.txt` for production-optimized dependencies with Gunicorn
-  - Redis and Celery configuration templates
-  - JWT authentication and CORS configuration
-  - Comprehensive logging and monitoring setup
+- **Project Migration Command** (`fascraft migrate`)
+  - Legacy project detection (flat structure vs. domain-driven)
+  - Automatic conversion from flat structure to domain-driven architecture
+  - Backup creation with timestamped directories
+  - Base router structure implementation
+  - Configuration file generation (`.fascraft.toml`)
+  - Migration summary and progress tracking
+  - Safety confirmations and rollback capabilities
+
+- **Configuration Management Command** (`fascraft config`)
+  - Project-specific configuration via `.fascraft.toml`
+  - Configuration creation, display, update, and validation
+  - TOML-based configuration format with multiple sections
+  - Environment-specific settings (development, production)
+  - Configuration validation and error handling
+  - Key-value updates with dot notation support
+
+- **Base Router Architecture**
+  - Centralized router management (`/routers/base.py`)
+  - Consistent API prefix (`/api/v1`) for all endpoints
+  - Automatic module integration in base router
+  - Health check endpoint (`/api/v1/health`)
+  - Clean module routers without hardcoded prefixes
+  - Automatic router updates when generating new modules
+
+- **Git Integration**
+  - Automatic `.gitignore` file generation for new projects
+  - Project-specific ignore patterns
+  - Ready for immediate version control setup
 
 - **Enhanced Project Generation**
-  - Production-ready project structure with environment management
-  - Database service configurations with default ports
-  - Service integration templates (Redis, Celery, JWT, CORS)
-  - Updated installation instructions using pip instead of poetry
-  - Enhanced README templates with new file documentation
+  - New project structure with base router integration
+  - Improved module templates and success messages
+  - Better project guidance and next steps
 
-### Changed
-- **Dependency Management**
-  - Switched from poetry to pip-based dependency management
-  - Updated all templates to use pip install commands
-  - Enhanced README.md templates with new installation options
-  - Updated success messages to reflect new file creation
+#### **Changed**
+- **Module Router Templates**: Removed hardcoded prefixes from individual module routers
+- **Main.py Integration**: Updated to use base router instead of individual module routers
+- **Success Messages**: Enhanced with new feature information and guidance
+- **Project Structure**: Added `routers/` directory with base router management
 
-- **Template System**
-  - Added new environment and requirements file templates
-  - Updated project generation to include all new files
-  - Enhanced success messages and user guidance
+#### **Technical Improvements**
+- **Dependency Management**: Added `tomli-w` for TOML file writing
+- **Error Handling**: Enhanced error messages and user guidance
+- **Testing**: Comprehensive test coverage for all new Phase 3 features
+- **Documentation**: Complete documentation updates for all new features
 
-### Technical Improvements
-- **Code Quality**
-  - Added comprehensive tests for new file generation
-  - Updated test expectations to match new functionality
-  - Enhanced template validation and testing
-  - Improved user feedback and success messages
+#### **Files Added**
+- `fascraft/commands/analyze.py` - Project analysis implementation
+- `fascraft/commands/migrate.py` - Project migration implementation
+- `fascraft/commands/config.py` - Configuration management implementation
+- `fascraft/templates/new_project/.gitignore.jinja2` - Git ignore template
+- `fascraft/templates/new_project/routers/__init__.py.jinja2` - Routers package init
+- `fascraft/templates/new_project/routers/base.py.jinja2` - Base router template
+- `fascraft/templates/new_project/fascraft.toml.jinja2` - Configuration template
 
-## [0.2.0] - 2024-12-19
+#### **Files Modified**
+- `fascraft/main.py` - Added new Phase 3 commands
+- `fascraft/commands/new.py` - Enhanced with base router and git integration
+- `fascraft/commands/generate.py` - Updated to use base router integration
+- `fascraft/templates/new_project/main.py.jinja2` - Updated for base router
+- `fascraft/templates/module/routers.py.jinja2` - Removed hardcoded prefixes
+- `pyproject.toml` - Added `tomli-w` dependency
 
-### Added
-- **Complete Module Management System** 🎉
-  - `fascraft list` command to display all domain modules with health status
-  - `fascraft remove <module_name>` command to safely remove modules
-  - `fascraft update <module_name>` command to update module templates
-  - Rich CLI output with tables, color coding, and progress indicators
-  - Automatic backup creation before updates with rollback capability
-  - Safety confirmations for destructive operations
-  - Automatic cleanup of main.py references after module removal
+#### **Tests Added**
+- `tests/test_analyze.py` - Comprehensive testing for analyze command
+- `tests/test_migrate.py` - Comprehensive testing for migrate command
+- `tests/test_config.py` - Comprehensive testing for config command
+- Updated existing tests to reflect new architecture
+
+## [0.3.0] - 2025-08-17
+
+### 🚀 **Phase 2.5: Environment & Dependency Management - COMPLETED**
+
+#### **Added**
+- **Environment Configuration**
+  - Complete `.env` file generation with database configurations
+  - `.env.sample` template for team collaboration
+  - Support for MongoDB, PostgreSQL, MySQL, and SQLite
+  - Redis, Celery, JWT, and CORS configurations
+  - Production-ready environment management
+
+- **Dual Dependency Management**
+  - Poetry configuration (`pyproject.toml`) with all dependencies
+  - pip requirements files (`requirements.txt`, `requirements.dev.txt`, `requirements.prod.txt`)
+  - Development tools and testing frameworks
+  - Production-optimized dependencies with Gunicorn
 
 - **Enhanced Project Structure**
-  - Domain-driven architecture with self-contained modules
-  - Each module contains: models.py, schemas.py, services.py, routers.py, tests/
-  - Config directory with settings.py, database.py, exceptions.py, middleware.py
-  - Pydantic settings with environment variable support
-  - Custom HTTP exception classes
+  - Comprehensive configuration directory
+  - Database and middleware configurations
+  - Exception handling and custom HTTP exceptions
   - CORS and timing middleware
 
-- **Smart Project Detection**
-  - Works with any existing FastAPI project
-  - Automatically creates missing config structure
-  - Validates project structure and module health
-  - Cross-platform compatibility (Windows, macOS, Linux)
+#### **Changed**
+- **Project Generation**: Enhanced with environment and dependency files
+- **Template System**: Improved templates with production-ready configurations
+- **Success Messages**: Better guidance for dependency installation
 
-- **Comprehensive Testing**
-  - 95 tests passing with 100% coverage for new features
-  - Unit tests for all command functions
-  - Integration tests for CLI commands
-  - Mock-based tests for external dependencies
-  - Error handling tests for edge cases
+## [0.2.0] - 2025-08-17
 
-### Changed
-- **Architecture Overhaul**
-  - Replaced top-level modular structure with domain-driven design
-  - Updated new project templates to use config/ directory
-  - Modified main.py to use settings and middleware from config
-  - Enhanced error handling with typer.Exit and rich console output
+### 🚀 **Phase 2: Complete Module Management - COMPLETED**
 
-- **Template System**
-  - New domain module templates with production-ready code
-  - SQLAlchemy models with proper relationships
-  - Pydantic schemas with validation
-  - Service layer with business logic
-  - FastAPI routers with CRUD endpoints
-  - Comprehensive test templates
+#### **Added**
+- **Module Listing** (`fascraft list`)
+  - Beautiful table display of all modules
+  - Health status indicators (✅ Healthy / ⚠️ Incomplete)
+  - File counts and test coverage information
+  - Module size and last modified dates
 
-### Fixed
-- **CLI Integration**
-  - Fixed argument parsing for hello command
-  - Improved error handling and user feedback
-  - Better validation of module names and project paths
-  - Consistent exit codes and error messages
+- **Module Removal** (`fascraft remove`)
+  - Safe module removal with confirmations
+  - Automatic cleanup of main.py references
+  - Removal preview with file counts and sizes
+  - Force removal option for automation
 
-- **Template Rendering**
-  - Fixed variable substitution in main.py templates
-  - Improved Jinja2 template organization
-  - Better handling of optional template variables
+- **Module Updates** (`fascraft update`)
+  - Template refresh with automatic backups
+  - Rollback capability if updates fail
+  - Preserves custom business logic
+  - Safe update process with confirmations
 
-### Technical Improvements
-- **Code Quality**
-  - Added type hints throughout the codebase
-  - Improved error handling with specific exception types
-  - Better separation of concerns between commands
-  - Consistent use of pathlib.Path for file operations
+#### **Changed**
+- **Module Generation**: Enhanced templates and better error handling
+- **Success Messages**: Improved guidance and next steps
+- **Error Handling**: Better error messages and user guidance
 
-- **Performance**
-  - Efficient file system operations
-  - Optimized template rendering
-  - Smart caching of project detection results
+## [0.1.0] - 2025-08-17
 
-## [0.1.0] - 2024-12-18
+### 🚀 **Phase 1: Module Templates & Project Generation - COMPLETED**
 
-### Added
-- **Initial FasCraft CLI** 🚀
-  - `fascraft new <project_name>` command to create new FastAPI projects
-  - `fascraft generate <module_name>` command to add domain modules
-  - `fascraft hello [name]` command for testing
-  - `fascraft version` command to show version
+#### **Added**
+- **Project Generation** (`fascraft new`)
+  - FastAPI project creation with domain-driven architecture
+  - Complete project structure with configuration
+  - Environment and dependency management
+  - Production-ready templates
 
-- **Project Generation**
-  - Complete FastAPI project structure
-  - Jinja2 template system for customizable generation
-  - pyproject.toml with all necessary dependencies
-  - README.md with project setup instructions
-  - Basic FastAPI application with health check endpoints
+- **Module Generation** (`fascraft generate`)
+  - Domain module creation (models, schemas, services, routers)
+  - Self-contained modules with clear boundaries
+  - Automatic integration with main.py
+  - Test directory generation
 
-- **Core Infrastructure**
-  - Typer-based CLI framework
-  - Rich console output for better user experience
-  - Comprehensive test suite with pytest
-  - Poetry for dependency management
-  - Cross-platform compatibility
+- **Core CLI Framework**
+  - Typer-based command structure
+  - Rich text formatting and beautiful output
+  - Comprehensive error handling
+  - User-friendly confirmations and guidance
 
-### Technical Features
-- **Template System**
-  - Modular template organization
-  - Variable substitution for project names
-  - Consistent file structure generation
-  - Production-ready code templates
-
-- **Testing**
-  - 100% test coverage for core functionality
-  - Unit tests for all commands
-  - Integration tests for CLI
-  - Template validation tests
+#### **Technical Foundation**
+- **Template System**: Jinja2-based template rendering
+- **Command Architecture**: Modular command structure
+- **Testing Framework**: Comprehensive test suite
+- **Documentation**: Complete user and developer guides
 
 ---
 
-## **Contributors**
+## **🚀 Version History Summary**
 
-### **Phase 2 (v0.2.0)**
-- **Core Development**: Complete module management system
-- **Architecture**: Domain-driven design implementation
-- **Testing**: Comprehensive test suite expansion
-- **Documentation**: Complete documentation overhaul
+- **v0.3.1** - Phase 3: Advanced Project Detection & Management ✅ **COMPLETED**
+- **v0.3.0** - Phase 2.5: Environment & Dependency Management ✅ **COMPLETED**
+- **v0.2.0** - Phase 2: Complete Module Management ✅ **COMPLETED**
+- **v0.1.0** - Phase 1: Module Templates & Project Generation ✅ **COMPLETED**
 
-### **Phase 1 (v0.1.0)**
-- **Initial Development**: FasCraft CLI foundation
-- **Project Generation**: New project creation system
-- **Template System**: Jinja2 template infrastructure
-- **Testing**: Initial test suite implementation
+## **🔮 Upcoming Versions**
 
----
-
-## **Version History**
-
-- **v0.2.0** - Complete Module Management System ✅
-- **v0.1.0** - Initial FasCraft CLI ✅
+- **v0.4.0** - Phase 4: Interactive Experience & Advanced Module Features
+- **v0.5.0** - Phase 5: Deployment & CI/CD Integration
+- **v0.6.0** - Phase 6: Monitoring & Observability
 
 ---
 
-**FasCraft - Making FastAPI development faster and easier!** 🚀
+**FasCraft** - Building better FastAPI projects, one command at a time! 🚀

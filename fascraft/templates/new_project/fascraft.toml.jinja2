@@ -1,0 +1,29 @@
+# FasCraft project configuration for {{ project_name }}
+
+[project]
+name = "{{ project_name }}"
+version = "0.1.0"
+description = "A FastAPI project generated with FasCraft"
+
+[router]
+base_prefix = "/api/v1"
+health_endpoint = true
+
+[database]
+default = "sqlite"
+supported = ["sqlite", "postgresql", "mysql", "mongodb"]
+
+[modules]
+auto_import = true
+prefix_strategy = "plural"
+test_coverage = true
+
+[development]
+auto_reload = true
+debug = true
+log_level = "DEBUG"
+
+[production]
+auto_reload = false
+debug = false
+log_level = "INFO"

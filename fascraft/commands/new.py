@@ -38,8 +38,9 @@ def create_new_project(
 
     project_path.mkdir(parents=True, exist_ok=True)
 
-    # Create config directory structure
+    # Create config and routers directory structure
     (project_path / "config").mkdir(exist_ok=True)
+    (project_path / "routers").mkdir(exist_ok=True)
 
     # Set up Jinja2 environment
     env = Environment(
@@ -63,6 +64,10 @@ def create_new_project(
         ("config/database.py.jinja2", "config/database.py"),
         ("config/exceptions.py.jinja2", "config/exceptions.py"),
         ("config/middleware.py.jinja2", "config/middleware.py"),
+        (".gitignore.jinja2", ".gitignore"),
+        ("routers/__init__.py.jinja2", "routers/__init__.py"),
+        ("routers/base.py.jinja2", "routers/base.py"),
+        ("fascraft.toml.jinja2", "fascraft.toml"),
     ]
 
     # Render all templates
@@ -102,6 +107,24 @@ def create_new_project(
     config_info_text.append("Project includes configuration: ", style="white")
     config_info_text.append("config/settings.py, config/database.py", style="bold cyan")
     console.print(config_info_text)
+    
+    router_info_text = Text()
+    router_info_text.append("🔄 ", style="bold blue")
+    router_info_text.append("Router structure: ", style="white")
+    router_info_text.append("Base router with centralized module management", style="bold cyan")
+    console.print(router_info_text)
+    
+    gitignore_info_text = Text()
+    gitignore_info_text.append("📝 ", style="bold blue")
+    gitignore_info_text.append("Git integration: ", style="white")
+    gitignore_info_text.append(".gitignore file included", style="bold cyan")
+    console.print(gitignore_info_text)
+    
+    config_file_info_text = Text()
+    config_file_info_text.append("⚙️ ", style="bold blue")
+    config_file_info_text.append("Configuration: ", style="white")
+    config_file_info_text.append("fascraft.toml file created", style="bold cyan")
+    console.print(config_file_info_text)
 
     env_info_text = Text()
     env_info_text.append("🌍 ", style="bold green")
