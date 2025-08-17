@@ -126,8 +126,8 @@ def generate_module(
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(content)
 
-    # Update main.py to include the new router
-    update_main_py(path_obj, module_name)
+    # Update base router to include the new module
+    update_base_router(path_obj, module_name)
 
     success_text = Text()
     success_text.append("🎯 ", style="bold green")
@@ -141,7 +141,7 @@ def generate_module(
     next_steps_text = Text()
     next_steps_text.append("🚀 ", style="bold yellow")
     next_steps_text.append("Next steps:", style="white")
-    next_steps_text.append(f"\n  1. Import the new {module_name} module in main.py", style="bold cyan")
+    next_steps_text.append(f"\n  1. The {module_name} module has been automatically added to the base router", style="bold cyan")
     next_steps_text.append(f"\n  2. Run 'pip install -r requirements.txt' to install dependencies", style="bold cyan")
     next_steps_text.append(f"\n  3. Test your new module with 'pytest {module_name}/tests/'", style="bold cyan")
     console.print(next_steps_text)
@@ -159,15 +159,15 @@ def generate_module(
     console.print(db_info_text)
 
 
-def update_main_py(project_path: Path, module_name: str) -> None:
-    """Update main.py to include the new module router."""
-    main_py_path = project_path / "main.py"
+def update_base_router(project_path: Path, module_name: str) -> None:
+    """Update base router to include the new module."""
+    base_router_path = project_path / "routers" / "base.py"
     
-    if not main_py_path.exists():
-        console.print("⚠️  Warning: main.py not found, skipping router integration", style="yellow")
+    if not base_router_path.exists():
+        console.print("⚠️  Warning: base router not found, skipping module integration", style="yellow")
         return
     
-    content = main_py_path.read_text()
+    content = base_router_path.read_text()
     
     # Add import if not present
     import_statement = f"from {module_name} import routers as {module_name}_routers"
@@ -186,14 +186,15 @@ def update_main_py(project_path: Path, module_name: str) -> None:
         if not import_added:
             # Add after existing imports
             for i, line in enumerate(lines):
-                if line.strip().startswith("from fastapi import"):
+                if line.strip().startswith("# from") and not import_added:
                     new_lines.insert(i + 1, import_statement)
+                    import_added = True
                     break
         
         content = '\n'.join(new_lines)
     
     # Add router include if not present
-    router_include = f"app.include_router({module_name}_routers.router, prefix=f\"/api/v1/{module_name}s\", tags=[\"{module_name}s\"])"
+    router_include = f"base_router.include_router({module_name}_routers.router, prefix=\"/{module_name}s\", tags=[\"{module_name}s\"])"
     if router_include not in content:
         # Find the comment line for router includes
         lines = content.split('\n')
@@ -202,19 +203,20 @@ def update_main_py(project_path: Path, module_name: str) -> None:
         
         for line in lines:
             new_lines.append(line)
-            if line.strip().startswith("# app.include_router") and not router_added:
+            if line.strip().startswith("# base_router.include_router") and not router_added:
                 new_lines.append(router_include)
                 router_added = True
         
         if not router_added:
             # Add after existing router includes
             for i, line in enumerate(lines):
-                if line.strip().startswith("app.include_router"):
+                if line.strip().startswith("# base_router.include_router") and not router_added:
                     new_lines.insert(i + 1, router_include)
+                    router_added = True
                     break
         
         content = '\n'.join(new_lines)
     
     # Write updated content
-    main_py_path.write_text(content)
-    console.print(f"📝 Updated main.py to include {module_name} router", style="bold green")
+    base_router_path.write_text(content)
+    console.print(f"📝 Updated base router to include {module_name} module", style="bold green")

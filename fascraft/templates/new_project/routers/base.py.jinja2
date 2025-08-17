@@ -1,0 +1,20 @@
+"""Base router for {{ project_name }} API endpoints."""
+
+from fastapi import APIRouter
+
+# Create base router with common prefix
+base_router = APIRouter(prefix="/api/v1")
+
+# Import all module routers here
+# from users import routers as user_routers
+# from products import routers as product_routers
+
+# Include all module routers
+# base_router.include_router(user_routers.router, prefix="/users", tags=["users"])
+# base_router.include_router(product_routers.router, prefix="/products", tags=["products"])
+
+# Health check endpoint
+@base_router.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    return {"status": "healthy", "version": "0.1.0"}

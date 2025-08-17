@@ -96,9 +96,14 @@ class TestNewCommand:
 
         # Verify endpoints
         assert '@app.get("/")' in content
-        assert '@app.get("/health")' in content
         assert "async def root():" in content
-        assert "async def health_check():" in content
+        
+        # Verify base router integration
+        assert "from routers import base_router" in content
+        assert "app.include_router(base_router)" in content
+        
+        # Verify health check is handled by base router
+        assert "# Health check is now handled by base router at /api/v1/health" in content
 
         # Verify uvicorn integration
         assert "import uvicorn" in content
@@ -148,7 +153,7 @@ class TestNewCommand:
         # Verify API endpoints documentation
         assert "## API Endpoints" in content
         assert "`GET /` - Root endpoint" in content
-        assert "`GET /health` - Health check" in content
+        assert "`GET /api/v1/health` - Health check" in content
 
         # Verify development tools
         assert "## Development" in content
@@ -233,6 +238,33 @@ class TestNewCommand:
         requirements_prod_content = (project_path / "requirements.prod.txt").read_text()
         assert "fastapi>=" in requirements_prod_content
         assert "gunicorn>=" in requirements_prod_content
+        
+        # Check that .gitignore file is created
+        assert (project_path / ".gitignore").exists()
+        gitignore_content = (project_path / ".gitignore").read_text()
+        assert "# Byte-compiled / optimized / DLL files" in gitignore_content
+        assert "__pycache__/" in gitignore_content
+        assert f"# {sample_project_name} specific" in gitignore_content
+        
+        # Check that routers directory structure is created
+        assert (project_path / "routers").exists()
+        assert (project_path / "routers" / "__init__.py").exists()
+        assert (project_path / "routers" / "base.py").exists()
+        
+        # Check that base router contains expected content
+        base_router_content = (project_path / "routers" / "base.py").read_text()
+        assert "from fastapi import APIRouter" in base_router_content
+        assert "base_router = APIRouter(prefix=\"/api/v1\")" in base_router_content
+        assert "@base_router.get(\"/health\")" in base_router_content
+        assert "async def health_check():" in base_router_content
+        
+        # Check that fascraft.toml configuration file is created
+        assert (project_path / "fascraft.toml").exists()
+        fascraft_config_content = (project_path / "fascraft.toml").read_text()
+        assert "# FasCraft project configuration for" in fascraft_config_content
+        assert "[project]" in fascraft_config_content
+        assert "[router]" in fascraft_config_content
+        assert "[database]" in fascraft_config_content
 
     def test_create_new_project_creates_parent_directories(
         self, temp_dir: Path
@@ -268,6 +300,11 @@ class TestNewCommand:
             assert "Run 'cd" in result.stdout
             assert "pip install -r requirements.txt" in result.stdout
             assert "pip install -r requirements.dev.txt" in result.stdout
+            
+            # Verify new Phase 3 features are mentioned
+            assert "Base router with centralized module management" in result.stdout
+            assert ".gitignore file included" in result.stdout
+            assert "fascraft.toml file created" in result.stdout
 
     def test_project_name_validation(self, temp_dir: Path) -> None:
         """Test project creation with various project names."""

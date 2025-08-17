@@ -108,9 +108,12 @@ class TestTemplateRendering:
         assert "from fastapi import FastAPI" in main_content
         assert "app = FastAPI(" in main_content
         assert '@app.get("/")' in main_content
-        assert '@app.get("/health")' in main_content
         assert "async def root():" in main_content
-        assert "async def health_check():" in main_content
+        
+        # Test base router integration
+        assert "from routers import base_router" in main_content
+        assert "app.include_router(base_router)" in main_content
+        assert "# Health check is now handled by base router at /api/v1/health" in main_content
 
         # Test pyproject.toml structure
         pyproject_content = (project_path / "pyproject.toml").read_text()
@@ -144,11 +147,13 @@ class TestTemplateRendering:
 
         # Check for proper function definitions
         assert any("async def root():" in line for line in lines)
-        assert any("async def health_check():" in line for line in lines)
 
         # Check for proper decorators
         assert any('@app.get("/")' in line for line in lines)
-        assert any('@app.get("/health")' in line for line in lines)
+        
+        # Check for base router integration
+        assert any("from routers import base_router" in line for line in lines)
+        assert any("app.include_router(base_router)" in line for line in lines)
 
     def test_template_error_handling(
         self, temp_dir: Path, sample_project_name: str
@@ -212,7 +217,10 @@ class TestTemplateRendering:
 
         # Should have proper endpoints
         assert "async def root():" in main_content
-        assert "async def health_check():" in main_content
+        
+        # Should have base router integration
+        assert "from routers import base_router" in main_content
+        assert "app.include_router(base_router)" in main_content
 
         # Should have proper uvicorn integration
         assert 'if __name__ == "__main__":' in main_content
