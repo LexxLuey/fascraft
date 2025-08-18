@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fascraft"
-version = "0.3.1"
+version = "0.3.2"
 description = "A CLI for generating modular FastAPI projects with environment and dependency management"
 authors = ["Lutor Iyornumbe <biggestluey@gmail.com>"]
 license = "MIT"
