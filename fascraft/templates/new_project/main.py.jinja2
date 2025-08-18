@@ -2,8 +2,13 @@
 
 from fastapi import FastAPI
 
-from config.settings import get_settings
-from config.middleware import setup_middleware
+try:
+    from config.settings import get_settings
+    from config.middleware import setup_middleware
+except ImportError as e:
+    print(f"Configuration error: {e}")
+    print("Please install required dependencies: pip install -r requirements.txt")
+    raise
 
 # Get application settings
 settings = get_settings()
@@ -17,7 +22,11 @@ app = FastAPI(
 )
 
 # Setup middleware
-setup_middleware(app)
+try:
+    setup_middleware(app)
+except Exception as e:
+    print(f"Warning: Middleware setup failed: {e}")
+    print("Application will run without custom middleware")
 
 # Import base router
 from routers import base_router

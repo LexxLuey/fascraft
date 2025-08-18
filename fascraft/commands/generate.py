@@ -1,7 +1,6 @@
 """Command for generating new domain modules in existing FasCraft projects."""
 
 from pathlib import Path
-from typing import Optional
 
 import typer
 from jinja2 import Environment, PackageLoader, select_autoescape
@@ -19,40 +18,42 @@ def is_fastapi_project(project_path: Path) -> bool:
         content = (project_path / "main.py").read_text()
         if "FastAPI" in content or "fastapi" in content:
             return True
-    
+
     # Check for pyproject.toml with FastAPI dependency
     if (project_path / "pyproject.toml").exists():
         content = (project_path / "pyproject.toml").read_text()
         if "fastapi" in content.lower():
             return True
-    
+
     return False
 
 
 def ensure_config_structure(project_path: Path) -> None:
     """Ensure config directory and files exist."""
     config_dir = project_path / "config"
-    
+
     if not config_dir.exists():
         console.print("📁 Creating config directory...", style="bold yellow")
         config_dir.mkdir(exist_ok=True)
-        
+
         # Create basic config files if they don't exist
         if not (config_dir / "__init__.py").exists():
             (config_dir / "__init__.py").write_text('"""Configuration module."""\n')
-        
+
         if not (config_dir / "settings.py").exists():
-            (config_dir / "settings.py").write_text('"""Application settings."""\n\napp_name = "{{ project_name }}"\n')
-        
+            (config_dir / "settings.py").write_text(
+                '"""Application settings."""\n\napp_name = "{{ project_name }}"\n'
+            )
+
         if not (config_dir / "database.py").exists():
-            (config_dir / "database.py").write_text('"""Database configuration."""\n\nfrom sqlalchemy import create_engine\nfrom sqlalchemy.ext.declarative import declarative_base\nfrom sqlalchemy.orm import sessionmaker\n\nBase = declarative_base()\n')
+            (config_dir / "database.py").write_text(
+                '"""Database configuration."""\n\nfrom sqlalchemy import create_engine\nfrom sqlalchemy.ext.declarative import declarative_base\nfrom sqlalchemy.orm import sessionmaker\n\nBase = declarative_base()\n'
+            )
 
 
 def generate_module(
     module_name: str,
-    path: str = typer.Option(
-        ".", help="📁 The path to the existing FastAPI project"
-    ),
+    path: str = typer.Option(".", help="📁 The path to the existing FastAPI project"),
 ) -> None:
     """🔧 Generates a new domain module in an existing FastAPI project."""
     if not module_name or not module_name.strip():
@@ -78,7 +79,9 @@ def generate_module(
         error_text.append("❌ ", style="bold red")
         error_text.append("Error: ", style="bold red")
         error_text.append(f"'{path_obj}' is not a FastAPI project.", style="white")
-        error_text.append("\nMake sure you're in a project with FastAPI dependencies.", style="white")
+        error_text.append(
+            "\nMake sure you're in a project with FastAPI dependencies.", style="white"
+        )
         console.print(error_text)
         raise typer.Exit(code=1)
 
@@ -141,48 +144,64 @@ def generate_module(
     next_steps_text = Text()
     next_steps_text.append("🚀 ", style="bold yellow")
     next_steps_text.append("Next steps:", style="white")
-    next_steps_text.append(f"\n  1. The {module_name} module has been automatically added to the base router", style="bold cyan")
-    next_steps_text.append(f"\n  2. Run 'pip install -r requirements.txt' to install dependencies", style="bold cyan")
-    next_steps_text.append(f"\n  3. Test your new module with 'pytest {module_name}/tests/'", style="bold cyan")
+    next_steps_text.append(
+        f"\n  1. The {module_name} module has been automatically added to the base router",
+        style="bold cyan",
+    )
+    next_steps_text.append(
+        "\n  2. Run 'pip install -r requirements.txt' to install dependencies",
+        style="bold cyan",
+    )
+    next_steps_text.append(
+        f"\n  3. Test your new module with 'pytest {module_name}/tests/'",
+        style="bold cyan",
+    )
     console.print(next_steps_text)
 
     module_info_text = Text()
     module_info_text.append("✨ ", style="bold green")
     module_info_text.append("Module includes: ", style="white")
-    module_info_text.append("Working routers, services, models, and schemas", style="bold cyan")
+    module_info_text.append(
+        "Working routers, services, models, and schemas", style="bold cyan"
+    )
     console.print(module_info_text)
 
     db_info_text = Text()
     db_info_text.append("🗄️ ", style="bold blue")
     db_info_text.append("Database ready: ", style="white")
-    db_info_text.append("Models are properly configured for SQLAlchemy and Alembic", style="bold cyan")
+    db_info_text.append(
+        "Models are properly configured for SQLAlchemy and Alembic", style="bold cyan"
+    )
     console.print(db_info_text)
 
 
 def update_base_router(project_path: Path, module_name: str) -> None:
     """Update base router to include the new module."""
     base_router_path = project_path / "routers" / "base.py"
-    
+
     if not base_router_path.exists():
-        console.print("⚠️  Warning: base router not found, skipping module integration", style="yellow")
+        console.print(
+            "⚠️  Warning: base router not found, skipping module integration",
+            style="yellow",
+        )
         return
-    
+
     content = base_router_path.read_text()
-    
+
     # Add import if not present
     import_statement = f"from {module_name} import routers as {module_name}_routers"
     if import_statement not in content:
         # Find the comment line for imports
-        lines = content.split('\n')
+        lines = content.split("\n")
         new_lines = []
         import_added = False
-        
+
         for line in lines:
             new_lines.append(line)
             if line.strip().startswith("# from") and not import_added:
                 new_lines.append(import_statement)
                 import_added = True
-        
+
         if not import_added:
             # Add after existing imports
             for i, line in enumerate(lines):
@@ -190,33 +209,41 @@ def update_base_router(project_path: Path, module_name: str) -> None:
                     new_lines.insert(i + 1, import_statement)
                     import_added = True
                     break
-        
-        content = '\n'.join(new_lines)
-    
+
+        content = "\n".join(new_lines)
+
     # Add router include if not present
-    router_include = f"base_router.include_router({module_name}_routers.router, prefix=\"/{module_name}s\", tags=[\"{module_name}s\"])"
+    router_include = f'base_router.include_router({module_name}_routers.router, prefix="/{module_name}s", tags=["{module_name}s"])'
     if router_include not in content:
         # Find the comment line for router includes
-        lines = content.split('\n')
+        lines = content.split("\n")
         new_lines = []
         router_added = False
-        
+
         for line in lines:
             new_lines.append(line)
-            if line.strip().startswith("# base_router.include_router") and not router_added:
+            if (
+                line.strip().startswith("# base_router.include_router")
+                and not router_added
+            ):
                 new_lines.append(router_include)
                 router_added = True
-        
+
         if not router_added:
             # Add after existing router includes
             for i, line in enumerate(lines):
-                if line.strip().startswith("# base_router.include_router") and not router_added:
+                if (
+                    line.strip().startswith("# base_router.include_router")
+                    and not router_added
+                ):
                     new_lines.insert(i + 1, router_include)
                     router_added = True
                     break
-        
-        content = '\n'.join(new_lines)
-    
+
+        content = "\n".join(new_lines)
+
     # Write updated content
     base_router_path.write_text(content)
-    console.print(f"📝 Updated base router to include {module_name} module", style="bold green")
+    console.print(
+        f"📝 Updated base router to include {module_name} module", style="bold green"
+    )

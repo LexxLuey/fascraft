@@ -1,7 +1,6 @@
 """Tests for the list command."""
 
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -23,7 +22,7 @@ class TestIsDomainModule:
         (tmp_path / "schemas.py").touch()
         (tmp_path / "services.py").touch()
         (tmp_path / "routers.py").touch()
-        
+
         assert is_domain_module(tmp_path) is True
 
     def test_is_domain_module_missing_files(self, tmp_path):
@@ -32,7 +31,7 @@ class TestIsDomainModule:
         (tmp_path / "models.py").touch()
         (tmp_path / "schemas.py").touch()
         # Missing services.py and routers.py
-        
+
         assert is_domain_module(tmp_path) is False
 
     def test_is_domain_module_empty(self, tmp_path):
@@ -54,13 +53,13 @@ class TestAnalyzeModule:
         (tmp_path / "tests").mkdir()
         (tmp_path / "tests" / "__init__.py").write_text("content")
         (tmp_path / "tests" / "test_models.py").write_text("content")
-        
+
         result = analyze_module(tmp_path)
-        
-        assert result['name'] == tmp_path.name
-        assert result['has_tests'] is True
-        assert len(result['files']) == 7  # 7 expected files, not 8
-        assert result['size'] > 0
+
+        assert result["name"] == tmp_path.name
+        assert result["has_tests"] is True
+        assert len(result["files"]) == 7  # 7 expected files, not 8
+        assert result["size"] > 0
 
     def test_analyze_module_no_tests(self, tmp_path):
         """Test analyzing a module without tests."""
@@ -69,11 +68,11 @@ class TestAnalyzeModule:
         (tmp_path / "schemas.py").write_text("content")
         (tmp_path / "services.py").write_text("content")
         (tmp_path / "routers.py").write_text("content")
-        
+
         result = analyze_module(tmp_path)
-        
-        assert result['has_tests'] is False
-        assert len(result['files']) == 4
+
+        assert result["has_tests"] is False
+        assert len(result["files"]) == 4
 
 
 class TestFindDomainModules:
@@ -93,22 +92,22 @@ class TestFindDomainModules:
         (customers_dir / "schemas.py").touch()
         (customers_dir / "services.py").touch()
         (customers_dir / "routers.py").touch()
-        
+
         products_dir = tmp_path / "products"
         products_dir.mkdir()
         (products_dir / "models.py").touch()
         (products_dir / "schemas.py").touch()
         (products_dir / "services.py").touch()
         (products_dir / "routers.py").touch()
-        
+
         # Create non-module directories
         (tmp_path / "config").mkdir()
         (tmp_path / "__pycache__").mkdir()
-        
+
         modules = find_domain_modules(tmp_path)
-        
+
         assert len(modules) == 2
-        module_names = [m['name'] for m in modules]
+        module_names = [m["name"] for m in modules]
         assert "customers" in module_names
         assert "products" in module_names
 
@@ -119,7 +118,7 @@ class TestFindDomainModules:
         (tmp_path / "tests").mkdir()
         (tmp_path / "migrations").mkdir()
         (tmp_path / ".git").mkdir()
-        
+
         modules = find_domain_modules(tmp_path)
         assert modules == []
 
@@ -132,19 +131,19 @@ class TestListModules:
     def test_list_modules_success(self, mock_find_modules, mock_is_fastapi, tmp_path):
         """Test successful module listing."""
         mock_is_fastapi.return_value = True
-        
+
         # Mock module data
         mock_modules = [
             {
-                'name': 'customers',
-                'path': tmp_path / 'customers',
-                'files': ['models.py', 'schemas.py', 'services.py', 'routers.py'],
-                'has_tests': True,
-                'health_status': 'healthy'
+                "name": "customers",
+                "path": tmp_path / "customers",
+                "files": ["models.py", "schemas.py", "services.py", "routers.py"],
+                "has_tests": True,
+                "health_status": "healthy",
             }
         ]
         mock_find_modules.return_value = mock_modules
-        
+
         # This should not raise an exception
         list_modules(str(tmp_path))
 
@@ -152,7 +151,7 @@ class TestListModules:
         """Test listing modules in an invalid project."""
         with pytest.raises(Exception) as exc_info:
             list_modules(str(tmp_path))
-        
+
         # Check that it's an exit exception with code 1
         exception = exc_info.value
         if hasattr(exception, "code"):
@@ -167,7 +166,7 @@ class TestListModules:
         """Test listing modules with nonexistent path."""
         with pytest.raises(Exception) as exc_info:
             list_modules("/nonexistent/path")
-        
+
         # Check that it's an exit exception with code 1
         exception = exc_info.value
         if hasattr(exception, "code"):

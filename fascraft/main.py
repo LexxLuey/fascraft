@@ -4,21 +4,18 @@ import typer
 from rich.console import Console
 from rich.text import Text
 
+from fascraft.commands import analyze, config
 from fascraft.commands import generate as generate_cmd
 from fascraft.commands import list as list_cmd
-from fascraft.commands import new
+from fascraft.commands import migrate, new
 from fascraft.commands import remove as remove_cmd
 from fascraft.commands import update as update_cmd
-from fascraft.commands import analyze
-from fascraft.commands import migrate
-from fascraft.commands import config
 
 # Initialize rich console
 console = Console()
 
 app = typer.Typer(
-    help="FasCraft CLI for generating modular FastAPI projects.",
-    name="fascraft"
+    help="FasCraft CLI for generating modular FastAPI projects.", name="fascraft"
 )
 
 # Register commands
@@ -39,7 +36,7 @@ def hello(name: str = typer.Argument("World", help="Name to greet")):
     welcome_text.append("👋 ", style="bold blue")
     welcome_text.append(f"Hello {name}!", style="bold white")
     console.print(welcome_text)
-    
+
     fascraft_text = Text()
     fascraft_text.append("🚀 ", style="bold green")
     fascraft_text.append("Welcome to ", style="white")
@@ -55,7 +52,7 @@ def version():
     version_text.append("📦 ", style="bold yellow")
     version_text.append("FasCraft ", style="bold cyan")
     version_text.append("version ", style="white")
-    version_text.append("0.3.2", style="bold green")
+    version_text.append("0.4.0", style="bold green")
     console.print(version_text)
 
 
