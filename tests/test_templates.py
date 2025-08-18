@@ -57,6 +57,7 @@ class TestTemplateRendering:
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that template variables are properly substituted."""
+        temp_dir.mkdir(exist_ok=True)
         create_new_project(sample_project_name, temp_dir)
 
         project_path = temp_dir / sample_project_name
@@ -79,6 +80,9 @@ class TestTemplateRendering:
         """Test that template rendering is consistent across different names."""
         test_names = ["project1", "project2", "different-name"]
 
+        # Ensure temp_dir exists
+        temp_dir.mkdir(exist_ok=True)
+
         for name in test_names:
             project_path = temp_dir / name
 
@@ -99,6 +103,7 @@ class TestTemplateRendering:
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that generated files have proper structure and content."""
+        temp_dir.mkdir(exist_ok=True)
         create_new_project(sample_project_name, temp_dir)
 
         project_path = temp_dir / sample_project_name
@@ -109,11 +114,14 @@ class TestTemplateRendering:
         assert "app = FastAPI(" in main_content
         assert '@app.get("/")' in main_content
         assert "async def root():" in main_content
-        
+
         # Test base router integration
         assert "from routers import base_router" in main_content
         assert "app.include_router(base_router)" in main_content
-        assert "# Health check is now handled by base router at /api/v1/health" in main_content
+        assert (
+            "# Health check is now handled by base router at /api/v1/health"
+            in main_content
+        )
 
         # Test pyproject.toml structure
         pyproject_content = (project_path / "pyproject.toml").read_text()
@@ -134,6 +142,7 @@ class TestTemplateRendering:
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that templates generate properly formatted and encoded content."""
+        temp_dir.mkdir(exist_ok=True)
         create_new_project(sample_project_name, temp_dir)
 
         project_path = temp_dir / sample_project_name
@@ -150,7 +159,7 @@ class TestTemplateRendering:
 
         # Check for proper decorators
         assert any('@app.get("/")' in line for line in lines)
-        
+
         # Check for base router integration
         assert any("from routers import base_router" in line for line in lines)
         assert any("app.include_router(base_router)" in line for line in lines)
@@ -162,6 +171,7 @@ class TestTemplateRendering:
         # This test ensures that our templates don't have syntax errors
         # and can render without issues
 
+        temp_dir.mkdir(exist_ok=True)
         try:
             create_new_project(sample_project_name, temp_dir)
             # If we get here, templates rendered successfully
@@ -173,6 +183,7 @@ class TestTemplateRendering:
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that generated Python files are syntactically valid."""
+        temp_dir.mkdir(exist_ok=True)
         create_new_project(sample_project_name, temp_dir)
 
         project_path = temp_dir / sample_project_name
@@ -196,6 +207,7 @@ class TestTemplateRendering:
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that template content meets quality standards."""
+        temp_dir.mkdir(exist_ok=True)
         create_new_project(sample_project_name, temp_dir)
 
         project_path = temp_dir / sample_project_name
@@ -217,7 +229,7 @@ class TestTemplateRendering:
 
         # Should have proper endpoints
         assert "async def root():" in main_content
-        
+
         # Should have base router integration
         assert "from routers import base_router" in main_content
         assert "app.include_router(base_router)" in main_content

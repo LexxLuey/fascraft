@@ -1,6 +1,5 @@
 """Tests for the generate command."""
 
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -20,7 +19,7 @@ class TestIsFastApiProject:
         # Create main.py with FastAPI content
         main_py = tmp_path / "main.py"
         main_py.write_text("from fastapi import FastAPI\napp = FastAPI()")
-        
+
         assert is_fastapi_project(tmp_path) is True
 
     def test_is_fastapi_project_valid_pyproject_toml(self, tmp_path):
@@ -28,14 +27,14 @@ class TestIsFastApiProject:
         # Create pyproject.toml with FastAPI dependency
         pyproject_toml = tmp_path / "pyproject.toml"
         pyproject_toml.write_text("[tool.poetry.dependencies]\nfastapi = '^0.104.0'")
-        
+
         assert is_fastapi_project(tmp_path) is True
 
     def test_is_fastapi_project_invalid(self, tmp_path):
         """Test that an invalid project is not identified as FastAPI."""
         # Create empty directory
         assert is_fastapi_project(tmp_path) is False
-        
+
         # Create main.py without FastAPI
         main_py = tmp_path / "main.py"
         main_py.write_text("print('Hello World')")
@@ -48,7 +47,7 @@ class TestEnsureConfigStructure:
     def test_ensure_config_structure_creates_config_dir(self, tmp_path):
         """Test that config directory is created if it doesn't exist."""
         ensure_config_structure(tmp_path)
-        
+
         config_dir = tmp_path / "config"
         assert config_dir.exists()
         assert config_dir.is_dir()
@@ -56,7 +55,7 @@ class TestEnsureConfigStructure:
     def test_ensure_config_structure_creates_basic_files(self, tmp_path):
         """Test that basic config files are created if they don't exist."""
         ensure_config_structure(tmp_path)
-        
+
         config_dir = tmp_path / "config"
         assert (config_dir / "__init__.py").exists()
         assert (config_dir / "settings.py").exists()
@@ -69,9 +68,9 @@ class TestEnsureConfigStructure:
         config_dir.mkdir()
         existing_settings = config_dir / "settings.py"
         existing_settings.write_text("app_name = 'existing'")
-        
+
         ensure_config_structure(tmp_path)
-        
+
         # Check that existing content is preserved
         assert existing_settings.read_text() == "app_name = 'existing'"
 
@@ -85,7 +84,7 @@ class TestGenerateModule:
         # Create a valid FastAPI project
         main_py = tmp_path / "main.py"
         main_py.write_text("from fastapi import FastAPI\napp = FastAPI()")
-        
+
         # Mock Jinja2 environment
         mock_template = MagicMock()
         mock_template.render.return_value = "rendered content"
@@ -98,7 +97,7 @@ class TestGenerateModule:
 
         # Verify templates were rendered
         assert mock_template.render.call_count == 7  # 7 template files
-        
+
         # Check that module directory was created
         module_dir = tmp_path / "customers"
         assert module_dir.exists()
@@ -107,11 +106,11 @@ class TestGenerateModule:
         assert (module_dir / "services.py").exists()
         assert (module_dir / "routers.py").exists()
         assert (module_dir / "tests").exists()
-        
+
         # Check that the module router doesn't have a hardcoded prefix
         # Note: Since we're mocking the template, we can't check actual content
         # In a real scenario, the router would be generated without hardcoded prefixes
-        
+
         # Verify that the success message mentions base router integration
         # Note: This test mocks the environment, so we can't test the actual output
         # In a real scenario, the message would show "automatically added to the base router"
@@ -121,7 +120,7 @@ class TestGenerateModule:
         # Create an empty directory (not a FastAPI project)
         with pytest.raises(Exception) as exc_info:
             generate_module("customers", str(tmp_path))
-        
+
         # Check that it's an exit exception with code 1
         exception = exc_info.value
         if hasattr(exception, "code"):
@@ -137,14 +136,14 @@ class TestGenerateModule:
         # Create a valid FastAPI project
         main_py = tmp_path / "main.py"
         main_py.write_text("from fastapi import FastAPI\napp = FastAPI()")
-        
+
         # Create existing module directory
         module_dir = tmp_path / "customers"
         module_dir.mkdir()
 
         with pytest.raises(Exception) as exc_info:
             generate_module("customers", str(tmp_path))
-        
+
         # Check that it's an exit exception with code 1
         exception = exc_info.value
         if hasattr(exception, "code"):
@@ -159,7 +158,7 @@ class TestGenerateModule:
         """Test module generation with empty name."""
         with pytest.raises(Exception) as exc_info:
             generate_module("")
-        
+
         # Check that it's an exit exception with code 1
         exception = exc_info.value
         if hasattr(exception, "code"):
@@ -174,7 +173,7 @@ class TestGenerateModule:
         """Test module generation with whitespace name."""
         with pytest.raises(Exception) as exc_info:
             generate_module("   ")
-        
+
         # Check that it's an exit exception with code 1
         exception = exc_info.value
         if hasattr(exception, "code"):
@@ -189,7 +188,7 @@ class TestGenerateModule:
         """Test module generation with nonexistent path."""
         with pytest.raises(Exception) as exc_info:
             generate_module("customers", "/nonexistent/path")
-        
+
         # Check that it's an exit exception with code 1
         exception = exc_info.value
         if hasattr(exception, "code"):
@@ -209,13 +208,14 @@ class TestGenerateModuleIntegration:
         # Create a valid FastAPI project with base router structure
         routers_dir = tmp_path / "routers"
         routers_dir.mkdir()
-        
+
         # Create main.py for FastAPI project detection
         main_py = tmp_path / "main.py"
         main_py.write_text("from fastapi import FastAPI\napp = FastAPI()")
-        
+
         base_router = routers_dir / "base.py"
-        base_router.write_text("""from fastapi import APIRouter
+        base_router.write_text(
+            """from fastapi import APIRouter
 
 # Create base router with common prefix
 base_router = APIRouter(prefix="/api/v1")
@@ -233,8 +233,9 @@ base_router = APIRouter(prefix="/api/v1")
 async def health_check():
     \"\"\"Health check endpoint.\"\"\"
     return {"status": "healthy", "version": "0.1.0"}
-""")
-        
+"""
+        )
+
         # Mock the Jinja2 environment to avoid template loading issues
         with patch("fascraft.commands.generate.Environment") as mock_env:
             mock_template = MagicMock()
@@ -258,5 +259,11 @@ async def health_check():
 
             # Check that base router was updated
             updated_base_router = base_router.read_text()
-            assert "from customers import routers as customers_routers" in updated_base_router
-            assert "base_router.include_router(customers_routers.router, prefix=\"/customerss\", tags=[\"customerss\"])" in updated_base_router
+            assert (
+                "from customers import routers as customers_routers"
+                in updated_base_router
+            )
+            assert (
+                'base_router.include_router(customers_routers.router, prefix="/customerss", tags=["customerss"])'
+                in updated_base_router
+            )

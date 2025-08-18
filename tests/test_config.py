@@ -1,18 +1,17 @@
 """Tests for the config command functionality."""
 
-from pathlib import Path
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import patch
 
-import pytest
 import click
+import pytest
 
 from fascraft.commands.config import (
+    create_config,
+    is_fastapi_project,
     manage_config,
     show_config,
-    create_config,
     update_config,
     validate_config,
-    is_fastapi_project,
 )
 
 
@@ -24,7 +23,7 @@ class TestIsFastApiProject:
         # Create main.py with FastAPI content
         main_py = tmp_path / "main.py"
         main_py.write_text("from fastapi import FastAPI\napp = FastAPI()")
-        
+
         assert is_fastapi_project(tmp_path) is True
 
     def test_is_fastapi_project_valid_pyproject_toml(self, tmp_path):
@@ -32,14 +31,14 @@ class TestIsFastApiProject:
         # Create pyproject.toml with FastAPI dependency
         pyproject_toml = tmp_path / "pyproject.toml"
         pyproject_toml.write_text("[tool.poetry.dependencies]\nfastapi = '^0.104.0'")
-        
+
         assert is_fastapi_project(tmp_path) is True
 
     def test_is_fastapi_project_invalid(self, tmp_path):
         """Test that an invalid project is not identified as FastAPI."""
         # Create empty directory
         assert is_fastapi_project(tmp_path) is False
-        
+
         # Create main.py without FastAPI
         main_py = tmp_path / "main.py"
         main_py.write_text("print('Hello World')")
@@ -62,9 +61,9 @@ version = "0.1.0"
 base_prefix = "/api/v1"
 """
         config_path.write_text(config_content)
-        
+
         show_config(config_path, tmp_path)
-        
+
         # Verify that console.print was called
         assert mock_print.call_count > 0
 
@@ -72,9 +71,9 @@ base_prefix = "/api/v1"
     def test_show_config_not_exists(self, mock_print, tmp_path):
         """Test showing non-existent configuration."""
         config_path = tmp_path / "fascraft.toml"
-        
+
         show_config(config_path, tmp_path)
-        
+
         # Verify error message is displayed
         mock_print.assert_called()
         # Check that error message is shown
@@ -90,12 +89,12 @@ class TestCreateConfig:
     def test_create_config_success(self, mock_print, tmp_path):
         """Test successful configuration creation."""
         config_path = tmp_path / "fascraft.toml"
-        
+
         create_config(config_path, tmp_path)
-        
+
         # Check that config file was created
         assert config_path.exists()
-        
+
         # Check config content
         config_content = config_path.read_text()
         assert "[project]" in config_content
@@ -104,7 +103,7 @@ class TestCreateConfig:
         assert "[modules]" in config_content
         assert "[development]" in config_content
         assert "[production]" in config_content
-        
+
         # Verify success message
         mock_print.assert_called()
 
@@ -115,16 +114,16 @@ class TestCreateConfig:
         config_path = tmp_path / "fascraft.toml"
         existing_content = "# existing config\n[project]\nname = 'existing'"
         config_path.write_text(existing_content)
-        
+
         # Mock the confirmation to return False (don't overwrite)
         mock_confirm.return_value = False
-        
+
         create_config(config_path, tmp_path)
-        
+
         # Check that existing content is preserved
         config_content = config_path.read_text()
         assert existing_content in config_content
-        
+
         # Verify warning message
         mock_print.assert_called()
 
@@ -145,13 +144,13 @@ version = "0.1.0"
 base_prefix = "/api/v1"
 """
         config_path.write_text(config_content)
-        
+
         update_config(config_path, "project.name", "updated-project")
-        
+
         # Check that config was updated
         updated_content = config_path.read_text()
-        assert "name = \"updated-project\"" in updated_content
-        
+        assert 'name = "updated-project"' in updated_content
+
         # Verify success message
         mock_print.assert_called()
 
@@ -164,11 +163,11 @@ base_prefix = "/api/v1"
 name = "test-project"
 """
         config_path.write_text(config_content)
-        
+
         # This should raise typer.Exit due to invalid key format
         with pytest.raises(click.exceptions.Exit) as exc_info:
             update_config(config_path, "invalid.key", "value")
-        
+
         # Check that it's an exit exception
         exception = exc_info.value
         assert isinstance(exception, click.exceptions.Exit)
@@ -177,9 +176,9 @@ name = "test-project"
     def test_update_config_file_not_exists(self, mock_print, tmp_path):
         """Test configuration update when file doesn't exist."""
         config_path = tmp_path / "fascraft.toml"
-        
+
         update_config(config_path, "project.name", "value")
-        
+
         # Verify error message
         mock_print.assert_called()
         # Check that error message is shown
@@ -204,9 +203,9 @@ version = "0.1.0"
 base_prefix = "/api/v1"
 """
         config_path.write_text(config_content)
-        
+
         validate_config(config_path)
-        
+
         # Verify success message
         mock_print.assert_called()
 
@@ -219,11 +218,11 @@ base_prefix = "/api/v1"
 name = "test-project"
 """
         config_path.write_text(invalid_content)
-        
+
         # This should raise typer.Exit due to TOML parsing error
         with pytest.raises(click.exceptions.Exit) as exc_info:
             validate_config(config_path)
-        
+
         # Check that it's an exit exception
         exception = exc_info.value
         assert isinstance(exception, click.exceptions.Exit)
@@ -237,9 +236,9 @@ name = "test-project"
 name = "test-project"
 """
         config_path.write_text(incomplete_content)
-        
+
         validate_config(config_path)
-        
+
         # Verify warning message
         mock_print.assert_called()
 
@@ -247,9 +246,9 @@ name = "test-project"
     def test_validate_config_file_not_exists(self, mock_print, tmp_path):
         """Test validation of non-existent configuration file."""
         config_path = tmp_path / "fascraft.toml"
-        
+
         validate_config(config_path)
-        
+
         # Verify error message
         mock_print.assert_called()
         # Check that error message is shown
@@ -265,7 +264,7 @@ class TestManageConfig:
         """Test show action."""
         # Create a valid FastAPI project
         (tmp_path / "main.py").write_text("from fastapi import FastAPI")
-        
+
         # Mock the show_config function
         with patch("fascraft.commands.config.show_config") as mock_show:
             manage_config("show", str(tmp_path))
@@ -275,7 +274,7 @@ class TestManageConfig:
         """Test create action."""
         # Create a valid FastAPI project
         (tmp_path / "main.py").write_text("from fastapi import FastAPI")
-        
+
         # Mock the create_config function
         with patch("fascraft.commands.config.create_config") as mock_create:
             manage_config("create", str(tmp_path))
@@ -285,7 +284,7 @@ class TestManageConfig:
         """Test update action with valid parameters."""
         # Create a valid FastAPI project
         (tmp_path / "main.py").write_text("from fastapi import FastAPI")
-        
+
         # Mock the update_config function
         with patch("fascraft.commands.config.update_config") as mock_update:
             manage_config("update", str(tmp_path), "project.name", "new-value")
@@ -297,7 +296,7 @@ class TestManageConfig:
         """Test update action with missing parameters."""
         # Create a valid FastAPI project
         (tmp_path / "main.py").write_text("from fastapi import FastAPI")
-        
+
         # Create a fascraft.toml file so the function doesn't default to show action
         config_path = tmp_path / "fascraft.toml"
         config_content = """# FasCraft project configuration
@@ -309,16 +308,16 @@ version = "0.1.0"
 base_prefix = "/api/v1"
 """
         config_path.write_text(config_content)
-        
+
         # Mock the console.print function
         with patch("fascraft.commands.config.console.print") as mock_print:
             with pytest.raises(click.exceptions.Exit) as exc_info:
                 manage_config(action="update", path=str(tmp_path))
-            
+
             # Check that it's an exit exception
             exception = exc_info.value
             assert isinstance(exception, click.exceptions.Exit)
-            
+
             # Verify error message was printed
             mock_print.assert_called()
 
@@ -326,7 +325,7 @@ base_prefix = "/api/v1"
         """Test validate action."""
         # Create a valid FastAPI project
         (tmp_path / "main.py").write_text("from fastapi import FastAPI")
-        
+
         # Mock the validate_config function
         with patch("fascraft.commands.config.validate_config") as mock_validate:
             manage_config("validate", str(tmp_path))
@@ -336,10 +335,10 @@ base_prefix = "/api/v1"
         """Test unknown action."""
         # Create a valid FastAPI project
         (tmp_path / "main.py").write_text("from fastapi import FastAPI")
-        
+
         with pytest.raises(click.exceptions.Exit) as exc_info:
             manage_config("unknown", str(tmp_path))
-        
+
         # Check that it's an exit exception
         exception = exc_info.value
         assert isinstance(exception, click.exceptions.Exit)
@@ -348,7 +347,7 @@ base_prefix = "/api/v1"
         """Test management with invalid path."""
         with pytest.raises(click.exceptions.Exit) as exc_info:
             manage_config("show", "/nonexistent/path")
-        
+
         # Check that it's an exit exception
         exception = exc_info.value
         assert isinstance(exception, click.exceptions.Exit)
@@ -358,10 +357,10 @@ base_prefix = "/api/v1"
         # Create a non-FastAPI project
         main_py = tmp_path / "main.py"
         main_py.write_text("print('Hello World')")
-        
+
         with pytest.raises(click.exceptions.Exit) as exc_info:
             manage_config("show", str(tmp_path))
-        
+
         # Check that it's an exit exception
         exception = exc_info.value
         assert isinstance(exception, click.exceptions.Exit)

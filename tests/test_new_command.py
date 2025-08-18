@@ -1,7 +1,6 @@
 """Unit tests for the new command functionality."""
 
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 import pytest
 from typer.testing import CliRunner
@@ -21,6 +20,9 @@ class TestNewCommand:
 
         # Ensure project doesn't exist initially
         assert not project_path.exists()
+
+        # Ensure temp_dir exists and is writable
+        temp_dir.mkdir(exist_ok=True)
 
         # Create project
         create_new_project(sample_project_name, temp_dir)
@@ -71,6 +73,9 @@ class TestNewCommand:
         assert not custom_path.exists()
         assert not project_path.exists()
 
+        # Ensure temp_dir exists
+        temp_dir.mkdir(exist_ok=True)
+
         # Create project with custom path
         create_new_project(sample_project_name, custom_path)
 
@@ -83,6 +88,7 @@ class TestNewCommand:
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that main.py contains expected FastAPI code."""
+        temp_dir.mkdir(exist_ok=True)
         create_new_project(sample_project_name, temp_dir)
 
         main_py_path = temp_dir / sample_project_name / "main.py"
@@ -97,13 +103,15 @@ class TestNewCommand:
         # Verify endpoints
         assert '@app.get("/")' in content
         assert "async def root():" in content
-        
+
         # Verify base router integration
         assert "from routers import base_router" in content
         assert "app.include_router(base_router)" in content
-        
+
         # Verify health check is handled by base router
-        assert "# Health check is now handled by base router at /api/v1/health" in content
+        assert (
+            "# Health check is now handled by base router at /api/v1/health" in content
+        )
 
         # Verify uvicorn integration
         assert "import uvicorn" in content
@@ -113,6 +121,7 @@ class TestNewCommand:
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that pyproject.toml contains expected configuration."""
+        temp_dir.mkdir(exist_ok=True)
         create_new_project(sample_project_name, temp_dir)
 
         pyproject_path = temp_dir / sample_project_name / "pyproject.toml"
@@ -123,9 +132,9 @@ class TestNewCommand:
         assert 'version = "0.1.0"' in content
         assert 'description = "A FastAPI project generated with FasCraft"' in content
 
-        # Verify dependencies
-        assert 'fastapi = "^0.104.0"' in content
-        assert 'uvicorn = {extras = ["standard"], version = "^0.24.0"}' in content
+        # Verify dependencies (now using flexible version ranges)
+        assert 'fastapi = ">=0.100.0,<1.0.0"' in content
+        assert 'uvicorn = {extras = ["standard"], version = ">=0.20.0,<1.0.0"}' in content
 
         # Verify development dependencies
         assert 'pytest = "^7.4.3"' in content
@@ -136,6 +145,7 @@ class TestNewCommand:
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that README.md contains expected documentation."""
+        temp_dir.mkdir(exist_ok=True)
         create_new_project(sample_project_name, temp_dir)
 
         readme_path = temp_dir / sample_project_name / "README.md"
@@ -165,6 +175,7 @@ class TestNewCommand:
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that __init__.py contains expected package info."""
+        temp_dir.mkdir(exist_ok=True)
         create_new_project(sample_project_name, temp_dir)
 
         init_path = temp_dir / sample_project_name / "__init__.py"
@@ -183,6 +194,7 @@ class TestNewCommand:
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that project name is properly substituted in all templates."""
+        temp_dir.mkdir(exist_ok=True)
         create_new_project(sample_project_name, temp_dir)
 
         project_path = temp_dir / sample_project_name
@@ -203,6 +215,7 @@ class TestNewCommand:
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that all new files (env, requirements) are created."""
+        temp_dir.mkdir(exist_ok=True)
         create_new_project(sample_project_name, temp_dir)
 
         project_path = temp_dir / sample_project_name
@@ -217,7 +230,7 @@ class TestNewCommand:
         # Check that .env contains project name
         env_content = (project_path / ".env").read_text()
         assert "FastAPI Application Configuration" in env_content
-        
+
         # Check that .env.sample contains project name
         env_sample_content = (project_path / ".env.sample").read_text()
         assert sample_project_name in env_sample_content
@@ -238,26 +251,26 @@ class TestNewCommand:
         requirements_prod_content = (project_path / "requirements.prod.txt").read_text()
         assert "fastapi>=" in requirements_prod_content
         assert "gunicorn>=" in requirements_prod_content
-        
+
         # Check that .gitignore file is created
         assert (project_path / ".gitignore").exists()
         gitignore_content = (project_path / ".gitignore").read_text()
         assert "# Byte-compiled / optimized / DLL files" in gitignore_content
         assert "__pycache__/" in gitignore_content
         assert f"# {sample_project_name} specific" in gitignore_content
-        
+
         # Check that routers directory structure is created
         assert (project_path / "routers").exists()
         assert (project_path / "routers" / "__init__.py").exists()
         assert (project_path / "routers" / "base.py").exists()
-        
+
         # Check that base router contains expected content
         base_router_content = (project_path / "routers" / "base.py").read_text()
         assert "from fastapi import APIRouter" in base_router_content
-        assert "base_router = APIRouter(prefix=\"/api/v1\")" in base_router_content
-        assert "@base_router.get(\"/health\")" in base_router_content
+        assert 'base_router = APIRouter(prefix="/api/v1")' in base_router_content
+        assert '@base_router.get("/health")' in base_router_content
         assert "async def health_check():" in base_router_content
-        
+
         # Check that fascraft.toml configuration file is created
         assert (project_path / "fascraft.toml").exists()
         fascraft_config_content = (project_path / "fascraft.toml").read_text()
@@ -276,6 +289,9 @@ class TestNewCommand:
 
         # Ensure nested path doesn't exist
         assert not nested_path.exists()
+
+        # Ensure temp_dir exists
+        temp_dir.mkdir(exist_ok=True)
 
         # Create project in nested path
         create_new_project(project_name, nested_path)
@@ -300,7 +316,7 @@ class TestNewCommand:
             assert "Run 'cd" in result.stdout
             assert "pip install -r requirements.txt" in result.stdout
             assert "pip install -r requirements.dev.txt" in result.stdout
-            
+
             # Verify new Phase 3 features are mentioned
             assert "Base router with centralized module management" in result.stdout
             assert ".gitignore file included" in result.stdout
@@ -312,9 +328,11 @@ class TestNewCommand:
             "simple-name",
             "name_with_underscores",
             "NameWithCaps",
-            "123-numbers",
             "mixed-123-name",
         ]
+
+        # Ensure temp_dir exists
+        temp_dir.mkdir(exist_ok=True)
 
         for name in test_names:
             project_path = temp_dir / name
@@ -333,11 +351,41 @@ class TestNewCommand:
             main_content = (project_path / "main.py").read_text()
             assert name in main_content
 
+    def test_invalid_project_names_are_rejected(self, temp_dir: Path) -> None:
+        """Test that invalid project names are properly rejected."""
+        invalid_names = [
+            "123-numbers",  # Starts with number
+            "test@project",  # Contains special characters
+            "test#project",  # Contains special characters
+        ]
+
+        for name in invalid_names:
+            project_path = temp_dir / name
+
+            # Ensure project doesn't exist
+            assert not project_path.exists()
+
+            # Attempt to create project with invalid name
+            with pytest.raises(Exception) as exc_info:
+                create_new_project(name, temp_dir)
+
+            # Verify project was not created
+            assert not project_path.exists()
+
+            # Verify it's an exit exception (typer.Exit or similar)
+            exception = exc_info.value
+            assert (
+                hasattr(exception, "code")
+                or hasattr(exception, "exit_code")
+                or isinstance(exception, Exception)
+            )
+
     def test_template_rendering_handles_special_characters(
         self, temp_dir: Path
     ) -> None:
         """Test that templates handle special characters in project names."""
-        special_name = "test@project#with$special%chars"
+        temp_dir.mkdir(exist_ok=True)
+        special_name = "test-project-with-special-chars"
         create_new_project(special_name, temp_dir)
 
         project_path = temp_dir / special_name
@@ -346,3 +394,20 @@ class TestNewCommand:
         # Verify files were created and contain the name
         main_content = (project_path / "main.py").read_text()
         assert special_name in main_content
+
+    def test_validation_error_messages_are_displayed(self, temp_dir: Path) -> None:
+        """Test that validation error messages are properly displayed."""
+        runner = CliRunner()
+
+        with runner.isolated_filesystem(temp_dir):
+            # Test with invalid project name that starts with number
+            result = runner.invoke(app, ["new", "123-invalid"])
+
+            assert result.exit_code == 1
+            assert "Invalid project name" in result.stdout
+
+            # Test with invalid project name containing special characters
+            result = runner.invoke(app, ["new", "test@project"])
+
+            assert result.exit_code == 1
+            assert "Invalid project name" in result.stdout

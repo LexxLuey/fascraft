@@ -5,9 +5,17 @@ from typing import Callable
 
 from fastapi import Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
+try:
+    from starlette.middleware.base import BaseHTTPMiddleware
+except ImportError:
+    from fastapi.middleware.base import BaseHTTPMiddleware
 
-from .settings import get_settings
+try:
+    from .settings import get_settings
+except ImportError:
+    print("Configuration error: settings module not available")
+    print("Please install required dependencies: pip install -r requirements.txt")
+    raise
 
 
 class TimingMiddleware(BaseHTTPMiddleware):

@@ -1,8 +1,8 @@
 """Pytest configuration and fixtures for FasCraft tests."""
 
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 from typer.testing import CliRunner
@@ -31,13 +31,13 @@ def sample_project_name() -> str:
 def expected_files() -> list[str]:
     """Provide list of expected files in generated project."""
     return [
-        "__init__.py", 
-        "main.py", 
-        "pyproject.toml", 
+        "__init__.py",
+        "main.py",
+        "pyproject.toml",
         "README.md",
         "config/__init__.py",
         "config/settings.py",
         "config/database.py",
         "config/exceptions.py",
-        "config/middleware.py"
+        "config/middleware.py",
     ]

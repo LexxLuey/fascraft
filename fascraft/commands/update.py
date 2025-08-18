@@ -1,7 +1,6 @@
 """Command for updating existing domain modules with latest templates."""
 
 from pathlib import Path
-from typing import List
 
 import typer
 from jinja2 import Environment, PackageLoader, select_autoescape
@@ -9,7 +8,6 @@ from rich.console import Console
 from rich.text import Text
 
 from .generate import is_fastapi_project
-from .list import find_domain_modules
 
 # Initialize rich console
 console = Console()
@@ -17,9 +15,7 @@ console = Console()
 
 def update_module(
     module_name: str,
-    path: str = typer.Option(
-        ".", help="📁 The path to the existing FastAPI project"
-    ),
+    path: str = typer.Option(".", help="📁 The path to the existing FastAPI project"),
     force: bool = typer.Option(
         False, "--force", "-f", help="🚨 Force update without confirmation"
     ),
@@ -51,7 +47,9 @@ def update_module(
         error_text.append("❌ ", style="bold red")
         error_text.append("Error: ", style="bold red")
         error_text.append(f"'{path_obj}' is not a FastAPI project.", style="white")
-        error_text.append("\nMake sure you're in a project with FastAPI dependencies.", style="white")
+        error_text.append(
+            "\nMake sure you're in a project with FastAPI dependencies.", style="white"
+        )
         console.print(error_text)
         raise typer.Exit(code=1)
 
@@ -71,8 +69,12 @@ def update_module(
         error_text = Text()
         error_text.append("❌ ", style="bold red")
         error_text.append("Error: ", style="bold red")
-        error_text.append(f"'{module_name}' is not a valid domain module.", style="white")
-        error_text.append("\nOnly domain modules can be updated with this command.", style="white")
+        error_text.append(
+            f"'{module_name}' is not a valid domain module.", style="white"
+        )
+        error_text.append(
+            "\nOnly domain modules can be updated with this command.", style="white"
+        )
         console.print(error_text)
         raise typer.Exit(code=1)
 
@@ -94,7 +96,7 @@ def update_module(
     # Update the module
     try:
         update_module_files(module_path, module_name, path_obj.name)
-        
+
         success_text = Text()
         success_text.append("🔄 ", style="bold green")
         success_text.append("Successfully updated module ", style="bold white")
@@ -103,14 +105,14 @@ def update_module(
         success_text.append(f"{path_obj.name}", style="bold blue")
         success_text.append(".", style="white")
         console.print(success_text)
-        
+
         if backup_path:
             backup_text = Text()
             backup_text.append("💾 ", style="bold blue")
             backup_text.append("Backup created at: ", style="white")
             backup_text.append(f"{backup_path}", style="bold cyan")
             console.print(backup_text)
-        
+
     except Exception as e:
         error_text = Text()
         error_text.append("❌ ", style="bold red")
@@ -118,7 +120,7 @@ def update_module(
         error_text.append(f"Failed to update module '{module_name}': ", style="white")
         error_text.append(str(e), style="yellow")
         console.print(error_text)
-        
+
         # Restore from backup if available
         if backup_path:
             restore_text = Text()
@@ -126,47 +128,50 @@ def update_module(
             restore_text.append("Attempting to restore from backup...", style="white")
             console.print(restore_text)
             restore_from_backup(backup_path, module_path)
-        
-        raise typer.Exit(code=1)
+
+        raise typer.Exit(code=1) from e
 
 
 def is_domain_module(module_path: Path) -> bool:
     """Check if a directory is a domain module."""
-    required_files = ['models.py', 'schemas.py', 'services.py', 'routers.py']
-    
+    required_files = ["models.py", "schemas.py", "services.py", "routers.py"]
+
     for file_name in required_files:
         if not (module_path / file_name).exists():
             return False
-    
+
     return True
 
 
 def analyze_module(module_path: Path) -> dict:
     """Analyze a domain module and return information about it."""
     module_info = {
-        'name': module_path.name,
-        'path': module_path,
-        'files': [],
-        'size': 0,
-        'has_tests': False,
-        'last_modified': None
+        "name": module_path.name,
+        "path": module_path,
+        "files": [],
+        "size": 0,
+        "has_tests": False,
+        "last_modified": None,
     }
-    
+
     # Count files and calculate size
-    for file_path in module_path.rglob('*'):
+    for file_path in module_path.rglob("*"):
         if file_path.is_file():
-            module_info['files'].append(str(file_path.relative_to(module_path)))
-            module_info['size'] += file_path.stat().st_size
-            
+            module_info["files"].append(str(file_path.relative_to(module_path)))
+            module_info["size"] += file_path.stat().st_size
+
             # Track last modification time
             mtime = file_path.stat().st_mtime
-            if module_info['last_modified'] is None or mtime > module_info['last_modified']:
-                module_info['last_modified'] = mtime
-    
+            if (
+                module_info["last_modified"] is None
+                or mtime > module_info["last_modified"]
+            ):
+                module_info["last_modified"] = mtime
+
     # Check if tests directory exists
-    if (module_path / 'tests').exists():
-        module_info['has_tests'] = True
-    
+    if (module_path / "tests").exists():
+        module_info["has_tests"] = True
+
     return module_info
 
 
@@ -177,35 +182,35 @@ def display_update_preview(module_info: dict, project_path: Path) -> None:
     preview_text.append("Module Update Preview", style="bold white")
     console.print(preview_text)
     console.print()
-    
+
     details_text = Text()
     details_text.append("📁 ", style="bold blue")
     details_text.append("Module: ", style="white")
     details_text.append(f"{module_info['name']}", style="bold cyan")
     console.print(details_text)
-    
+
     details_text = Text()
     details_text.append("📊 ", style="bold blue")
     details_text.append("Files: ", style="white")
     details_text.append(f"{len(module_info['files'])}", style="bold cyan")
     details_text.append(" files will be updated", style="white")
     console.print(details_text)
-    
+
     details_text = Text()
     details_text.append("💾 ", style="bold blue")
     details_text.append("Current size: ", style="white")
     details_text.append(f"{module_info['size'] / 1024:.1f} KB", style="bold cyan")
     console.print(details_text)
-    
-    if module_info['has_tests']:
+
+    if module_info["has_tests"]:
         details_text = Text()
         details_text.append("🧪 ", style="bold blue")
         details_text.append("Tests: ", style="white")
         details_text.append("Will be updated", style="bold green")
         console.print(details_text)
-    
+
     console.print()
-    
+
     warning_text = Text()
     warning_text.append("⚠️ ", style="bold yellow")
     warning_text.append(" This will overwrite existing files!", style="bold white")
@@ -219,20 +224,20 @@ def confirm_update(module_name: str) -> bool:
     confirm_text.append("Are you sure you want to update module ", style="white")
     confirm_text.append(f"'{module_name}'", style="bold cyan")
     confirm_text.append("? (y/N): ", style="white")
-    
+
     response = input(confirm_text.plain)
-    return response.lower() in ['y', 'yes']
+    return response.lower() in ["y", "yes"]
 
 
 def create_backup(module_path: Path, project_path: Path) -> Path:
     """Create a backup of the module before updating."""
     import shutil
     from datetime import datetime
-    
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup_name = f"{module_path.name}_backup_{timestamp}"
     backup_path = project_path / backup_name
-    
+
     try:
         shutil.copytree(module_path, backup_path)
         console.print(f"💾 Created backup at: {backup_path}", style="green")
@@ -279,7 +284,7 @@ def update_module_files(module_path: Path, module_name: str, project_name: str) 
 def restore_from_backup(backup_path: Path, module_path: Path) -> None:
     """Restore module from backup after failed update."""
     import shutil
-    
+
     try:
         if module_path.exists():
             shutil.rmtree(module_path)

@@ -1,8 +1,5 @@
 """Integration tests for the FasCraft CLI."""
 
-from pathlib import Path
-
-import pytest
 from typer.testing import CliRunner
 
 from fascraft.main import app
@@ -41,7 +38,10 @@ class TestCLIIntegration:
         """Test the generate command help."""
         result = cli_runner.invoke(app, ["generate", "--help"])
         assert result.exit_code == 0
-        assert "Generates a new domain module in an existing FastAPI project" in result.stdout
+        assert (
+            "Generates a new domain module in an existing FastAPI project"
+            in result.stdout
+        )
 
     def test_list_command_help(self, cli_runner: CliRunner) -> None:
         """Test the list command help."""
@@ -59,7 +59,10 @@ class TestCLIIntegration:
         """Test the update command help."""
         result = cli_runner.invoke(app, ["update", "--help"])
         assert result.exit_code == 0
-        assert "Updates an existing domain module with the latest templates" in result.stdout
+        assert (
+            "Updates an existing domain module with the latest templates"
+            in result.stdout
+        )
 
     def test_main_help(self, cli_runner: CliRunner) -> None:
         """Test the main help command."""
@@ -82,6 +85,8 @@ class TestCLIIntegration:
     def test_new_command_validation(self, cli_runner: CliRunner, temp_dir) -> None:
         """Test new command with validation."""
         project_name = "test-project"
+        # Ensure temp_dir exists and is writable
+        temp_dir.mkdir(exist_ok=True)
         result = cli_runner.invoke(app, ["new", project_name, "--path", str(temp_dir)])
         assert result.exit_code == 0
         assert "Successfully created new project" in result.stdout
@@ -91,11 +96,14 @@ class TestCLIIntegration:
         """Test generate command with validation."""
         # First create a project
         project_name = "test-project"
+        temp_dir.mkdir(exist_ok=True)
         cli_runner.invoke(app, ["new", project_name, "--path", str(temp_dir)])
-        
+
         # Then try to generate a module
         module_name = "users"
-        result = cli_runner.invoke(app, ["generate", module_name, "--path", str(temp_dir / project_name)])
+        result = cli_runner.invoke(
+            app, ["generate", module_name, "--path", str(temp_dir / project_name)]
+        )
         assert result.exit_code == 0
         assert "Successfully generated domain module" in result.stdout
         assert module_name in result.stdout
@@ -104,10 +112,13 @@ class TestCLIIntegration:
         """Test list command with validation."""
         # First create a project
         project_name = "test-project"
+        temp_dir.mkdir(exist_ok=True)
         cli_runner.invoke(app, ["new", project_name, "--path", str(temp_dir)])
-        
+
         # Then try to list modules
-        result = cli_runner.invoke(app, ["list", "--path", str(temp_dir / project_name)])
+        result = cli_runner.invoke(
+            app, ["list", "--path", str(temp_dir / project_name)]
+        )
         assert result.exit_code == 0
         assert "No domain modules found" in result.stdout
 
@@ -115,14 +126,19 @@ class TestCLIIntegration:
         """Test list command when modules exist."""
         # First create a project
         project_name = "test-project"
+        temp_dir.mkdir(exist_ok=True)
         cli_runner.invoke(app, ["new", project_name, "--path", str(temp_dir)])
-        
+
         # Generate a module
         module_name = "users"
-        cli_runner.invoke(app, ["generate", module_name, "--path", str(temp_dir / project_name)])
-        
+        cli_runner.invoke(
+            app, ["generate", module_name, "--path", str(temp_dir / project_name)]
+        )
+
         # Then list modules
-        result = cli_runner.invoke(app, ["list", "--path", str(temp_dir / project_name)])
+        result = cli_runner.invoke(
+            app, ["list", "--path", str(temp_dir / project_name)]
+        )
         assert result.exit_code == 0
         assert "Found 1 domain module(s)" in result.stdout
         assert module_name in result.stdout
@@ -131,14 +147,20 @@ class TestCLIIntegration:
         """Test remove command with validation."""
         # First create a project
         project_name = "test-project"
+        temp_dir.mkdir(exist_ok=True)
         cli_runner.invoke(app, ["new", project_name, "--path", str(temp_dir)])
-        
+
         # Generate a module
         module_name = "users"
-        cli_runner.invoke(app, ["generate", module_name, "--path", str(temp_dir / project_name)])
-        
+        cli_runner.invoke(
+            app, ["generate", module_name, "--path", str(temp_dir / project_name)]
+        )
+
         # Then try to remove the module (with force to avoid interactive prompt)
-        result = cli_runner.invoke(app, ["remove", module_name, "--path", str(temp_dir / project_name), "--force"])
+        result = cli_runner.invoke(
+            app,
+            ["remove", module_name, "--path", str(temp_dir / project_name), "--force"],
+        )
         assert result.exit_code == 0
         assert "Successfully removed module" in result.stdout
         assert module_name in result.stdout
@@ -147,14 +169,20 @@ class TestCLIIntegration:
         """Test update command with validation."""
         # First create a project
         project_name = "test-project"
+        temp_dir.mkdir(exist_ok=True)
         cli_runner.invoke(app, ["new", project_name, "--path", str(temp_dir)])
-        
+
         # Generate a module
         module_name = "users"
-        cli_runner.invoke(app, ["generate", module_name, "--path", str(temp_dir / project_name)])
-        
+        cli_runner.invoke(
+            app, ["generate", module_name, "--path", str(temp_dir / project_name)]
+        )
+
         # Then try to update the module (with force to avoid interactive prompt)
-        result = cli_runner.invoke(app, ["update", module_name, "--path", str(temp_dir / project_name), "--force"])
+        result = cli_runner.invoke(
+            app,
+            ["update", module_name, "--path", str(temp_dir / project_name), "--force"],
+        )
         assert result.exit_code == 0
         assert "Successfully updated module" in result.stdout
         assert module_name in result.stdout

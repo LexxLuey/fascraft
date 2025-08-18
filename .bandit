@@ -1,0 +1,29 @@
+# Bandit configuration file for FasCraft
+# Security linting configuration
+
+# Exclude directories and files
+exclude_dirs = ["tests", ".venv", "venv", "env", ".git", "dist", "build", "__pycache__"]
+
+# Exclude specific test files
+exclude = ["tests/*"]
+
+# Severity levels to include
+skips = ["B101"]  # Skip assert_used in tests
+
+# Confidence levels to include
+confidence = ["HIGH", "MEDIUM", "LOW"]
+
+# Severity levels to include
+severity = ["HIGH", "MEDIUM", "LOW"]
+
+# Output format
+output_format = "txt"
+
+# Verbose output
+verbose = false
+
+# Number of processes
+jobs = 1
+
+# Recursive scanning
+recursive = true
