@@ -5,7 +5,7 @@ Thank you for your interest in contributing to FasCraft! This document provides 
 ## **📋 Project Status**
 
 **Current Phase:** Phase 3 - Advanced Project Detection & Management ✅ **COMPLETED**  
-**Version:** 0.3.1  
+**Version:** 0.3.2
 **Status:** All Phase 3 features implemented and tested
 
 ### **✅ Recently Completed Features:**
