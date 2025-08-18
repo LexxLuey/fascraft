@@ -164,6 +164,6 @@ def create_new_project(
     best_wishes_text = Text()
     best_wishes_text.append("🎉 ", style="bold yellow")
     best_wishes_text.append("Congratulations! ", style="bold green")
-    best_wishes_text.append("Your project is set up for success!", style="bold white")
+    best_wishes_text.append("Your project is set up for success! ", style="bold white")
     best_wishes_text.append("Happy coding!", style="bold white")
     console.print(best_wishes_text)
