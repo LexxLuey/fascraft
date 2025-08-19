@@ -1,0 +1,68 @@
+"""Tests for {{ module_name_title }} Basic models."""
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from .models import {{ module_name_title }}
+
+
+@pytest.fixture
+def db_session():
+    """Create a test database session."""
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    
+    from .models import Base
+    Base.metadata.create_all(bind=engine)
+    
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+class Test{{ module_name_title }}Model:
+    """Test the {{ module_name_title }} basic model."""
+    
+    def test_create_{{ module_name }}(self, db_session):
+        """Test creating a {{ module_name_title }}."""
+        {{ module_name }} = {{ module_name_title }}(
+            name="Test {{ module_name_title }}",
+            description="Test description"
+        )
+        
+        db_session.add({{ module_name }})
+        db_session.commit()
+        db_session.refresh({{ module_name }})
+        
+        assert {{ module_name }}.id is not None
+        assert {{ module_name }}.name == "Test {{ module_name_title }}"
+        assert {{ module_name }}.description == "Test description"
+        assert {{ module_name }}.created_at is not None
+        assert {{ module_name }}.updated_at is not None
+    
+    def test_{{ module_name }}_name_required(self, db_session):
+        """Test that name is required."""
+        with pytest.raises(Exception):
+            {{ module_name }} = {{ module_name_title }}(name="")
+            db_session.add({{ module_name }})
+            db_session.commit()
+    
+    def test_{{ module_name }}_update(self, db_session):
+        """Test updating a {{ module_name_title }}."""
+        {{ module_name }} = {{ module_name_title }}(name="Update Test")
+        db_session.add({{ module_name }})
+        db_session.commit()
+        
+        {{ module_name }}.name = "Updated Name"
+        db_session.commit()
+        
+        assert {{ module_name }}.name == "Updated Name"
+        assert {{ module_name }}.updated_at > {{ module_name }}.created_at

@@ -1,0 +1,224 @@
+"""FastAPI routers for {{ module_name_title }} microservice module."""
+
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
+
+from .schemas import (
+    {{ module_name_title }}Create, {{ module_name_title }}Update, {{ module_name_title }}Response,
+    {{ module_name_title }}ListResponse, HealthCheck
+)
+from .services import {{ module_name_title }}Service, HealthService
+from .models import {{ module_name_title }}
+
+# Import database dependency (adjust path as needed)
+# from ...database import get_db
+
+router = APIRouter(
+    prefix="/{{ module_name_plural }}",
+    tags=["{{ module_name_plural }}"],
+    responses={404: {"description": "Not found"}},
+)
+
+
+@router.post("/", response_model={{ module_name_title }}Response, status_code=201)
+def create_{{ module_name }}(
+    {{ module_name }}_data: {{ module_name_title }}Create,
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Create a new {{ module_name_title }}.
+    
+    Simple endpoint for creating {{ module_name_plural }} in microservice architecture.
+    """
+    try:
+        service = {{ module_name_title }}Service(db)
+        created_{{ module_name }} = service.create_{{ module_name }}({{ module_name }}_data)
+        return created_{{ module_name }}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create {{ module_name_title }}: {str(e)}")
+
+
+@router.get("/", response_model={{ module_name_title }}ListResponse)
+def get_{{ module_name_plural }}(
+    skip: int = Query(0, ge=0, description="Number of items to skip"),
+    limit: int = Query(100, ge=1, le=1000, description="Number of items to return"),
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Get {{ module_name_plural }} with pagination.
+    
+    Lightweight endpoint for retrieving {{ module_name_plural }} with basic pagination.
+    """
+    try:
+        service = {{ module_name_title }}Service(db)
+        {{ module_name_plural }} = service.get_{{ module_name_plural }}(skip, limit)
+        total = service.get_{{ module_name_plural }}_count()
+        
+        return {{ module_name_title }}ListResponse(
+            items={{ module_name_plural }},
+            total=total,
+            page=(skip // limit) + 1,
+            size=limit
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve {{ module_name_plural }}: {str(e)}")
+
+
+@router.get("/{ {{ module_name }}_id}", response_model={{ module_name_title }}Response)
+def get_{{ module_name }}(
+    {{ module_name }}_id: int,
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Get a specific {{ module_name_title }} by ID.
+    
+    Simple endpoint for retrieving a single {{ module_name_title }}.
+    """
+    try:
+        service = {{ module_name_title }}Service(db)
+        {{ module_name }} = service.get_{{ module_name }}({{ module_name }}_id)
+        
+        if not {{ module_name }}:
+            raise HTTPException(status_code=404, detail=f"{{ module_name_title }} with ID { {{ module_name }}_id} not found")
+        
+        return {{ module_name }}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve {{ module_name_title }}: {str(e)}")
+
+
+@router.put("/{ {{ module_name }}_id}", response_model={{ module_name_title }}Response)
+def update_{{ module_name }}(
+    {{ module_name }}_id: int,
+    {{ module_name }}_data: {{ module_name_title }}Update,
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Update an existing {{ module_name_title }}.
+    
+    Simple endpoint for updating {{ module_name_plural }}.
+    """
+    try:
+        service = {{ module_name_title }}Service(db)
+        updated_{{ module_name }} = service.update_{{ module_name }}({{ module_name }}_id, {{ module_name }}_data)
+        
+        if not updated_{{ module_name }}:
+            raise HTTPException(status_code=404, detail=f"{{ module_name_title }} with ID { {{ module_name }}_id} not found")
+        
+        return updated_{{ module_name }}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update {{ module_name_title }}: {str(e)}")
+
+
+@router.delete("/{ {{ module_name }}_id}")
+def delete_{{ module_name }}(
+    {{ module_name }}_id: int,
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Delete a {{ module_name_title }}.
+    
+    Simple endpoint for deleting {{ module_name_plural }}.
+    """
+    try:
+        service = {{ module_name_title }}Service(db)
+        success = service.delete_{{ module_name }}({{ module_name }}_id)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail=f"{{ module_name_title }} with ID { {{ module_name }}_id} not found")
+        
+        return {"message": f"{{ module_name_title }} with ID { {{ module_name }}_id} deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete {{ module_name_title }}: {str(e)}")
+
+
+@router.get("/search/{search_term}")
+def search_{{ module_name_plural }}(
+    search_term: str,
+    skip: int = Query(0, ge=0, description="Number of items to skip"),
+    limit: int = Query(100, ge=1, le=1000, description="Number of items to return"),
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Search {{ module_name_plural }} by name or description.
+    
+    Lightweight search functionality for microservice architecture.
+    """
+    try:
+        service = {{ module_name_title }}Service(db)
+        {{ module_name_plural }} = service.search_{{ module_name_plural }}(search_term, skip, limit)
+        
+        return {
+            "items": {{ module_name_plural }},
+            "search_term": search_term,
+            "total_found": len({{ module_name_plural }}),
+            "skip": skip,
+            "limit": limit
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to search {{ module_name_plural }}: {str(e)}")
+
+
+@router.get("/health", response_model=HealthCheck)
+def health_check(
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Health check endpoint.
+    
+    Essential for microservice monitoring and load balancer health checks.
+    """
+    try:
+        health_service = HealthService(db)
+        stats = health_service.get_service_stats()
+        
+        return HealthCheck(
+            status="healthy" if stats.get("database_healthy", False) else "unhealthy",
+            timestamp=stats.get("timestamp"),
+            version="1.0.0"
+        )
+        
+    except Exception as e:
+        return HealthCheck(
+            status="unhealthy",
+            timestamp=datetime.utcnow(),
+            version="1.0.0"
+        )
+
+
+@router.get("/stats")
+def get_service_stats(
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Get service statistics.
+    
+    Basic monitoring endpoint for microservice observability.
+    """
+    try:
+        health_service = HealthService(db)
+        stats = health_service.get_service_stats()
+        return stats
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get service stats: {str(e)}")

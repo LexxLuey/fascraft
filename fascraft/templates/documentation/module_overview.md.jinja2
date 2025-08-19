@@ -1,0 +1,334 @@
+# {{ module_name|title }} Module Overview
+
+## Module Information
+
+- **Name**: {{ module_name }}
+- **Path**: `{{ module_path }}`
+- **Description**: {{ module_description }}
+- **Template**: {{ template_type if template_type else "Standard" }}
+- **Generated**: {{ generated_at if generated_at else "Unknown" }}
+
+## Module Structure
+
+```
+{{ module_name }}/
+├── __init__.py              # Module initialization
+├── models.py                # Database models
+├── schemas.py               # Pydantic schemas
+├── services.py              # Business logic
+├── routers.py               # API endpoints
+└── tests/                   # Test files
+    ├── __init__.py
+    └── test_models.py
+```
+
+## Files
+
+{% if files %}
+This module contains the following files:
+
+{% for file in files %}
+- **`{{ file }}`**: {{ file_description if file_description else "Module file" }}
+{% endfor %}
+{% else %}
+No specific files listed for this module.
+{% endif %}
+
+## Dependencies
+
+{% if dependencies %}
+This module depends on the following modules:
+
+{% for dependency in dependencies %}
+- **{{ dependency }}**: {{ dependency|title }} module
+{% endfor %}
+
+### Dependency Graph
+```
+{{ module_name }}
+{% for dependency in dependencies %}├── {{ dependency }}
+{% endfor %}
+```
+
+### Import Statements
+```python
+{% for dependency in dependencies %}from {{ dependency }} import models as {{ dependency }}_models
+from {{ dependency }} import services as {{ dependency }}_services
+from {{ dependency }} import schemas as {{ dependency }}_schemas
+{% endfor %}
+```
+
+### Service Dependencies
+```python
+class {{ module_name|title }}Service:
+    def __init__(
+        self,
+        {% for dependency in dependencies %}{{ dependency }}_service: {{ dependency|title }}Service,
+        {% endfor %}
+    ):
+        {% for dependency in dependencies %}self.{{ dependency }}_service = {{ dependency }}_service
+        {% endfor %}
+```
+{% else %}
+This module has no external dependencies.
+{% endif %}
+
+## API Endpoints
+
+The module provides the following API endpoints:
+
+**Base Path**: `/{{ module_name }}s`
+
+- `GET /{{ module_name }}s` - List all {{ module_name }}s
+- `POST /{{ module_name }}s` - Create a new {{ module_name }}
+- `GET /{{ module_name }}s/{id}` - Get {{ module_name }} by ID
+- `PUT /{{ module_name }}s/{id}` - Update {{ module_name }} by ID
+- `DELETE /{{ module_name }}s/{id}` - Delete {{ module_name }} by ID
+
+### Example Usage
+
+#### Creating a {{ module_name|title }}
+
+```http
+POST /{{ module_name }}s
+Content-Type: application/json
+
+{
+  "name": "Example {{ module_name|title }}",
+  "description": "Description of the {{ module_name }}"
+}
+```
+
+#### Retrieving {{ module_name }}s
+
+```http
+GET /{{ module_name }}s?page=1&size=10
+```
+
+## Data Models
+
+### {{ module_name|title }}Model
+
+```python
+class {{ module_name|title }}Model(Base):
+    __tablename__ = "{{ module_name }}s"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False, index=True)
+    description = Column(String(500), nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+```
+
+## Schemas
+
+### {{ module_name|title }}Create
+
+```python
+class {{ module_name|title }}Create(BaseModel):
+    name: str
+    description: Optional[str] = None
+    is_active: bool = True
+```
+
+### {{ module_name|title }}Update
+
+```python
+class {{ module_name|title }}Update(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+```
+
+### {{ module_name|title }}Response
+
+```python
+class {{ module_name|title }}Response(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        orm_mode = True
+```
+
+## Services
+
+### {{ module_name|title }}Service
+
+The service layer handles business logic for {{ module_name }} operations:
+
+```python
+class {{ module_name|title }}Service:
+    def __init__(self, db: Session):
+        self.db = db
+    
+    def create_{{ module_name }}(self, {{ module_name }}_data: {{ module_name|title }}Create) -> {{ module_name|title }}Model:
+        # Implementation details
+        
+    def get_{{ module_name }}(self, {{ module_name }}_id: int) -> {{ module_name|title }}Model:
+        # Implementation details
+        
+    def update_{{ module_name }}(self, {{ module_name }}_id: int, {{ module_name }}_data: {{ module_name|title }}Update) -> {{ module_name|title }}Model:
+        # Implementation details
+        
+    def delete_{{ module_name }}(self, {{ module_name }}_id: int) -> bool:
+        # Implementation details
+```
+
+## Testing
+
+### Running Tests
+
+```bash
+# Run all tests for this module
+pytest {{ module_name }}/tests/
+
+# Run specific test file
+pytest {{ module_name }}/tests/test_models.py
+
+# Run with coverage
+pytest {{ module_name }}/tests/ --cov={{ module_name }}
+```
+
+### Test Structure
+
+The test suite includes:
+
+- **Model Tests**: Database model validation and relationships
+- **Schema Tests**: Pydantic schema validation
+- **Service Tests**: Business logic validation
+- **Router Tests**: API endpoint validation
+
+## Configuration
+
+### Environment Variables
+
+This module may use the following environment variables:
+
+- `{{ module_name|upper }}_DB_URL`: Database connection string
+- `{{ module_name|upper }}_CACHE_TTL`: Cache time-to-live in seconds
+- `{{ module_name|upper }}_LOG_LEVEL`: Logging level
+
+### Settings
+
+Module-specific settings can be configured in `config/settings.py`:
+
+```python
+# {{ module_name|title }} module settings
+{{ module_name|upper }}_SETTINGS = {
+    "default_page_size": 20,
+    "max_page_size": 100,
+    "cache_enabled": True,
+    "cache_ttl": 300
+}
+```
+
+## Monitoring and Logging
+
+### Logging
+
+The module uses structured logging with the following loggers:
+
+- `{{ module_name }}.models`: Database operations
+- `{{ module_name }}.services`: Business logic
+- `{{ module_name }}.routers`: API requests
+
+### Metrics
+
+Key metrics to monitor:
+
+- Request count and response times
+- Database query performance
+- Error rates and types
+- Cache hit/miss ratios
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Database Connection Errors**
+   - Check database configuration
+   - Verify connection string format
+   - Ensure database is running
+
+2. **Import Errors**
+   - Verify all dependencies are installed
+   - Check Python path configuration
+   - Ensure module is properly initialized
+
+3. **API Errors**
+   - Check request format and validation
+   - Verify authentication and permissions
+   - Review server logs for details
+
+### Debug Mode
+
+Enable debug mode for detailed error information:
+
+```python
+# In config/settings.py
+DEBUG = True
+LOG_LEVEL = "DEBUG"
+```
+
+## Performance Considerations
+
+### Database Optimization
+
+- Use database indexes on frequently queried fields
+- Implement connection pooling
+- Consider read replicas for heavy read workloads
+
+### Caching
+
+- Cache frequently accessed data
+- Use Redis or similar for distributed caching
+- Implement cache invalidation strategies
+
+### API Optimization
+
+- Implement pagination for large datasets
+- Use compression for responses
+- Consider GraphQL for complex queries
+
+## Security
+
+### Input Validation
+
+- All inputs are validated using Pydantic schemas
+- SQL injection protection through SQLAlchemy ORM
+- XSS protection through proper output encoding
+
+### Authentication
+
+{% if auth_required %}
+- JWT token-based authentication
+- Role-based access control
+- API key validation for external services
+{% else %}
+- Currently no authentication required
+- Consider implementing authentication for production use
+{% endif %}
+
+## Future Enhancements
+
+Potential improvements for this module:
+
+- [ ] Add bulk operations support
+- [ ] Implement advanced filtering and search
+- [ ] Add audit logging
+- [ ] Implement soft delete functionality
+- [ ] Add data export capabilities
+- [ ] Implement webhook notifications
+
+## Related Documentation
+
+- [Project Overview](../project_overview.md)
+- [API Documentation](../api_documentation.md)
+- [Database Schema](../database_schema.md)
+- [Deployment Guide](../deployment.md)

@@ -1,0 +1,263 @@
+"""Pydantic schemas for {{ module_name_title }} admin panel module."""
+
+from datetime import datetime
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field, validator, computed_field
+from enum import Enum
+
+
+class UserRole(str, Enum):
+    """User roles for access control."""
+    VIEWER = "viewer"
+    EDITOR = "editor"
+    ADMIN = "admin"
+    SUPER_ADMIN = "super_admin"
+
+
+class ApprovalStatus(str, Enum):
+    """Approval workflow status."""
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    UNDER_REVIEW = "under_review"
+
+
+class AuditAction(str, Enum):
+    """Audit log action types."""
+    CREATE = "create"
+    READ = "read"
+    UPDATE = "update"
+    DELETE = "delete"
+    APPROVE = "approve"
+    REJECT = "reject"
+    EXPORT = "export"
+    IMPORT = "import"
+
+
+class {{ module_name_title }}Base(BaseModel):
+    """Base schema for {{ module_name_title }} with admin fields."""
+    
+    name: str = Field(..., min_length=1, max_length=100, description="Name of the {{ module_name_title }}")
+    description: Optional[str] = Field(None, max_length=500, description="Description of the {{ module_name_title }}")
+    is_active: bool = Field(default=True, description="Whether the {{ module_name_title }} is active")
+    requires_approval: bool = Field(default=False, description="Whether changes require approval")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "name": "Sample {{ module_name_title }}",
+                "description": "A sample {{ module_name_title }} for testing",
+                "is_active": True,
+                "requires_approval": False
+            }
+        }
+
+
+class {{ module_name_title }}Create({{ module_name_title }}Base):
+    """Schema for creating a new {{ module_name_title }}."""
+    
+    @validator('name')
+    def validate_name(cls, v):
+        if not v.strip():
+            raise ValueError('Name cannot be empty or whitespace')
+        return v.strip()
+
+
+class {{ module_name_title }}Update(BaseModel):
+    """Schema for updating an existing {{ module_name_title }}."""
+    
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+    is_active: Optional[bool] = None
+    requires_approval: Optional[bool] = None
+
+
+class {{ module_name_title }}Response({{ module_name_title }}Base):
+    """Schema for {{ module_name_title }} response with admin metadata."""
+    
+    id: int = Field(..., description="Unique identifier")
+    created_at: datetime = Field(..., description="Creation timestamp")
+    updated_at: datetime = Field(..., description="Last update timestamp")
+    created_by: Optional[str] = Field(None, description="User who created the {{ module_name_title }}")
+    updated_by: Optional[str] = Field(None, description="User who last updated the {{ module_name_title }}")
+    approval_status: ApprovalStatus = Field(..., description="Current approval status")
+    approved_by: Optional[str] = Field(None, description="User who approved the {{ module_name_title }}")
+    approved_at: Optional[datetime] = Field(None, description="Approval timestamp")
+    
+    @computed_field
+    @property
+    def can_edit(self) -> bool:
+        """Check if the {{ module_name_title }} can be edited."""
+        return self.is_active and self.approval_status != ApprovalStatus.UNDER_REVIEW
+    
+    @computed_field
+    @property
+    def needs_approval(self) -> bool:
+        """Check if the {{ module_name_title }} needs approval."""
+        return self.requires_approval and self.approval_status == ApprovalStatus.PENDING
+    
+    class Config:
+        from_attributes = True
+        schema_extra = {
+            "example": {
+                "id": 1,
+                "name": "Sample {{ module_name_title }}",
+                "description": "A sample {{ module_name_title }} for testing",
+                "is_active": True,
+                "requires_approval": False,
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+                "created_by": "admin@example.com",
+                "updated_by": "admin@example.com",
+                "approval_status": "approved",
+                "approved_by": "admin@example.com",
+                "approved_at": "2024-01-01T00:00:00Z"
+            }
+        }
+
+
+class {{ module_name_title }}ListResponse(BaseModel):
+    """Schema for paginated {{ module_name_title }} list response."""
+    
+    items: List[{{ module_name_title }}Response] = Field(..., description="List of {{ module_name_plural }}")
+    total: int = Field(..., description="Total number of {{ module_name_plural }}")
+    page: int = Field(..., description="Current page number")
+    size: int = Field(..., description="Page size")
+    pages: int = Field(..., description="Total number of pages")
+    
+    @computed_field
+    @property
+    def has_next(self) -> bool:
+        """Check if there's a next page."""
+        return self.page < self.pages
+    
+    @computed_field
+    @property
+    def has_previous(self) -> bool:
+        """Check if there's a previous page."""
+        return self.page > 1
+
+
+class ApprovalRequest(BaseModel):
+    """Schema for approval requests."""
+    
+    {{ module_name }}_id: int = Field(..., description="ID of the {{ module_name_title }} to approve")
+    action: str = Field(..., description="Action being requested (create, update, delete)")
+    reason: Optional[str] = Field(None, max_length=500, description="Reason for the request")
+    requested_by: str = Field(..., description="User requesting approval")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "{{ module_name }}_id": 1,
+                "action": "update",
+                "reason": "Updating description for clarity",
+                "requested_by": "editor@example.com"
+            }
+        }
+
+
+class ApprovalResponse(BaseModel):
+    """Schema for approval responses."""
+    
+    {{ module_name }}_id: int = Field(..., description="ID of the {{ module_name_title }}")
+    approved: bool = Field(..., description="Whether the request was approved")
+    approved_by: str = Field(..., description="User who made the approval decision")
+    comments: Optional[str] = Field(None, max_length=500, description="Approval comments")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "{{ module_name }}_id": 1,
+                "approved": True,
+                "approved_by": "admin@example.com",
+                "comments": "Changes look good, approved"
+            }
+        }
+
+
+class AuditLogEntry(BaseModel):
+    """Schema for audit log entries."""
+    
+    id: int = Field(..., description="Unique identifier")
+    user_id: str = Field(..., description="User who performed the action")
+    action: AuditAction = Field(..., description="Action performed")
+    resource_type: str = Field(..., description="Type of resource affected")
+    resource_id: int = Field(..., description="ID of the resource affected")
+    details: Optional[Dict[str, Any]] = Field(None, description="Additional action details")
+    ip_address: Optional[str] = Field(None, description="IP address of the user")
+    user_agent: Optional[str] = Field(None, description="User agent string")
+    timestamp: datetime = Field(..., description="When the action occurred")
+    
+    class Config:
+        from_attributes = True
+        schema_extra = {
+            "example": {
+                "id": 1,
+                "user_id": "admin@example.com",
+                "action": "create",
+                "resource_type": "{{ module_name_title }}",
+                "resource_id": 1,
+                "details": {"name": "New {{ module_name_title }}"},
+                "ip_address": "192.168.1.1",
+                "user_agent": "Mozilla/5.0...",
+                "timestamp": "2024-01-01T00:00:00Z"
+            }
+        }
+
+
+class UserPermission(BaseModel):
+    """Schema for user permissions."""
+    
+    user_id: str = Field(..., description="User identifier")
+    role: UserRole = Field(..., description="User role")
+    permissions: List[str] = Field(default_factory=list, description="Specific permissions")
+    can_approve: bool = Field(default=False, description="Whether user can approve changes")
+    can_delete: bool = Field(default=False, description="Whether user can delete items")
+    can_export: bool = Field(default=False, description="Whether user can export data")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "user_id": "admin@example.com",
+                "role": "admin",
+                "permissions": ["read", "write", "delete"],
+                "can_approve": True,
+                "can_delete": True,
+                "can_export": True
+            }
+        }
+
+
+class AdminFilter(BaseModel):
+    """Schema for admin filtering."""
+    
+    is_active: Optional[bool] = Field(None, description="Filter by active status")
+    approval_status: Optional[ApprovalStatus] = Field(None, description="Filter by approval status")
+    created_by: Optional[str] = Field(None, description="Filter by creator")
+    updated_by: Optional[str] = Field(None, description="Filter by last updater")
+    requires_approval: Optional[bool] = Field(None, description="Filter by approval requirement")
+    start_date: Optional[datetime] = Field(None, description="Start date for filtering")
+    end_date: Optional[datetime] = Field(None, description="End date for filtering")
+    search: Optional[str] = Field(None, description="Search term for name/description")
+
+
+class AdminStats(BaseModel):
+    """Schema for admin statistics."""
+    
+    total_{{ module_name_plural }}: int = Field(..., description="Total number of {{ module_name_plural }}")
+    active_{{ module_name_plural }}: int = Field(..., description="Number of active {{ module_name_plural }}")
+    pending_approvals: int = Field(..., description="Number of pending approvals")
+    recent_activities: int = Field(..., description="Number of recent activities")
+    users_with_access: int = Field(..., description="Number of users with access")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "total_{{ module_name_plural }}": 100,
+                "active_{{ module_name_plural }}": 85,
+                "pending_approvals": 5,
+                "recent_activities": 25,
+                "users_with_access": 15
+            }
+        }

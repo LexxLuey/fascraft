@@ -1,0 +1,21 @@
+"""Basic models for {{ module_name }} module."""
+
+from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy.sql import func
+from config.database import Base
+
+
+class {{ module_name|title }}Model(Base):
+    """Basic {{ module_name }} model."""
+    
+    __tablename__ = "{{ module_name }}s"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False, index=True)
+    description = Column(String(500), nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    def __repr__(self):
+        return f"<{{ module_name|title }}Model(id={self.id}, name='{self.name}')>"

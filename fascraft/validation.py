@@ -365,10 +365,7 @@ def validate_disk_space(path: Path, required_space_mb: int = 10) -> None:
         available_mb = stat.free / (1024 * 1024)
 
         if available_mb < required_space_mb:
-            raise DiskSpaceError(
-                f"{required_space_mb}MB",
-                f"{available_mb:.1f}MB"
-            )
+            raise DiskSpaceError(f"{required_space_mb}MB", f"{available_mb:.1f}MB")
     except OSError as e:
         # Handle network paths or permission issues
         if "No space left on device" in str(e):
@@ -407,9 +404,7 @@ def validate_path_robust(path: str) -> Path:
 
         # Handle special characters and non-ASCII
         if not is_path_safe(str(path_obj)):
-            raise InvalidInputError(
-                "path", path, "Path contains unsafe characters"
-            )
+            raise InvalidInputError("path", path, "Path contains unsafe characters")
 
         # Handle reserved system names (Windows)
         for part in path_obj.parts:
@@ -427,23 +422,46 @@ def validate_path_robust(path: str) -> Path:
     except Exception as e:
         if isinstance(e, InvalidInputError):
             raise
-        raise InvalidInputError("path", path, f"Path validation failed: {str(e)}") from e
+        raise InvalidInputError(
+            "path", path, f"Path validation failed: {str(e)}"
+        ) from e
 
 
 def is_path_safe(path_str: str) -> bool:
     """Check if path contains only safe characters."""
     # Allow alphanumeric, spaces, dots, hyphens, underscores, forward slashes, backslashes, and colons
     # Note: Colons are allowed for Windows drive letters (e.g., C:), backslashes for Windows paths
-    safe_chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-_/\\:")
+    safe_chars = set(
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-_/\\:"
+    )
     return all(c in safe_chars for c in path_str)
 
 
 def is_windows_reserved_name(name: str) -> bool:
     """Check if name is a Windows reserved name."""
     reserved_names = {
-        "CON", "PRN", "AUX", "NUL",
-        "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
-        "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
+        "CON",
+        "PRN",
+        "AUX",
+        "NUL",
+        "COM1",
+        "COM2",
+        "COM3",
+        "COM4",
+        "COM5",
+        "COM6",
+        "COM7",
+        "COM8",
+        "COM9",
+        "LPT1",
+        "LPT2",
+        "LPT3",
+        "LPT4",
+        "LPT5",
+        "LPT6",
+        "LPT7",
+        "LPT8",
+        "LPT9",
     }
     return name.upper() in reserved_names
 
@@ -464,4 +482,6 @@ def validate_network_path(path: Path) -> None:
             test_file.write_text("test")
             test_file.unlink()
     except Exception as e:
-        raise NetworkPathError(str(path), f"Network path validation failed: {str(e)}") from e
+        raise NetworkPathError(
+            str(path), f"Network path validation failed: {str(e)}"
+        ) from e

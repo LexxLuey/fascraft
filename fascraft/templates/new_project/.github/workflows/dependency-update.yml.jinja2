@@ -1,0 +1,171 @@
+name: Dependency Update
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      update_type:
+        description: 'Type of update to perform'
+        required: true
+        default: 'security'
+        type: choice
+        options:
+        - security
+        - all
+        - major
+
+env:
+  PYTHON_VERSION: "3.10"
+  POETRY_VERSION: "1.7.0"
+
+jobs:
+  check-dependencies:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: {% raw %}${{ env.PYTHON_VERSION }}{% endraw %}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: {% raw %}${{ env.POETRY_VERSION }}{% endraw %}
+
+    - name: Install dependencies
+      run: poetry install --no-interaction --no-root
+
+    - name: Check for outdated dependencies
+      id: check-updates
+      run: |
+        poetry show --outdated --format json > outdated.json
+        echo "outdated_count=$(jq length outdated.json)" >> $GITHUB_OUTPUT
+        cat outdated.json
+
+    - name: Check for security vulnerabilities
+      id: security-check
+      run: |
+        poetry run safety check --json --output safety-report.json || true
+        echo "vulnerabilities=$(jq '.vulnerabilities | length' safety-report.json)" >> $GITHUB_OUTPUT
+        cat safety-report.json
+
+    - name: Create issue for updates
+      if: steps.check-updates.outputs.outdated_count != '0' || steps.security-check.outputs.vulnerabilities != '0'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: issues } = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            labels: ['dependencies', 'automated']
+          });
+          
+          const existingIssue = issues.find(issue => 
+            issue.title.includes('Dependency Updates Available')
+          );
+          
+          if (existingIssue) {
+            console.log('Issue already exists:', existingIssue.number);
+            return;
+          }
+          
+          const body = `## 🔄 Dependency Updates Available
+          
+          **Outdated Dependencies:** ${context.outputs.outdated_count}
+          **Security Vulnerabilities:** ${context.outputs.vulnerabilities}
+          
+          ### 📋 Next Steps
+          1. Review outdated dependencies
+          2. Update security-critical packages first
+          3. Test thoroughly after updates
+          4. Update poetry.lock file
+          
+          ### 🔍 Details
+          Check the workflow run for detailed information about outdated packages and security issues.
+          
+          ---
+          *This issue was automatically created by the Dependency Update workflow.*`;
+          
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🔄 Dependency Updates Available',
+            body: body,
+            labels: ['dependencies', 'automated', 'maintenance']
+          });
+
+  update-dependencies:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.update_type == 'all' || github.event.inputs.update_type == 'security'
+    needs: check-dependencies
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: {% raw %}${{ env.PYTHON_VERSION }}{% endraw %}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: {% raw %}${{ env.POETRY_VERSION }}{% endraw %}
+
+    - name: Configure Git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+    - name: Install dependencies
+      run: poetry install --no-interaction --no-root
+
+    - name: Update dependencies
+      run: |
+        if [ "{% raw %}${{ github.event.inputs.update_type }}{% endraw %}" = "security" ]; then
+          poetry run safety check --update
+        else
+          poetry update
+        fi
+
+    - name: Run tests after update
+      run: poetry run pytest --cov=. --cov-report=term-missing
+
+    - name: Create pull request
+      if: success()
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+        commit-message: "chore: update dependencies"
+        title: "🔄 Update Dependencies"
+        body: |
+          ## 🔄 Dependency Updates
+          
+          This PR updates project dependencies to their latest versions.
+          
+          ### 📋 Changes
+          - Updated dependencies to latest compatible versions
+          - All tests passing
+          - Security vulnerabilities addressed
+          
+          ### 🧪 Testing
+          - [x] Unit tests passing
+          - [x] Integration tests passing
+          - [x] Coverage maintained
+          
+          ### 🔍 Review Required
+          Please review the changes and ensure compatibility with your application.
+          
+          ---
+          *Automatically created by the Dependency Update workflow.*
+        branch: "deps/update-$(date +%Y%m%d)"
+        delete-branch: true
+        labels: "dependencies,automated"

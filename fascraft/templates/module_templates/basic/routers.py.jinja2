@@ -1,0 +1,48 @@
+"""Basic routers for {{ module_name }} module."""
+
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+from config.database import get_db
+from . import schemas, services
+
+router = APIRouter()
+
+@router.post("/", response_model=schemas.{{ module_name|title }}Response, status_code=status.HTTP_201_CREATED)
+def create_{{ module_name }}({{ module_name }}: schemas.{{ module_name|title }}Create, db: Session = Depends(get_db)):
+    """Create a new {{ module_name }}."""
+    return services.{{ module_name|title }}Service.create_{{ module_name }}(db, {{ module_name }})
+
+
+@router.get("/", response_model=List[schemas.{{ module_name|title }}Response])
+def get_{{ module_name }}s(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """Get all {{ module_name }}s with pagination."""
+    return services.{{ module_name|title }}Service.get_{{ module_name }}s(db, skip=skip, limit=limit)
+
+
+@router.get("/{ {{ module_name }}_id }", response_model=schemas.{{ module_name|title }}Response)
+def get_{{ module_name }}({{ module_name }}_id: int, db: Session = Depends(get_db)):
+    """Get a {{ module_name }} by ID."""
+    db_{{ module_name }} = services.{{ module_name|title }}Service.get_{{ module_name }}(db, {{ module_name }}_id)
+    if db_{{ module_name }} is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="{{ module_name|title }} not found")
+    return db_{{ module_name }}
+
+
+@router.put("/{ {{ module_name }}_id }", response_model=schemas.{{ module_name|title }}Response)
+def update_{{ module_name }}({{ module_name }}_id: int, {{ module_name }}: schemas.{{ module_name|title }}Update, db: Session = Depends(get_db)):
+    """Update a {{ module_name }}."""
+    db_{{ module_name }} = services.{{ module_name|title }}Service.update_{{ module_name }}(db, {{ module_name }}_id, {{ module_name }})
+    if db_{{ module_name }} is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="{{ module_name|title }} not found")
+    return db_{{ module_name }}
+
+
+@router.delete("/{ {{ module_name }}_id }", status_code=status.HTTP_204_NO_CONTENT)
+def delete_{{ module_name }}({{ module_name }}_id: int, db: Session = Depends(get_db)):
+    """Delete a {{ module_name }}."""
+    success = services.{{ module_name|title }}Service.delete_{{ module_name }}(db, {{ module_name }}_id)
+    if not success:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="{{ module_name|title }} not found")
+    return None

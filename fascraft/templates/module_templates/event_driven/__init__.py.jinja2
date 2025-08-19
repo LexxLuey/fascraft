@@ -1,0 +1,19 @@
+"""Event-Driven {{ module_name_title }} domain module with async event handling.
+
+This module provides an event-driven architecture with:
+- Event tracking and logging
+- Async event handlers
+- State change monitoring
+- User activity tracking
+- Session management
+"""
+
+from . import models, schemas, services, routers
+
+__all__ = ["models", "schemas", "services", "routers"]
+
+# Module metadata for API documentation
+__version__ = "1.0.0"
+__api_version__ = "v1"
+__description__ = "Event-Driven {{ module_name_title }} domain module with async event handling"
+__tags__ = ["{{ module_name }}s", "event-driven", "async", "events"]

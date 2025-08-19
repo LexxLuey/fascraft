@@ -7,6 +7,9 @@ from jinja2 import Environment, PackageLoader, select_autoescape
 from rich.console import Console
 from rich.text import Text
 
+from fascraft.module_dependencies import dependency_analyzer, dependency_graph
+from fascraft.template_registry import template_registry
+
 # Initialize rich console
 console = Console()
 
@@ -26,6 +29,32 @@ def is_fastapi_project(project_path: Path) -> bool:
             return True
 
     return False
+
+
+def generate_dependency_imports(dependencies: list) -> str:
+    """Generate import statements for dependencies."""
+    if not dependencies:
+        return ""
+
+    imports = []
+    for dep in dependencies:
+        imports.append(f"from {dep} import models as {dep}_models")
+        imports.append(f"from {dep} import services as {dep}_services")
+        imports.append(f"from {dep} import schemas as {dep}_schemas")
+
+    return "\n".join(imports)
+
+
+def generate_dependency_injections(dependencies: list) -> str:
+    """Generate dependency injection parameters for services and routers."""
+    if not dependencies:
+        return ""
+
+    injections = []
+    for dep in dependencies:
+        injections.append(f"{dep}_service: {dep.title()}Service")
+
+    return ", ".join(injections)
 
 
 def ensure_config_structure(project_path: Path) -> None:
@@ -54,6 +83,15 @@ def ensure_config_structure(project_path: Path) -> None:
 def generate_module(
     module_name: str,
     path: str = typer.Option(".", help="📁 The path to the existing FastAPI project"),
+    template: str = typer.Option(
+        "basic",
+        help="🎨 Template type to use (basic, crud, api_first, event_driven, microservice, admin_panel)",
+    ),
+    depends_on: str = typer.Option(
+        None,
+        "--depends-on",
+        help="🔗 Comma-separated list of modules this module depends on",
+    ),
 ) -> None:
     """🔧 Generates a new domain module in an existing FastAPI project."""
     if not module_name or not module_name.strip():
@@ -96,12 +134,141 @@ def generate_module(
         console.print(error_text)
         raise typer.Exit(code=1)
 
+    # Validate template selection
+    try:
+        selected_template = template_registry.get_template(template)
+        console.print(
+            f"🎨 Using template: {selected_template.display_name} ({selected_template.description})",
+            style="bold blue",
+        )
+    except Exception as e:
+        error_text = Text()
+        error_text.append("❌ ", style="bold red")
+        error_text.append("Error: ", style="bold red")
+        error_text.append(f"Invalid template '{template}': {str(e)}", style="white")
+        console.print(error_text)
+
+        # Show available templates
+        available_templates = template_registry.list_templates()
+        console.print("\n📋 Available templates:", style="bold yellow")
+        for t in available_templates:
+            console.print(
+                f"  • {t.name}: {t.display_name} - {t.description}", style="cyan"
+            )
+
+        raise typer.Exit(code=1) from e
+
+    # Handle module dependencies
+    dependencies = []
+    if depends_on:
+        dependencies = [dep.strip() for dep in depends_on.split(",") if dep.strip()]
+
+        # Validate that all dependency modules exist
+        for dep_module in dependencies:
+            dep_path = path_obj / dep_module
+            if not dep_path.exists():
+                error_text = Text()
+                error_text.append("❌ ", style="bold red")
+                error_text.append("Error: ", style="bold red")
+                error_text.append(
+                    f"Dependency module '{dep_module}' not found at ", style="white"
+                )
+                error_text.append(f"{dep_path}", style="yellow")
+                console.print(error_text)
+                raise typer.Exit(code=1)
+
+        # Check for circular dependencies
+        if module_name in dependencies:
+            error_text = Text()
+            error_text.append("❌ ", style="bold red")
+            error_text.append("Error: ", style="bold red")
+            error_text.append(
+                f"Module cannot depend on itself: '{module_name}'", style="white"
+            )
+            console.print(error_text)
+            raise typer.Exit(code=1)
+
+        console.print(f"🔗 Dependencies: {', '.join(dependencies)}", style="bold blue")
+
+    # Register module in dependency graph
+    module_path = path_obj / module_name
+    dependency_graph.add_module(
+        module_name,
+        module_path,
+        {"template": template, "generated_at": "now", "dependencies": dependencies},
+    )
+
+    # Register dependencies in the graph
+    for dep_module in dependencies:
+        dep_path = path_obj / dep_module
+        if dep_module not in dependency_graph.modules:
+            dependency_graph.add_module(
+                dep_module, dep_path, {"type": "existing", "discovered_at": "now"}
+            )
+
+        # Add dependency relationship
+        dependency_graph.add_dependency(
+            module_name,
+            dep_module,
+            "import",
+            "strong",
+            f"{module_name} module depends on {dep_module}",
+            module_path,
+            1,
+        )
+
+    # Validate dependency graph health
+    if dependencies:
+        try:
+            # Check for circular dependencies
+            if dependency_graph.has_circular_dependencies():
+                cycles = dependency_graph.find_circular_dependencies()
+                error_text = Text()
+                error_text.append("❌ ", style="bold red")
+                error_text.append("Error: ", style="bold red")
+                error_text.append("Circular dependencies detected:", style="white")
+                console.print(error_text)
+
+                for cycle in cycles:
+                    cycle_text = Text()
+                    cycle_text.append("  🔄 ", style="yellow")
+                    cycle_text.append(" → ".join(cycle), style="cyan")
+                    console.print(cycle_text)
+
+                raise typer.Exit(code=1)
+
+            # Analyze module health
+            health = dependency_analyzer.analyze_module_health(module_name)
+            if health["health_score"] < 70:
+                warning_text = Text()
+                warning_text.append("⚠️  ", style="bold yellow")
+                warning_text.append("Warning: ", style="bold yellow")
+                warning_text.append(
+                    f"Module health score: {health['health_score']}/100", style="white"
+                )
+                console.print(warning_text)
+
+                suggestions = dependency_analyzer.suggest_dependency_optimizations()
+                for suggestion in suggestions:
+                    if suggestion["type"] == "critical":
+                        suggestion_text = Text()
+                        suggestion_text.append("  💡 ", style="blue")
+                        suggestion_text.append(
+                            suggestion["recommendation"], style="cyan"
+                        )
+                        console.print(suggestion_text)
+        except Exception as e:
+            console.print(
+                f"⚠️  Warning: Could not analyze dependencies: {str(e)}", style="yellow"
+            )
+
     # Ensure config structure exists
     ensure_config_structure(path_obj)
 
-    # Set up Jinja2 environment for module templates
+    # Set up Jinja2 environment for the selected template
+    template_path = f"templates/module_templates/{template}"
     env = Environment(
-        loader=PackageLoader("fascraft", "templates/module"),
+        loader=PackageLoader("fascraft", template_path),
         autoescape=select_autoescape(),
     )
 
@@ -124,6 +291,9 @@ def generate_module(
             project_name=path_obj.name,
             module_name_plural=f"{module_name}s",
             module_name_title=module_name.title(),
+            dependencies=dependencies,
+            dependency_imports=generate_dependency_imports(dependencies),
+            dependency_injections=generate_dependency_injections(dependencies),
         )
         output_path = path_obj / output_name
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -136,9 +306,17 @@ def generate_module(
     success_text.append("🎯 ", style="bold green")
     success_text.append("Successfully generated domain module ", style="bold white")
     success_text.append(f"'{module_name}' ", style="bold cyan")
-    success_text.append("in ", style="white")
+    success_text.append("using ", style="white")
+    success_text.append(f"'{selected_template.display_name}' ", style="bold yellow")
+    success_text.append("template in ", style="white")
     success_text.append(f"{path_obj}", style="bold blue")
     success_text.append(".", style="white")
+
+    if dependencies:
+        success_text.append(
+            f"\n🔗 Module depends on: {', '.join(dependencies)}", style="bold green"
+        )
+
     console.print(success_text)
 
     next_steps_text = Text()
@@ -156,6 +334,17 @@ def generate_module(
         f"\n  3. Test your new module with 'pytest {module_name}/tests/'",
         style="bold cyan",
     )
+
+    if dependencies:
+        next_steps_text.append(
+            f"\n  4. Review dependency imports in {module_name}/models.py, {module_name}/services.py",
+            style="bold cyan",
+        )
+        next_steps_text.append(
+            "\n  5. Ensure all dependency modules are properly configured",
+            style="bold cyan",
+        )
+
     console.print(next_steps_text)
 
     module_info_text = Text()
@@ -173,6 +362,31 @@ def generate_module(
         "Models are properly configured for SQLAlchemy and Alembic", style="bold cyan"
     )
     console.print(db_info_text)
+
+    # Show dependency information if any
+    if dependencies:
+        dep_info_text = Text()
+        dep_info_text.append("🔗 ", style="bold green")
+        dep_info_text.append("Dependencies configured: ", style="white")
+        dep_info_text.append(
+            f"Import statements and dependency injections added for {', '.join(dependencies)}",
+            style="bold cyan",
+        )
+        console.print(dep_info_text)
+
+        # Show dependency graph info
+        try:
+            stats = dependency_analyzer.get_dependency_statistics()
+            graph_info_text = Text()
+            graph_info_text.append("📊 ", style="bold blue")
+            graph_info_text.append("Dependency graph: ", style="white")
+            graph_info_text.append(
+                f"{stats['total_modules']} modules, {stats['total_dependencies']} dependencies",
+                style="bold cyan",
+            )
+            console.print(graph_info_text)
+        except Exception:
+            pass  # Silently fail if dependency analysis fails
 
 
 def update_base_router(project_path: Path, module_name: str) -> None:

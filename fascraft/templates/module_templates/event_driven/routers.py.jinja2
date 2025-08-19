@@ -1,0 +1,375 @@
+"""FastAPI routers for {{ module_name_title }} module with event-driven architecture."""
+
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from sqlalchemy.orm import Session
+
+from .schemas import (
+    {{ module_name_title }}Create, {{ module_name_title }}Update, {{ module_name_title }}Response,
+    {{ module_name_title }}ListResponse, EventFilter, EventStatus, EventPriority, EventLogEntry
+)
+from .services import {{ module_name_title }}Service, EventProcessingService
+from .models import {{ module_name_title }}
+
+# Import database dependency (adjust path as needed)
+# from ...database import get_db
+
+router = APIRouter(
+    prefix="/{{ module_name_plural }}",
+    tags=["{{ module_name_plural }}"],
+    responses={404: {"description": "Not found"}},
+)
+
+
+@router.post("/", response_model={{ module_name_title }}Response, status_code=201)
+async def create_{{ module_name }}(
+    {{ module_name }}_data: {{ module_name_title }}Create,
+    background_tasks: BackgroundTasks,
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Create a new {{ module_name_title }} with event logging.
+    
+    This endpoint creates a {{ module_name_title }} and logs the creation event.
+    The event processing happens asynchronously in the background.
+    """
+    try:
+        service = {{ module_name_title }}Service(db)
+        
+        # Add event metadata
+        event_metadata = {
+            "source": "api",
+            "user_agent": "fastapi",
+            "endpoint": "/{{ module_name_plural }}/"
+        }
+        
+        # Create the {{ module_name_title }} with event logging
+        created_{{ module_name }} = await service.create_{{ module_name }}({{ module_name }}_data, event_metadata)
+        
+        # Add background task for event processing
+        background_tasks.add_task(service._log_event, "api_creation", "api", EventStatus.COMPLETED, 
+                                f"{{ module_name_title }} created via API: {created_{{ module_name }}.id}", event_metadata)
+        
+        return created_{{ module_name }}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create {{ module_name_title }}: {str(e)}")
+
+
+@router.get("/", response_model={{ module_name_title }}ListResponse)
+async def get_{{ module_name_plural }}(
+    skip: int = Query(0, ge=0, description="Number of items to skip"),
+    limit: int = Query(100, ge=1, le=1000, description="Number of items to return"),
+    event_type: Optional[str] = Query(None, description="Filter by event type"),
+    event_source: Optional[str] = Query(None, description="Filter by event source"),
+    status: Optional[EventStatus] = Query(None, description="Filter by event status"),
+    priority: Optional[EventPriority] = Query(None, description="Filter by priority"),
+    search: Optional[str] = Query(None, description="Search term for name/description"),
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Get {{ module_name_plural }} with filtering and pagination.
+    
+    Supports filtering by event properties, status, priority, and text search.
+    Returns paginated results with metadata.
+    """
+    try:
+        service = {{ module_name_title }}Service(db)
+        
+        # Build filters
+        filters = EventFilter(
+            event_type=event_type,
+            event_source=event_source,
+            status=status,
+            priority=priority,
+            search=search
+        )
+        
+        # Get {{ module_name_plural }} with filters
+        {{ module_name_plural }} = await service.get_{{ module_name_plural }}(skip, limit, filters)
+        
+        # Get total count for pagination
+        total_query = db.query({{ module_name_title }})
+        if filters:
+            total_query = service._apply_filters(total_query, filters)
+        total = total_query.count()
+        
+        # Calculate pagination info
+        pages = (total + limit - 1) // limit if total > 0 else 0
+        
+        return {{ module_name_title }}ListResponse(
+            items={{ module_name_plural }},
+            total=total,
+            page=(skip // limit) + 1,
+            size=limit,
+            pages=pages
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve {{ module_name_plural }}: {str(e)}")
+
+
+@router.get("/{ {{ module_name }}_id}", response_model={{ module_name_title }}Response)
+async def get_{{ module_name }}(
+    {{ module_name }}_id: int,
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Get a specific {{ module_name_title }} by ID.
+    
+    Returns detailed information including event status and metadata.
+    """
+    try:
+        service = {{ module_name_title }}Service(db)
+        {{ module_name }} = await service.get_{{ module_name }}({{ module_name }}_id)
+        
+        if not {{ module_name }}:
+            raise HTTPException(status_code=404, detail=f"{{ module_name_title }} with ID { {{ module_name }}_id} not found")
+        
+        return {{ module_name }}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve {{ module_name_title }}: {str(e)}")
+
+
+@router.put("/{ {{ module_name }}_id}", response_model={{ module_name_title }}Response)
+async def update_{{ module_name }}(
+    {{ module_name }}_id: int,
+    {{ module_name }}_data: {{ module_name_title }}Update,
+    background_tasks: BackgroundTasks,
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Update an existing {{ module_name_title }} with event logging.
+    
+    This endpoint updates a {{ module_name_title }} and logs the update event.
+    The event processing happens asynchronously in the background.
+    """
+    try:
+        service = {{ module_name_title }}Service(db)
+        
+        # Add event metadata
+        event_metadata = {
+            "source": "api",
+            "user_agent": "fastapi",
+            "endpoint": f"/{{ module_name_plural }}/{ {{ module_name }}_id}",
+            "update_data": {{ module_name }}_data.dict(exclude_unset=True)
+        }
+        
+        # Update the {{ module_name_title }} with event logging
+        updated_{{ module_name }} = await service.update_{{ module_name }}({{ module_name }}_id, {{ module_name }}_data, event_metadata)
+        
+        if not updated_{{ module_name }}:
+            raise HTTPException(status_code=404, detail=f"{{ module_name_title }} with ID { {{ module_name }}_id} not found")
+        
+        # Add background task for event processing
+        background_tasks.add_task(service._log_event, "api_update", "api", EventStatus.COMPLETED,
+                                f"{{ module_name_title }} updated via API: { {{ module_name }}_id}", event_metadata)
+        
+        return updated_{{ module_name }}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update {{ module_name_title }}: {str(e)}")
+
+
+@router.delete("/{ {{ module_name }}_id}")
+async def delete_{{ module_name }}(
+    {{ module_name }}_id: int,
+    background_tasks: BackgroundTasks,
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Delete a {{ module_name_title }} with event logging.
+    
+    This endpoint deletes a {{ module_name_title }} and logs the deletion event.
+    The event processing happens asynchronously in the background.
+    """
+    try:
+        service = {{ module_name_title }}Service(db)
+        
+        # Add event metadata
+        event_metadata = {
+            "source": "api",
+            "user_agent": "fastapi",
+            "endpoint": f"/{{ module_name_plural }}/{ {{ module_name }}_id}"
+        }
+        
+        # Delete the {{ module_name_title }} with event logging
+        success = await service.delete_{{ module_name }}({{ module_name }}_id, event_metadata)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail=f"{{ module_name_title }} with ID { {{ module_name }}_id} not found")
+        
+        # Add background task for event processing
+        background_tasks.add_task(service._log_event, "api_deletion", "api", EventStatus.COMPLETED,
+                                f"{{ module_name_title }} deleted via API: { {{ module_name }}_id}", event_metadata)
+        
+        return {"message": f"{{ module_name_title }} with ID { {{ module_name }}_id} deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete {{ module_name_title }}: {str(e)}")
+
+
+@router.get("/status/{status}", response_model=List[{{ module_name_title }}Response])
+async def get_{{ module_name_plural }}_by_status(
+    status: EventStatus,
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Get {{ module_name_plural }} by event status.
+    
+    Useful for monitoring pending, processing, completed, or failed events.
+    """
+    try:
+        service = {{ module_name_title }}Service(db)
+        {{ module_name_plural }} = await service.get_{{ module_name_plural }}_by_event_status(status)
+        return {{ module_name_plural }}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve {{ module_name_plural }} by status: {str(e)}")
+
+
+@router.get("/priority/{priority}", response_model=List[{{ module_name_title }}Response])
+async def get_{{ module_name_plural }}_by_priority(
+    priority: EventPriority,
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Get {{ module_name_plural }} by priority level.
+    
+    Useful for processing high-priority events first.
+    """
+    try:
+        service = {{ module_name_title }}Service(db)
+        {{ module_name_plural }} = await service.get_{{ module_name_plural }}_by_priority(priority)
+        return {{ module_name_plural }}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve {{ module_name_plural }} by priority: {str(e)}")
+
+
+@router.post("/retry-failed")
+async def retry_failed_events(
+    background_tasks: BackgroundTasks,
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Retry all failed events.
+    
+    This endpoint resets the status of all failed events to pending,
+    allowing them to be processed again.
+    """
+    try:
+        service = {{ module_name_title }}Service(db)
+        
+        # Add background task for retrying failed events
+        background_tasks.add_task(service.retry_failed_events)
+        
+        return {"message": "Retry of failed events initiated in background"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to initiate retry of failed events: {str(e)}")
+
+
+@router.post("/process-pending")
+async def process_pending_events(
+    background_tasks: BackgroundTasks,
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Process all pending events.
+    
+    This endpoint processes all pending events asynchronously.
+    Useful for manual event processing or testing.
+    """
+    try:
+        event_service = EventProcessingService(db)
+        
+        # Add background task for processing pending events
+        background_tasks.add_task(event_service.process_pending_events)
+        
+        return {"message": "Processing of pending events initiated in background"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to initiate processing of pending events: {str(e)}")
+
+
+@router.post("/cleanup-old")
+async def cleanup_old_events(
+    days: int = Query(30, ge=1, le=365, description="Number of days to keep events"),
+    background_tasks: BackgroundTasks,
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Clean up old completed events.
+    
+    This endpoint removes completed events older than the specified number of days.
+    Useful for maintaining database performance and storage.
+    """
+    try:
+        event_service = EventProcessingService(db)
+        
+        # Add background task for cleaning up old events
+        background_tasks.add_task(event_service.cleanup_old_events, days)
+        
+        return {"message": f"Cleanup of events older than {days} days initiated in background"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to initiate cleanup of old events: {str(e)}")
+
+
+@router.get("/events/summary")
+async def get_event_summary(
+    # db: Session = Depends(get_db)
+    db: Session = None  # Placeholder - adjust based on your project structure
+):
+    """
+    Get a summary of event statistics.
+    
+    Returns counts of events by status, priority, and other metrics.
+    Useful for monitoring and dashboard displays.
+    """
+    try:
+        # Get counts by status
+        status_counts = {}
+        for status in EventStatus:
+            count = db.query({{ module_name_title }}).filter({{ module_name_title }}.event_status == status).count()
+            status_counts[status.value] = count
+        
+        # Get counts by priority
+        priority_counts = {}
+        for priority in EventPriority:
+            count = db.query({{ module_name_title }}).filter({{ module_name_title }}.priority == priority).count()
+            priority_counts[priority.value] = count
+        
+        # Get total count
+        total_count = db.query({{ module_name_title }}).count()
+        
+        return {
+            "total_events": total_count,
+            "status_counts": status_counts,
+            "priority_counts": priority_counts,
+            "pending_count": status_counts.get("pending", 0),
+            "processing_count": status_counts.get("processing", 0),
+            "completed_count": status_counts.get("completed", 0),
+            "failed_count": status_counts.get("failed", 0)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve event summary: {str(e)}")

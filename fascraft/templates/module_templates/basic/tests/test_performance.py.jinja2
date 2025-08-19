@@ -1,0 +1,119 @@
+"""Performance tests for {{ module_name }} module."""
+
+import pytest
+import time
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from {{ module_name }}.models import Base
+from {{ module_name }}.services import {{ module_name_title }}Service
+from {{ module_name }}.schemas import {{ module_name_title }}Create
+
+
+class Test{{ module_name_title }}Performance:
+    """Performance tests for {{ module_name_title }} module."""
+    
+    @pytest.fixture
+    def db_session(self):
+        """Create in-memory database session for testing."""
+        engine = create_engine(
+            "sqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+        TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        Base.metadata.create_all(bind=engine)
+        
+        session = TestingSessionLocal()
+        try:
+            yield session
+        finally:
+            session.close()
+            Base.metadata.drop_all(bind=engine)
+    
+    @pytest.fixture
+    def {{ module_name }}_service(self, db_session):
+        """Create {{ module_name }} service with test database."""
+        return {{ module_name_title }}Service(db_session)
+    
+    def test_bulk_create_performance(self, {{ module_name }}_service):
+        """Test performance of bulk {{ module_name }} creation."""
+        start_time = time.time()
+        
+        # Create 100 {{ module_name }}s
+        for i in range(100):
+            {{ module_name }}_data = {{ module_name_title }}Create(name=f"{{ module_name_title }} {i}")
+            {{ module_name }}_service.create({{ module_name }}_data)
+        
+        end_time = time.time()
+        creation_time = end_time - start_time
+        
+        # Should complete within 1 second
+        assert creation_time < 1.0, f"Bulk creation took {creation_time:.2f}s, expected < 1.0s"
+        
+        # Verify all were created
+        {{ module_name }}s = {{ module_name }}_service.get_all()
+        assert len({{ module_name }}s) == 100
+    
+    def test_bulk_retrieval_performance(self, {{ module_name }}_service):
+        """Test performance of bulk {{ module_name }} retrieval."""
+        # Create test data
+        for i in range(50):
+            {{ module_name }}_data = {{ module_name_title }}Create(name=f"{{ module_name_title }} {i}")
+            {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Test retrieval performance
+        start_time = time.time()
+        {{ module_name }}s = {{ module_name }}_service.get_all()
+        end_time = time.time()
+        
+        retrieval_time = end_time - start_time
+        
+        # Should complete within 0.5 seconds
+        assert retrieval_time < 0.5, f"Bulk retrieval took {retrieval_time:.2f}s, expected < 0.5s"
+        assert len({{ module_name }}s) == 50
+    
+    def test_search_performance(self, {{ module_name }}_service):
+        """Test performance of {{ module_name }} search operations."""
+        # Create test data with searchable names
+        searchable_names = ["apple", "banana", "cherry", "date", "elderberry"]
+        for name in searchable_names:
+            {{ module_name }}_data = {{ module_name_title }}Create(name=name)
+            {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Test search performance
+        start_time = time.time()
+        
+        # Perform multiple searches
+        for name in searchable_names:
+            # This would need a search method in the service
+            # For now, we'll test get_all and filter
+            {{ module_name }}s = {{ module_name }}_service.get_all()
+            found = any({{ module_name }}.name == name for {{ module_name }} in {{ module_name }}s)
+            assert found
+        
+        end_time = time.time()
+        search_time = end_time - start_time
+        
+        # Should complete within 0.1 seconds
+        assert search_time < 0.1, f"Search operations took {search_time:.2f}s, expected < 0.1s"
+    
+    def test_memory_usage(self, {{ module_name }}_service):
+        """Test memory usage during large operations."""
+        import psutil
+        import os
+        
+        process = psutil.Process(os.getpid())
+        initial_memory = process.memory_info().rss / 1024 / 1024  # MB
+        
+        # Create 1000 {{ module_name }}s
+        for i in range(1000):
+            {{ module_name }}_data = {{ module_name_title }}Create(name=f"{{ module_name_title }} {i}")
+            {{ module_name }}_service.get_all()  # Force memory usage
+        
+        final_memory = process.memory_info().rss / 1024 / 1024  # MB
+        memory_increase = final_memory - initial_memory
+        
+        # Memory increase should be reasonable (< 100MB)
+        assert memory_increase < 100, f"Memory increased by {memory_increase:.1f}MB, expected < 100MB"

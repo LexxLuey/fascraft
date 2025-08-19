@@ -1,0 +1,520 @@
+# {{ project_name }} Project Overview
+
+## Project Information
+
+- **Name**: {{ project_name }}
+- **Version**: {{ project_version }}
+- **Description**: {{ project_description }}
+- **Path**: `{{ project_path }}`
+- **Framework**: FastAPI
+- **Language**: Python 3.8+
+
+## Project Architecture
+
+{{ project_name }} follows a modular, domain-driven design pattern with clean separation of concerns:
+
+```
+{{ project_name }}/
+├── main.py                 # FastAPI application entry point
+├── config/                 # Configuration management
+│   ├── __init__.py
+│   ├── settings.py        # Application settings
+│   └── database.py        # Database configuration
+├── routers/                # API route definitions
+│   └── base.py            # Base router configuration
+├── models/                 # Shared database models
+├── schemas/                # Shared Pydantic schemas
+├── services/               # Shared business logic
+├── tests/                  # Test files
+├── alembic/                # Database migrations
+├── requirements.txt        # Python dependencies
+└── pyproject.toml         # Project configuration
+```
+
+## Technology Stack
+
+### Backend Framework
+- **FastAPI**: High-performance web framework for building APIs
+- **Uvicorn**: ASGI server for running FastAPI applications
+- **Pydantic**: Data validation using Python type annotations
+
+### Database
+- **SQLAlchemy**: SQL toolkit and Object-Relational Mapping (ORM)
+- **Alembic**: Database migration tool
+- **PostgreSQL/MySQL**: Primary database (configurable)
+
+### Testing
+- **pytest**: Testing framework
+- **pytest-asyncio**: Async testing support
+- **pytest-cov**: Coverage reporting
+
+### Development Tools
+- **Poetry**: Dependency management
+- **Black**: Code formatting
+- **Ruff**: Fast Python linter
+- **Pre-commit**: Git hooks for code quality
+
+## Modules
+
+{% if modules %}
+The project is organized into the following domain modules:
+
+{% for module in modules %}
+### {{ module|title }} Module
+- **Purpose**: {{ module|title }} management and operations
+- **Path**: `{{ module }}/`
+- **Dependencies**: {% if module_dependencies and module in module_dependencies %}{{ ', '.join(module_dependencies[module]) }}{% else %}None{% endif %}
+- **API Endpoints**: `/{{ module }}s`
+- **Features**: CRUD operations, validation, business logic
+
+{% endfor %}
+
+### Module Dependencies
+
+The following dependency relationships exist between modules:
+
+{% if module_dependencies %}
+{% for module, deps in module_dependencies.items() %}
+- **{{ module }}** depends on: {% if deps %}{{ ', '.join(deps) }}{% else %}None{% endif %}
+{% endfor %}
+{% else %}
+No module dependencies defined.
+{% endif %}
+
+### Module Generation
+
+New modules can be generated using the FasCraft CLI:
+
+```bash
+# Generate a basic module
+fascraft generate users
+
+# Generate a module with specific template
+fascraft generate products --template crud
+
+# Generate a module with dependencies
+fascraft generate orders --depends-on users,products
+```
+
+Available templates:
+- **basic**: Standard CRUD operations
+- **crud**: Enhanced CRUD with filtering and pagination
+- **api_first**: API-first design with comprehensive schemas
+- **event_driven**: Event-driven architecture with message queues
+- **microservice**: Microservice-ready with external API calls
+- **admin_panel**: Administrative interface with user management
+{% else %}
+Currently, no modules have been generated. Use the FasCraft CLI to create your first module:
+
+```bash
+fascraft generate <module_name>
+```
+{% endif %}
+
+## Configuration
+
+### Environment Variables
+
+The application uses environment variables for configuration:
+
+```bash
+# Database
+DATABASE_URL=postgresql://user:password@localhost/dbname
+
+# Application
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+LOG_LEVEL=INFO
+
+# Server
+HOST=0.0.0.0
+PORT=8000
+```
+
+### Configuration Files
+
+- **`.env`**: Environment-specific configuration
+- **`config/settings.py`**: Application settings and defaults
+- **`config/database.py`**: Database connection and session management
+- **`pyproject.toml`**: Project metadata and dependencies
+
+## Database Design
+
+### Database Schema
+
+The database follows a normalized design with the following key principles:
+
+- **Primary Keys**: Auto-incrementing integer IDs
+- **Timestamps**: `created_at` and `updated_at` fields on all tables
+- **Soft Deletes**: `is_active` boolean flag for data retention
+- **Indexes**: Strategic indexing on frequently queried fields
+- **Foreign Keys**: Proper referential integrity constraints
+
+### Migration Strategy
+
+Database changes are managed through Alembic migrations:
+
+```bash
+# Create a new migration
+alembic revision --autogenerate -m "Description of changes"
+
+# Apply migrations
+alembic upgrade head
+
+# Rollback migrations
+alembic downgrade -1
+```
+
+## API Design
+
+### RESTful Endpoints
+
+The API follows REST principles with consistent patterns:
+
+- **Resource Naming**: Plural nouns (e.g., `/users`, `/products`)
+- **HTTP Methods**: GET, POST, PUT, DELETE for CRUD operations
+- **Status Codes**: Standard HTTP status codes
+- **Response Format**: Consistent JSON structure
+
+### API Documentation
+
+Interactive API documentation is automatically generated:
+
+- **Swagger UI**: `/docs` - Interactive API explorer
+- **ReDoc**: `/redoc` - Alternative documentation view
+- **OpenAPI JSON**: `/openapi.json` - Machine-readable specification
+
+### Authentication & Authorization
+
+{% if auth_enabled %}
+The API implements JWT-based authentication:
+
+- **JWT Tokens**: Secure, stateless authentication
+- **Role-Based Access**: Granular permission control
+- **API Keys**: External service integration
+- **OAuth2**: Third-party authentication support
+{% else %}
+Authentication is currently not implemented. Consider adding:
+
+- JWT token-based authentication
+- Role-based access control
+- API key validation
+- OAuth2 integration
+{% endif %}
+
+## Testing Strategy
+
+### Test Structure
+
+Tests are organized to mirror the application structure:
+
+```
+tests/
+├── conftest.py            # Test configuration and fixtures
+├── test_models.py         # Database model tests
+├── test_schemas.py        # Pydantic schema tests
+├── test_services.py       # Business logic tests
+├── test_routers.py        # API endpoint tests
+└── integration/           # Integration tests
+    ├── test_api.py        # Full API workflow tests
+    └── test_database.py   # Database integration tests
+```
+
+### Testing Commands
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=.
+
+# Run specific test file
+pytest tests/test_models.py
+
+# Run tests in parallel
+pytest -n auto
+
+# Run with verbose output
+pytest -v
+```
+
+### Test Data
+
+Tests use fixtures and factories for consistent test data:
+
+- **Database Fixtures**: Clean database state for each test
+- **Model Factories**: Generate test data with realistic values
+- **Mock Services**: Isolate units under test
+- **Test Database**: Separate database for testing
+
+## Development Workflow
+
+### Getting Started
+
+1. **Clone Repository**
+   ```bash
+   git clone <repository-url>
+   cd {{ project_name }}
+   ```
+
+2. **Setup Environment**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+3. **Configure Database**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your database credentials
+   ```
+
+4. **Run Migrations**
+   ```bash
+   alembic upgrade head
+   ```
+
+5. **Start Development Server**
+   ```bash
+   uvicorn main:app --reload
+   ```
+
+### Development Commands
+
+```bash
+# Format code
+black .
+
+# Lint code
+ruff check .
+
+# Run tests
+pytest
+
+# Generate new module
+fascraft generate <module_name>
+
+# Update dependencies
+fascraft update
+
+# Analyze project
+fascraft analyze
+```
+
+## Deployment
+
+### Production Considerations
+
+- **Environment Variables**: Secure configuration management
+- **Database**: Production-ready database with connection pooling
+- **Caching**: Redis or similar for performance optimization
+- **Monitoring**: Application performance monitoring (APM)
+- **Logging**: Structured logging with log aggregation
+- **Security**: HTTPS, CORS, rate limiting, input validation
+
+### Deployment Options
+
+- **Docker**: Containerized deployment
+- **Kubernetes**: Orchestrated container deployment
+- **Cloud Platforms**: AWS, GCP, Azure deployment
+- **Traditional Servers**: VPS or dedicated server deployment
+
+### CI/CD Pipeline
+
+Recommended CI/CD setup:
+
+1. **Code Quality**: Automated linting and formatting
+2. **Testing**: Automated test execution
+3. **Security**: Dependency vulnerability scanning
+4. **Build**: Docker image creation
+5. **Deploy**: Automated deployment to staging/production
+
+## Monitoring & Observability
+
+### Application Metrics
+
+Key metrics to monitor:
+
+- **Performance**: Response times, throughput, error rates
+- **Resources**: CPU, memory, disk usage
+- **Database**: Query performance, connection pool status
+- **External Services**: API response times, availability
+
+### Logging Strategy
+
+Structured logging with different levels:
+
+- **DEBUG**: Detailed debugging information
+- **INFO**: General application flow
+- **WARNING**: Potential issues
+- **ERROR**: Error conditions
+- **CRITICAL**: Critical system failures
+
+### Health Checks
+
+Built-in health check endpoints:
+
+- **`/health`**: Basic application health
+- **`/health/detailed`**: Detailed system status
+- **`/ready`**: Readiness for traffic
+- **`/live`**: Liveness check
+
+## Security
+
+### Security Measures
+
+- **Input Validation**: Pydantic schema validation
+- **SQL Injection Protection**: SQLAlchemy ORM
+- **XSS Protection**: Proper output encoding
+- **CSRF Protection**: Token-based CSRF protection
+- **Rate Limiting**: Request rate limiting
+- **HTTPS**: TLS encryption in transit
+
+### Security Best Practices
+
+- Regular dependency updates
+- Security vulnerability scanning
+- Principle of least privilege
+- Secure configuration management
+- Regular security audits
+
+## Performance Optimization
+
+### Database Optimization
+
+- **Indexing**: Strategic database indexes
+- **Query Optimization**: Efficient SQL queries
+- **Connection Pooling**: Database connection management
+- **Read Replicas**: Scaling read operations
+
+### Application Optimization
+
+- **Caching**: Redis-based caching
+- **Async Operations**: Non-blocking I/O
+- **Background Tasks**: Celery for long-running tasks
+- **Load Balancing**: Multiple application instances
+
+### API Optimization
+
+- **Pagination**: Efficient data retrieval
+- **Compression**: Response compression
+- **CDN**: Static content delivery
+- **GraphQL**: Alternative to REST for complex queries
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Database Connection Errors**
+   - Check database configuration
+   - Verify network connectivity
+   - Check database server status
+
+2. **Import Errors**
+   - Verify virtual environment activation
+   - Check Python path configuration
+   - Ensure all dependencies are installed
+
+3. **API Errors**
+   - Check request format and validation
+   - Verify authentication and permissions
+   - Review server logs for details
+
+### Debug Mode
+
+Enable debug mode for detailed error information:
+
+```python
+# In config/settings.py
+DEBUG = True
+LOG_LEVEL = "DEBUG"
+```
+
+### Log Analysis
+
+Use structured logging for easier troubleshooting:
+
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+logger.info("Operation completed", extra={
+    "user_id": user_id,
+    "operation": "create",
+    "duration_ms": duration
+})
+```
+
+## Contributing
+
+### Development Guidelines
+
+- Follow PEP 8 style guidelines
+- Write comprehensive tests
+- Update documentation
+- Use conventional commit messages
+- Create feature branches for changes
+
+### Code Review Process
+
+1. Create feature branch
+2. Implement changes with tests
+3. Submit pull request
+4. Code review and feedback
+5. Address feedback and merge
+
+### Testing Requirements
+
+- All new code must have tests
+- Maintain minimum 80% code coverage
+- Integration tests for new features
+- Performance tests for critical paths
+
+## Support & Resources
+
+### Documentation
+
+- **API Documentation**: `/docs` endpoint
+- **Project Documentation**: `docs/` directory
+- **Code Comments**: Inline documentation
+- **README**: Project overview and setup
+
+### Community
+
+- **GitHub Issues**: Bug reports and feature requests
+- **Discussions**: Community discussions and Q&A
+- **Contributing Guide**: Development guidelines
+- **Code of Conduct**: Community standards
+
+### External Resources
+
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [SQLAlchemy Documentation](https://docs.sqlalchemy.org/)
+- [Pydantic Documentation](https://pydantic-docs.helpmanual.io/)
+- [Alembic Documentation](https://alembic.sqlalchemy.org/)
+
+## Roadmap
+
+### Upcoming Features
+
+- [ ] GraphQL API support
+- [ ] Real-time WebSocket endpoints
+- [ ] Advanced caching strategies
+- [ ] Multi-tenant architecture
+- [ ] Advanced authentication (OAuth2, SAML)
+- [ ] API versioning support
+
+### Long-term Goals
+
+- [ ] Microservices architecture
+- [ ] Event sourcing implementation
+- [ ] Advanced monitoring and alerting
+- [ ] Machine learning integration
+- [ ] Multi-language support
+- [ ] Advanced analytics dashboard
+
+---
+
+*This documentation is automatically generated and should be updated as the project evolves.*

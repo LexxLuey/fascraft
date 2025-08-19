@@ -1,0 +1,253 @@
+# API Documentation
+
+{{ project_name }} API provides a comprehensive set of endpoints for managing {{ project_description.lower() }}.
+
+## Base URL
+
+```
+http://localhost:8000
+```
+
+## Authentication
+
+{% if auth_enabled %}
+This API uses JWT token-based authentication.
+
+### Getting a Token
+
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "username": "your_username",
+  "password": "your_password"
+}
+```
+
+### Using a Token
+
+Include the token in the Authorization header:
+
+```http
+Authorization: Bearer <your_jwt_token>
+```
+{% else %}
+Currently, this API does not require authentication.
+{% endif %}
+
+## API Endpoints
+
+### Health Check
+
+#### GET /health
+
+Check the health status of the API.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-01T00:00:00Z",
+  "version": "{{ project_version }}"
+}
+```
+
+### Core Endpoints
+
+{% if modules %}
+{% for module in modules %}
+#### {{ module|title }} Module
+
+**Base Path:** `/{{ module }}s`
+
+**Endpoints:**
+- `GET /{{ module }}s` - List all {{ module }}s
+- `POST /{{ module }}s` - Create a new {{ module }}
+- `GET /{{ module }}s/{id}` - Get {{ module }} by ID
+- `PUT /{{ module }}s/{id}` - Update {{ module }} by ID
+- `DELETE /{{ module }}s/{id}` - Delete {{ module }} by ID
+
+**Example Request:**
+```http
+GET /{{ module }}s?page=1&size=10
+Authorization: Bearer <token>
+```
+
+**Example Response:**
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "name": "Example {{ module|title }}",
+      "description": "Description of the {{ module }}",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "size": 10,
+  "pages": 1
+}
+```
+
+{% endfor %}
+{% else %}
+#### Basic Endpoints
+
+**Endpoints:**
+- `GET /` - Root endpoint
+- `GET /docs` - Interactive API documentation
+- `GET /redoc` - Alternative API documentation
+
+**Example Request:**
+```http
+GET /
+```
+
+**Example Response:**
+```json
+{
+  "message": "Welcome to {{ project_name }} API",
+  "version": "{{ project_version }}"
+}
+```
+{% endif %}
+
+## Data Models
+
+### Common Fields
+
+All API responses include these common fields:
+
+- `id`: Unique identifier (integer)
+- `created_at`: Creation timestamp (ISO 8601)
+- `updated_at`: Last update timestamp (ISO 8601)
+
+### Error Responses
+
+All endpoints may return error responses in the following format:
+
+```json
+{
+  "detail": "Error message description",
+  "status_code": 400,
+  "timestamp": "2024-01-01T00:00:00Z"
+}
+```
+
+### Common HTTP Status Codes
+
+- `200 OK`: Request successful
+- `201 Created`: Resource created successfully
+- `400 Bad Request`: Invalid request data
+- `401 Unauthorized`: Authentication required
+- `403 Forbidden`: Access denied
+- `404 Not Found`: Resource not found
+- `422 Unprocessable Entity`: Validation error
+- `500 Internal Server Error`: Server error
+
+## Pagination
+
+List endpoints support pagination with the following query parameters:
+
+- `page`: Page number (default: 1)
+- `size`: Items per page (default: 10, max: 100)
+
+**Example:**
+```http
+GET /items?page=2&size=20
+```
+
+## Filtering and Sorting
+
+{% if modules %}
+Some endpoints support filtering and sorting:
+
+### Filtering
+Use query parameters to filter results:
+```http
+GET /{{ modules[0] }}s?name=example&is_active=true
+```
+
+### Sorting
+Use the `sort` parameter to sort results:
+```http
+GET /{{ modules[0] }}s?sort=name&order=desc
+```
+
+Supported sort fields: `id`, `name`, `created_at`, `updated_at`
+Supported order values: `asc`, `desc`
+{% endif %}
+
+## Rate Limiting
+
+{% if rate_limiting %}
+This API implements rate limiting:
+
+- **Authenticated users**: 1000 requests per hour
+- **Anonymous users**: 100 requests per hour
+
+Rate limit headers are included in responses:
+```http
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1640995200
+```
+{% else %}
+Currently, this API does not implement rate limiting.
+{% endif %}
+
+## SDKs and Libraries
+
+### Python
+```bash
+pip install {{ project_name }}-client
+```
+
+### JavaScript/Node.js
+```bash
+npm install {{ project_name }}-client
+```
+
+## Examples
+
+### Complete CRUD Example
+
+```python
+import requests
+
+# Create
+response = requests.post(
+    "http://localhost:8000/items",
+    json={"name": "New Item", "description": "Item description"}
+)
+item_id = response.json()["id"]
+
+# Read
+response = requests.get(f"http://localhost:8000/items/{item_id}")
+item = response.json()
+
+# Update
+response = requests.put(
+    f"http://localhost:8000/items/{item_id}",
+    json={"name": "Updated Item"}
+)
+
+# Delete
+response = requests.delete(f"http://localhost:8000/items/{item_id}")
+```
+
+## Support
+
+For API support and questions:
+
+- **Documentation**: Visit `/docs` for interactive documentation
+- **Issues**: Report bugs and feature requests on GitHub
+- **Email**: api-support@example.com
+
+## Changelog
+
+See the [CHANGELOG.md](CHANGELOG.md) file for API version history and changes.

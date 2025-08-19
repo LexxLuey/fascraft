@@ -1,0 +1,127 @@
+"""Tests for {{ module_name_title }} Admin Panel models."""
+
+import pytest
+from datetime import datetime
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from .models import {{ module_name_title }}, AuditLog, UserPermission, UserRole, ApprovalStatus, AuditAction
+
+
+@pytest.fixture
+def db_session():
+    """Create a test database session."""
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    
+    from .models import Base
+    Base.metadata.create_all(bind=engine)
+    
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+class Test{{ module_name_title }}Model:
+    """Test the {{ module_name_title }} admin panel model."""
+    
+    def test_create_{{ module_name }}_with_admin_fields(self, db_session):
+        """Test creating a {{ module_name_title }} with admin control fields."""
+        {{ module_name }} = {{ module_name_title }}(
+            name="Admin Test {{ module_name_title }}",
+            description="Test description",
+            is_active=True,
+            requires_approval=False,
+            created_by="admin@example.com",
+            updated_by="admin@example.com"
+        )
+        
+        db_session.add({{ module_name }})
+        db_session.commit()
+        db_session.refresh({{ module_name }})
+        
+        assert {{ module_name }}.id is not None
+        assert {{ module_name }}.name == "Admin Test {{ module_name_title }}"
+        assert {{ module_name }}.is_active is True
+        assert {{ module_name }}.approval_status == ApprovalStatus.APPROVED
+        assert {{ module_name }}.created_by == "admin@example.com"
+    
+    def test_{{ module_name }}_approval_workflow(self, db_session):
+        """Test {{ module_name_title }} approval workflow."""
+        {{ module_name }} = {{ module_name_title }}(
+            name="Approval Test {{ module_name_title }}",
+            requires_approval=True,
+            created_by="editor@example.com",
+            updated_by="editor@example.com"
+        )
+        
+        db_session.add({{ module_name }})
+        db_session.commit()
+        db_session.refresh({{ module_name }})
+        
+        assert {{ module_name }}.approval_status == ApprovalStatus.PENDING
+        
+        {{ module_name }}.approval_status = ApprovalStatus.APPROVED
+        {{ module_name }}.approved_by = "admin@example.com"
+        {{ module_name }}.approved_at = datetime.utcnow()
+        db_session.commit()
+        
+        assert {{ module_name }}.approval_status == ApprovalStatus.APPROVED
+        assert {{ module_name }}.approved_by == "admin@example.com"
+
+
+class TestAuditLogModel:
+    """Test the AuditLog model."""
+    
+    def test_create_audit_log(self, db_session):
+        """Test creating an audit log entry."""
+        audit_log = AuditLog(
+            user_id="test@example.com",
+            action=AuditAction.CREATE,
+            resource_type="{{ module_name_title }}",
+            resource_id=1,
+            details={"name": "Test {{ module_name_title }}"}
+        )
+        
+        db_session.add(audit_log)
+        db_session.commit()
+        db_session.refresh(audit_log)
+        
+        assert audit_log.id is not None
+        assert audit_log.user_id == "test@example.com"
+        assert audit_log.action == AuditAction.CREATE
+        assert audit_log.resource_type == "{{ module_name_title }}"
+        assert audit_log.timestamp is not None
+
+
+class TestUserPermissionModel:
+    """Test the UserPermission model."""
+    
+    def test_create_user_permission(self, db_session):
+        """Test creating a user permission."""
+        user_perm = UserPermission(
+            user_id="user@example.com",
+            role=UserRole.EDITOR,
+            permissions=["read", "write"],
+            can_approve=False,
+            can_delete=False,
+            can_export=True
+        )
+        
+        db_session.add(user_perm)
+        db_session.commit()
+        db_session.refresh(user_perm)
+        
+        assert user_perm.id is not None
+        assert user_perm.user_id == "user@example.com"
+        assert user_perm.role == UserRole.EDITOR
+        assert user_perm.permissions == ["read", "write"]
+        assert user_perm.can_approve is False
+        assert user_perm.can_export is True

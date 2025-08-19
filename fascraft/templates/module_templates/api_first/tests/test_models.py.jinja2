@@ -1,0 +1,352 @@
+"""Tests for {{ module_name_title }} API-First models."""
+
+import pytest
+from datetime import datetime
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from .models import {{ module_name_title }}
+
+
+@pytest.fixture
+def db_session():
+    """Create a test database session."""
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    
+    from .models import Base
+    Base.metadata.create_all(bind=engine)
+    
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+class Test{{ module_name_title }}Model:
+    """Test the {{ module_name_title }} API-First model."""
+    
+    def test_create_{{ module_name }}_with_all_fields(self, db_session):
+        """Test creating a {{ module_name_title }} with all fields populated."""
+        {{ module_name }} = {{ module_name_title }}(
+            name="Test {{ module_name_title }}",
+            description="A comprehensive test description",
+            status="active",
+            priority=5,
+            tags=["test", "api", "first"],
+            metadata={"category": "test", "version": "1.0"},
+            external_id="ext_123",
+            is_featured=True,
+            rating=4.5
+        )
+        
+        db_session.add({{ module_name }})
+        db_session.commit()
+        db_session.refresh({{ module_name }})
+        
+        assert {{ module_name }}.id is not None
+        assert {{ module_name }}.name == "Test {{ module_name_title }}"
+        assert {{ module_name }}.description == "A comprehensive test description"
+        assert {{ module_name }}.status == "active"
+        assert {{ module_name }}.priority == 5
+        assert {{ module_name }}.tags == ["test", "api", "first"]
+        assert {{ module_name }}.metadata == {"category": "test", "version": "1.0"}
+        assert {{ module_name }}.external_id == "ext_123"
+        assert {{ module_name }}.is_featured is True
+        assert {{ module_name }}.rating == 4.5
+        assert {{ module_name }}.created_at is not None
+        assert {{ module_name }}.updated_at is not None
+    
+    def test_create_{{ module_name }}_minimal_fields(self, db_session):
+        """Test creating a {{ module_name_title }} with minimal required fields."""
+        {{ module_name }} = {{ module_name_title }}(
+            name="Minimal {{ module_name_title }}"
+        )
+        
+        db_session.add({{ module_name }})
+        db_session.commit()
+        db_session.refresh({{ module_name }})
+        
+        assert {{ module_name }}.id is not None
+        assert {{ module_name }}.name == "Minimal {{ module_name_title }}"
+        assert {{ module_name }}.description is None
+        assert {{ module_name }}.status == "draft"
+        assert {{ module_name }}.priority == 1
+        assert {{ module_name }}.tags == []
+        assert {{ module_name }}.metadata == {}
+        assert {{ module_name }}.external_id is None
+        assert {{ module_name }}.is_featured is False
+        assert {{ module_name }}.rating == 0.0
+    
+    def test_{{ module_name }}_name_validation(self, db_session):
+        """Test {{ module_name_title }} name validation."""
+        # Test empty name
+        with pytest.raises(Exception):
+            {{ module_name }} = {{ module_name_title }}(name="")
+            db_session.add({{ module_name }})
+            db_session.commit()
+        
+        db_session.rollback()
+        
+        # Test None name
+        with pytest.raises(Exception):
+            {{ module_name }} = {{ module_name_title }}(name=None)
+            db_session.add({{ module_name }})
+            db_session.commit()
+        
+        db_session.rollback()
+        
+        # Test valid name
+        {{ module_name }} = {{ module_name_title }}(name="Valid Name")
+        db_session.add({{ module_name }})
+        db_session.commit()
+        
+        assert {{ module_name }}.id is not None
+        assert {{ module_name }}.name == "Valid Name"
+    
+    def test_{{ module_name }}_priority_validation(self, db_session):
+        """Test {{ module_name_title }} priority validation."""
+        # Test priority range
+        for priority in [1, 5, 10]:
+            {{ module_name }} = {{ module_name_title }}(
+                name=f"Priority {priority} {{ module_name_title }}",
+                priority=priority
+            )
+            db_session.add({{ module_name }})
+        
+        db_session.commit()
+        
+        # Verify all priorities were saved
+        saved_{{ module_name_plural }} = db_session.query({{ module_name_title }}).filter(
+            {{ module_name_title }}.name.like("Priority%")
+        ).all()
+        
+        assert len(saved_{{ module_name_plural }}) == 3
+        priorities = [{{ module_name }}.priority for {{ module_name }} in saved_{{ module_name_plural }}]
+        assert set(priorities) == {1, 5, 10}
+    
+    def test_{{ module_name }}_rating_validation(self, db_session):
+        """Test {{ module_name_title }} rating validation."""
+        # Test rating range
+        for rating in [0.0, 2.5, 5.0]:
+            {{ module_name }} = {{ module_name_title }}(
+                name=f"Rating {rating} {{ module_name_title }}",
+                rating=rating
+            )
+            db_session.add({{ module_name }})
+        
+        db_session.commit()
+        
+        # Verify all ratings were saved
+        saved_{{ module_name_plural }} = db_session.query({{ module_name_title }}).filter(
+            {{ module_name_title }}.name.like("Rating%")
+        ).all()
+        
+        assert len(saved_{{ module_name_plural }}) == 3
+        ratings = [{{ module_name }}.rating for {{ module_name }} in saved_{{ module_name_plural }}]
+        assert set(ratings) == {0.0, 2.5, 5.0}
+    
+    def test_{{ module_name }}_tags_storage(self, db_session):
+        """Test {{ module_name_title }} tags list storage."""
+        # Test different tag combinations
+        tag_sets = [
+            [],
+            ["single"],
+            ["tag1", "tag2"],
+            ["api", "first", "template", "test"]
+        ]
+        
+        for tags in tag_sets:
+            {{ module_name }} = {{ module_name_title }}(
+                name=f"Tags Test {{ len(tags) }}",
+                tags=tags
+            )
+            db_session.add({{ module_name }})
+        
+        db_session.commit()
+        
+        # Verify all tag sets were saved
+        saved_{{ module_name_plural }} = db_session.query({{ module_name_title }}).filter(
+            {{ module_name_title }}.name.like("Tags Test%")
+        ).all()
+        
+        assert len(saved_{{ module_name_plural }}) == 4
+        for {{ module_name }} in saved_{{ module_name_plural }}:
+            tag_count = int({{ module_name }}.name.split()[-1])
+            assert len({{ module_name }}.tags) == tag_count
+    
+    def test_{{ module_name }}_metadata_storage(self, db_session):
+        """Test {{ module_name_title }} metadata JSON storage."""
+        # Test different metadata structures
+        metadata_examples = [
+            {},
+            {"key": "value"},
+            {"nested": {"data": "structure"}},
+            {"list": [1, 2, 3], "boolean": True, "null": None}
+        ]
+        
+        for metadata in metadata_examples:
+            {{ module_name }} = {{ module_name_title }}(
+                name=f"Metadata Test {len(str(metadata))}",
+                metadata=metadata
+            )
+            db_session.add({{ module_name }})
+        
+        db_session.commit()
+        
+        # Verify all metadata was saved
+        saved_{{ module_name_plural }} = db_session.query({{ module_name_title }}).filter(
+            {{ module_name_title }}.name.like("Metadata Test%")
+        ).all()
+        
+        assert len(saved_{{ module_name_plural }}) == 4
+        for {{ module_name }} in saved_{{ module_name_plural }}:
+            assert {{ module_name }}.metadata is not None
+    
+    def test_{{ module_name }}_computed_fields(self, db_session):
+        """Test {{ module_name_title }} computed fields."""
+        {{ module_name }} = {{ module_name_title }}(
+            name="Computed Test {{ module_name_title }}",
+            created_at=datetime(2023, 1, 1, 12, 0, 0),
+            updated_at=datetime(2023, 1, 1, 12, 0, 0)
+        )
+        
+        db_session.add({{ module_name }})
+        db_session.commit()
+        db_session.refresh({{ module_name }})
+        
+        # Test age_in_days computation
+        assert {{ module_name }}.age_in_days >= 0
+        
+        # Test is_recent computation
+        assert {{ module_name }}.is_recent is False  # Should be False for old dates
+        
+        # Test priority_label computation
+        assert {{ module_name }}.priority_label == "Low"  # Default priority is 1
+    
+    def test_{{ module_name }}_string_representation(self, db_session):
+        """Test {{ module_name_title }} string representation."""
+        {{ module_name }} = {{ module_name_title }}(
+            name="String Test {{ module_name_title }}",
+            status="active"
+        )
+        
+        db_session.add({{ module_name }})
+        db_session.commit()
+        db_session.refresh({{ module_name }})
+        
+        # Test string representation
+        str_repr = str({{ module_name }})
+        assert "String Test {{ module_name_title }}" in str_repr
+        assert str({{ module_name }}.id) in str_repr
+        assert "active" in str_repr
+    
+    def test_{{ module_name }}_equality(self, db_session):
+        """Test {{ module_name_title }} equality comparison."""
+        {{ module_name }}1 = {{ module_name_title }}(name="Equality Test 1")
+        {{ module_name }}2 = {{ module_name_title }}(name="Equality Test 2")
+        {{ module_name }}3 = {{ module_name_title }}(name="Equality Test 1")
+        
+        db_session.add_all([{{ module_name }}1, {{ module_name }}2, {{ module_name }}3])
+        db_session.commit()
+        
+        # Different IDs should be different objects
+        assert {{ module_name }}1 != {{ module_name }}2
+        
+        # Same names but different IDs should be different
+        assert {{ module_name }}1 != {{ module_name }}3
+        
+        # Same object should be equal to itself
+        assert {{ module_name }}1 == {{ module_name }}1
+
+
+class Test{{ module_name_title }}CRUD:
+    """Test CRUD operations on {{ module_name_title }}."""
+    
+    def test_create_multiple_{{ module_name_plural }}(self, db_session):
+        """Test creating multiple {{ module_name_plural }}."""
+        {{ module_name_plural }} = [
+            {{ module_name_title }}(
+                name=f"{{ module_name_title }} {i}",
+                description=f"Description {i}",
+                priority=i + 1
+            )
+            for i in range(5)
+        ]
+        
+        for {{ module_name }} in {{ module_name_plural }}:
+            db_session.add({{ module_name }})
+        
+        db_session.commit()
+        
+        # Verify all were created
+        saved_{{ module_name_plural }} = db_session.query({{ module_name_title }}).all()
+        assert len(saved_{{ module_name_plural }}) == 5
+        
+        # Verify priorities
+        priorities = [{{ module_name }}.priority for {{ module_name }} in saved_{{ module_name_plural }}]
+        expected_priorities = [1, 2, 3, 4, 5]
+        assert set(priorities) == set(expected_priorities)
+    
+    def test_read_{{ module_name }}_by_id(self, db_session):
+        """Test reading a {{ module_name_title }} by ID."""
+        {{ module_name }} = {{ module_name_title }}(name="Read Test {{ module_name_title }}")
+        db_session.add({{ module_name }})
+        db_session.commit()
+        db_session.refresh({{ module_name }})
+        
+        # Read by ID
+        found_{{ module_name }} = db_session.query({{ module_name_title }}).filter(
+            {{ module_name_title }}.id == {{ module_name }}.id
+        ).first()
+        
+        assert found_{{ module_name }} is not None
+        assert found_{{ module_name }}.id == {{ module_name }}.id
+        assert found_{{ module_name }}.name == {{ module_name }}.name
+    
+    def test_update_{{ module_name }}(self, db_session):
+        """Test updating a {{ module_name_title }}."""
+        {{ module_name }} = {{ module_name_title }}(name="Update Test {{ module_name_title }}")
+        db_session.add({{ module_name }})
+        db_session.commit()
+        db_session.refresh({{ module_name }})
+        
+        # Update fields
+        {{ module_name }}.name = "Updated Name"
+        {{ module_name }}.description = "Updated Description"
+        {{ module_name }}.priority = 8
+        {{ module_name }}.tags = ["updated", "test"]
+        db_session.commit()
+        db_session.refresh({{ module_name }})
+        
+        assert {{ module_name }}.name == "Updated Name"
+        assert {{ module_name }}.description == "Updated Description"
+        assert {{ module_name }}.priority == 8
+        assert {{ module_name }}.tags == ["updated", "test"]
+        assert {{ module_name }}.updated_at > {{ module_name }}.created_at
+    
+    def test_delete_{{ module_name }}(self, db_session):
+        """Test deleting a {{ module_name_title }}."""
+        {{ module_name }} = {{ module_name_title }}(name="Delete Test {{ module_name_title }}")
+        db_session.add({{ module_name }})
+        db_session.commit()
+        db_session.refresh({{ module_name }})
+        
+        {{ module_name }}_id = {{ module_name }}.id
+        
+        # Delete the {{ module_name_title }}
+        db_session.delete({{ module_name }})
+        db_session.commit()
+        
+        # Verify it's gone
+        found_{{ module_name }} = db_session.query({{ module_name_title }}).filter(
+            {{ module_name_title }}.id == {{ module_name }}_id
+        ).first()
+        
+        assert found_{{ module_name }} is None

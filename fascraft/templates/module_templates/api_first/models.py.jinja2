@@ -1,0 +1,106 @@
+"""API-First models for {{ module_name }} domain with comprehensive documentation."""
+
+from datetime import datetime
+from typing import Optional
+from sqlalchemy import Column, DateTime, Integer, String, Text, Boolean, Index, UniqueConstraint
+from sqlalchemy.sql import func
+from sqlalchemy.orm import validates
+
+from config.database import Base
+
+
+class {{ module_name_title }}(Base):
+    """{{ module_name_title }} model with API-first design principles.
+    
+    This model is designed with comprehensive validation, indexing, and documentation
+    to support robust API operations and OpenAPI documentation generation.
+    """
+    
+    __tablename__ = "{{ module_name }}s"
+    
+    # Primary key with auto-increment
+    id = Column(Integer, primary_key=True, index=True, doc="Unique identifier for the {{ module_name }}")
+    
+    # Core fields with comprehensive validation
+    name = Column(String(100), nullable=False, index=True, doc="Display name of the {{ module_name }}")
+    slug = Column(String(120), unique=True, nullable=False, index=True, doc="URL-friendly identifier")
+    description = Column(Text, nullable=True, doc="Detailed description of the {{ module_name }}")
+    
+    # Status and metadata
+    is_active = Column(Boolean, default=True, index=True, doc="Whether the {{ module_name }} is currently active")
+    is_featured = Column(Boolean, default=False, index=True, doc="Whether the {{ module_name }} should be featured")
+    priority = Column(Integer, default=0, index=True, doc="Priority level for sorting and display")
+    
+    # Timestamps with timezone awareness
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True, doc="Creation timestamp")
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), doc="Last update timestamp")
+    
+    # API metadata
+    api_version = Column(String(10), default="v1", doc="API version this {{ module_name }} was created with")
+    external_id = Column(String(100), nullable=True, index=True, doc="External system identifier")
+    
+    # Performance indexes
+    __table_args__ = (
+        Index('idx_{{ module_name }}_active_featured', 'is_active', 'is_featured'),
+        Index('idx_{{ module_name }}_priority_created', 'priority', 'created_at'),
+        Index('idx_{{ module_name }}_slug_active', 'slug', 'is_active'),
+        UniqueConstraint('slug', 'is_active', name='uq_{{ module_name }}_slug_active'),
+    )
+    
+    @validates('name')
+    def validate_name(self, key, name):
+        """Validate the name field."""
+        if not name or not name.strip():
+            raise ValueError("Name cannot be empty")
+        if len(name) > 100:
+            raise ValueError("Name cannot exceed 100 characters")
+        return name.strip()
+    
+    @validates('slug')
+    def validate_slug(self, key, slug):
+        """Validate the slug field."""
+        if not slug or not slug.strip():
+            raise ValueError("Slug cannot be empty")
+        if not slug.replace('-', '').replace('_', '').isalnum():
+            raise ValueError("Slug can only contain letters, numbers, hyphens, and underscores")
+        if len(slug) > 120:
+            raise ValueError("Slug cannot exceed 120 characters")
+        return slug.lower().strip()
+    
+    @validates('priority')
+    def validate_priority(self, key, priority):
+        """Validate the priority field."""
+        if priority < -100 or priority > 100:
+            raise ValueError("Priority must be between -100 and 100")
+        return priority
+    
+    def __repr__(self):
+        """String representation of the model."""
+        return f"<{{ module_name_title }}(id={self.id}, name='{self.name}', slug='{self.slug}')>"
+    
+    def to_dict(self):
+        """Convert model to dictionary for API responses."""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'slug': self.slug,
+            'description': self.description,
+            'is_active': self.is_active,
+            'is_featured': self.is_featured,
+            'priority': self.priority,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'api_version': self.api_version,
+            'external_id': self.external_id,
+        }
+    
+    def to_api_response(self):
+        """Convert model to API response format."""
+        return {
+            'data': self.to_dict(),
+            'meta': {
+                'type': '{{ module_name }}',
+                'version': self.api_version,
+                'timestamp': datetime.utcnow().isoformat()
+            }
+        }

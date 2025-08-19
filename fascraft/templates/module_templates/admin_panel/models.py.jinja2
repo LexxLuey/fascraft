@@ -1,0 +1,189 @@
+"""Admin Panel models for {{ module_name }} domain with role-based access control."""
+
+from datetime import datetime
+from typing import Optional
+from sqlalchemy import Column, DateTime, Integer, String, Text, Boolean, Index, ForeignKey, Enum
+from sqlalchemy.sql import func
+from sqlalchemy.orm import validates, relationship
+import enum
+
+from config.database import Base
+
+
+class {{ module_name_title }}Status(str, enum.Enum):
+    """Status enumeration for {{ module_name }}s."""
+    
+    DRAFT = "draft"
+    PENDING_REVIEW = "pending_review"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    ARCHIVED = "archived"
+
+
+class {{ module_name_title }}Permission(str, enum.Enum):
+    """Permission levels for {{ module_name }}s."""
+    
+    READ = "read"
+    WRITE = "write"
+    DELETE = "delete"
+    ADMIN = "admin"
+
+
+class {{ module_name_title }}AuditLog(Base):
+    """Audit log for tracking {{ module_name }} changes."""
+    
+    __tablename__ = "{{ module_name }}_audit_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    action = Column(String(50), nullable=False, index=True, doc="Action performed (create, update, delete)")
+    field_name = Column(String(100), nullable=True, doc="Field that was changed")
+    old_value = Column(Text, nullable=True, doc="Previous value")
+    new_value = Column(Text, nullable=True, doc="New value")
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True, doc="When the action occurred")
+    
+    # User tracking
+    user_id = Column(Integer, nullable=False, index=True, doc="User who performed the action")
+    user_email = Column(String(255), nullable=True, doc="User email for reference")
+    
+    # {{ module_name }} relationship
+    {{ module_name }}_id = Column(Integer, ForeignKey("{{ module_name }}s.id"), nullable=False, index=True)
+    {{ module_name }} = relationship("{{ module_name_title }}", back_populates="audit_logs")
+    
+    # IP and session tracking
+    ip_address = Column(String(45), nullable=True, doc="IP address of the user")
+    user_agent = Column(Text, nullable=True, doc="User agent string")
+    
+    __table_args__ = (
+        Index('idx_{{ module_name }}_audit_user_timestamp', 'user_id', 'timestamp'),
+        Index('idx_{{ module_name }}_audit_action_timestamp', 'action', 'timestamp'),
+    )
+    
+    def __repr__(self):
+        return f"<{{ module_name_title }}AuditLog(id={self.id}, action='{self.action}', user_id={self.user_id})>"
+
+
+class {{ module_name_title }}(Base):
+    """{{ module_name_title }} model with administrative features and audit logging."""
+    
+    __tablename__ = "{{ module_name }}s"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False, index=True, doc="Display name of the {{ module_name }}")
+    slug = Column(String(120), unique=True, nullable=False, index=True, doc="URL-friendly identifier")
+    description = Column(Text, nullable=True, doc="Detailed description of the {{ module_name }}")
+    
+    # Administrative fields
+    status = Column(Enum({{ module_name_title }}Status), default={{ module_name_title }}Status.DRAFT, index=True, doc="Current status")
+    is_active = Column(Boolean, default=True, index=True, doc="Whether the {{ module_name }} is currently active")
+    is_featured = Column(Boolean, default=False, index=True, doc="Whether the {{ module_name }} should be featured")
+    
+    # Approval workflow
+    approved_by = Column(Integer, nullable=True, index=True, doc="User ID who approved this {{ module_name }}")
+    approved_at = Column(DateTime(timezone=True), nullable=True, doc="When this {{ module_name }} was approved")
+    rejection_reason = Column(Text, nullable=True, doc="Reason for rejection if applicable")
+    
+    # Metadata
+    tags = Column(Text, nullable=True, doc="Comma-separated tags for categorization")
+    priority = Column(Integer, default=0, index=True, doc="Priority level for administrative review")
+    
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True, doc="Creation timestamp")
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), doc="Last update timestamp")
+    
+    # Relationships
+    audit_logs = relationship("{{ module_name_title }}AuditLog", back_populates="{{ module_name }}", cascade="all, delete-orphan")
+    
+    # Performance indexes
+    __table_args__ = (
+        Index('idx_{{ module_name }}_status_priority', 'status', 'priority'),
+        Index('idx_{{ module_name }}_approved_featured', 'approved_by', 'is_featured'),
+        Index('idx_{{ module_name }}_created_status', 'created_at', 'status'),
+    )
+    
+    @validates('name')
+    def validate_name(self, key, name):
+        """Validate the name field."""
+        if not name or not name.strip():
+            raise ValueError("Name cannot be empty")
+        if len(name) > 100:
+            raise ValueError("Name cannot exceed 100 characters")
+        return name.strip()
+    
+    @validates('slug')
+    def validate_slug(self, key, slug):
+        """Validate the slug field."""
+        if not slug or not slug.strip():
+            raise ValueError("Slug cannot be empty")
+        if not slug.replace('-', '').replace('_', '').isalnum():
+            raise ValueError("Slug can only contain letters, numbers, hyphens, and underscores")
+        if len(slug) > 120:
+            raise ValueError("Slug cannot exceed 120 characters")
+        return slug.lower().strip()
+    
+    @validates('priority')
+    def validate_priority(self, key, priority):
+        """Validate the priority field."""
+        if priority < 0 or priority > 100:
+            raise ValueError("Priority must be between 0 and 100")
+        return priority
+    
+    def __repr__(self):
+        return f"<{{ module_name_title }}(id={self.id}, name='{self.name}', status='{self.status}')>"
+    
+    def to_dict(self):
+        """Convert model to dictionary for API responses."""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'slug': self.slug,
+            'description': self.description,
+            'status': self.status.value if self.status else None,
+            'is_active': self.is_active,
+            'is_featured': self.is_featured,
+            'approved_by': self.approved_by,
+            'approved_at': self.approved_at.isoformat() if self.approved_at else None,
+            'rejection_reason': self.rejection_reason,
+            'tags': self.tags,
+            'priority': self.priority,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+    
+    def approve(self, user_id: int) -> None:
+        """Approve this {{ module_name }}."""
+        self.status = {{ module_name_title }}Status.APPROVED
+        self.approved_by = user_id
+        self.approved_at = datetime.utcnow()
+        self.rejection_reason = None
+    
+    def reject(self, user_id: int, reason: str) -> None:
+        """Reject this {{ module_name }}."""
+        self.status = {{ module_name_title }}Status.REJECTED
+        self.rejection_reason = reason
+    
+    def archive(self) -> None:
+        """Archive this {{ module_name }}."""
+        self.status = {{ module_name_title }}Status.ARCHIVED
+        self.is_active = False
+    
+    def add_audit_log(self, action: str, user_id: int, field_name: Optional[str] = None, 
+                      old_value: Optional[str] = None, new_value: Optional[str] = None,
+                      user_email: Optional[str] = None, ip_address: Optional[str] = None,
+                      user_agent: Optional[str] = None) -> '{{ module_name_title }}AuditLog':
+        """Add an audit log entry for this {{ module_name }}."""
+        from .models import {{ module_name_title }}AuditLog
+        
+        audit_log = {{ module_name_title }}AuditLog(
+            action=action,
+            field_name=field_name,
+            old_value=old_value,
+            new_value=new_value,
+            user_id=user_id,
+            user_email=user_email,
+            {{ module_name }}_id=self.id,
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
+        
+        self.audit_logs.append(audit_log)
+        return audit_log

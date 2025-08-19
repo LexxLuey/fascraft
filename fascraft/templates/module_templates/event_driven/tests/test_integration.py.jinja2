@@ -1,0 +1,165 @@
+"""Integration tests for {{ module_name }} event-driven module."""
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from {{ module_name }}.models import Base, {{ module_name_title }}Event
+from {{ module_name }}.services import {{ module_name_title }}Service, EventProcessor
+from {{ module_name }}.schemas import {{ module_name_title }}Create, {{ module_name_title }}Update
+
+
+class Test{{ module_name_title }}EventIntegration:
+    """Integration tests for {{ module_name_title }} event-driven module."""
+    
+    @pytest.fixture
+    def db_session(self):
+        """Create in-memory database session for testing."""
+        engine = create_engine(
+            "sqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+        TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        Base.metadata.create_all(bind=engine)
+        
+        session = TestingSessionLocal()
+        try:
+            yield session
+        finally:
+            session.close()
+            Base.metadata.drop_all(bind=engine)
+    
+    @pytest.fixture
+    def {{ module_name }}_service(self, db_session):
+        """Create {{ module_name }} service with test database."""
+        return {{ module_name_title }}Service(db_session)
+    
+    @pytest.fixture
+    def event_processor(self, db_session):
+        """Create event processor with test database."""
+        return EventProcessor(db_session)
+    
+    def test_create_{{ module_name }}_triggers_event(self, {{ module_name }}_service, event_processor):
+        """Test that creating {{ module_name }} triggers an event."""
+        # Create {{ module_name }}
+        {{ module_name }}_data = {{ module_name_title }}Create(name="Test {{ module_name_title }}", description="Test description")
+        created_{{ module_name }} = {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Check that event was created
+        events = event_processor.get_events_for_{{ module_name }}(created_{{ module_name }}.id)
+        assert len(events) >= 1
+        
+        # Verify event details
+        creation_event = events[0]
+        assert creation_event.event_type == "{{ module_name }}_created"
+        assert creation_event.{{ module_name }}_id == created_{{ module_name }}.id
+        assert creation_event.data["name"] == "Test {{ module_name_title }}"
+    
+    def test_update_{{ module_name }}_triggers_event(self, {{ module_name }}_service, event_processor):
+        """Test that updating {{ module_name }} triggers an event."""
+        # Create {{ module_name }}
+        {{ module_name }}_data = {{ module_name_title }}Create(name="Original", description="Original")
+        created_{{ module_name }} = {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Update {{ module_name }}
+        update_data = {{ module_name_title }}Update(name="Updated", description="Updated")
+        updated_{{ module_name }} = {{ module_name }}_service.update(created_{{ module_name }}.id, update_data)
+        
+        # Check that update event was created
+        events = event_processor.get_events_for_{{ module_name }}(created_{{ module_name }}.id)
+        assert len(events) >= 2
+        
+        # Find update event
+        update_event = next((e for e in events if e.event_type == "{{ module_name }}_updated"), None)
+        assert update_event is not None
+        assert update_event.data["name"] == "Updated"
+    
+    def test_delete_{{ module_name }}_triggers_event(self, {{ module_name }}_service, event_processor):
+        """Test that deleting {{ module_name }} triggers an event."""
+        # Create {{ module_name }}
+        {{ module_name }}_data = {{ module_name_title }}Create(name="To Delete", description="Delete me")
+        created_{{ module_name }} = {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Delete {{ module_name }}
+        {{ module_name }}_service.delete(created_{{ module_name }}.id)
+        
+        # Check that deletion event was created
+        events = event_processor.get_events_for_{{ module_name }}(created_{{ module_name }}.id)
+        assert len(events) >= 2
+        
+        # Find deletion event
+        deletion_event = next((e for e in events if e.event_type == "{{ module_name }}_deleted"), None)
+        assert deletion_event is not None
+    
+    def test_event_processing_workflow(self, {{ module_name }}_service, event_processor):
+        """Test complete event processing workflow."""
+        # Create {{ module_name }}
+        {{ module_name }}_data = {{ module_name_title }}Create(name="Workflow Test", description="Testing workflow")
+        created_{{ module_name }} = {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Process events
+        processed_events = event_processor.process_pending_events()
+        assert len(processed_events) >= 1
+        
+        # Verify event was processed
+        events = event_processor.get_events_for_{{ module_name }}(created_{{ module_name }}.id)
+        processed_event = events[0]
+        assert processed_event.processed_at is not None
+        assert processed_event.status == "processed"
+    
+    def test_event_ordering(self, {{ module_name }}_service, event_processor):
+        """Test that events are properly ordered by timestamp."""
+        # Create {{ module_name }}
+        {{ module_name }}_data = {{ module_name_title }}Create(name="Order Test", description="Testing order")
+        created_{{ module_name }} = {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Update {{ module_name }} multiple times
+        for i in range(3):
+            update_data = {{ module_name_title }}Update(name=f"Update {i}", description=f"Description {i}")
+            {{ module_name }}_service.update(created_{{ module_name }}.id, update_data)
+        
+        # Get events and verify ordering
+        events = event_processor.get_events_for_{{ module_name }}(created_{{ module_name }}.id)
+        assert len(events) >= 4  # create + 3 updates
+        
+        # Verify chronological order (oldest first)
+        for i in range(len(events) - 1):
+            assert events[i].created_at <= events[i + 1].created_at
+    
+    def test_event_data_integrity(self, {{ module_name }}_service, event_processor):
+        """Test that event data maintains integrity."""
+        # Create {{ module_name }} with specific data
+        test_data = {
+            "name": "Data Integrity Test",
+            "description": "Testing data integrity",
+            "metadata": {"key": "value", "number": 42}
+        }
+        {{ module_name }}_data = {{ module_name_title }}Create(**test_data)
+        created_{{ module_name }} = {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Check event data integrity
+        events = event_processor.get_events_for_{{ module_name }}(created_{{ module_name }}.id)
+        creation_event = events[0]
+        
+        # Verify all data is preserved
+        for key, value in test_data.items():
+            assert creation_event.data[key] == value
+    
+    def test_event_cleanup(self, {{ module_name }}_service, event_processor):
+        """Test event cleanup functionality."""
+        # Create {{ module_name }}
+        {{ module_name }}_data = {{ module_name_title }}Create(name="Cleanup Test", description="Testing cleanup")
+        created_{{ module_name }} = {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Process events
+        event_processor.process_pending_events()
+        
+        # Clean up old events
+        cleaned_count = event_processor.cleanup_old_events(days=0)  # Clean all events
+        
+        # Verify cleanup
+        events = event_processor.get_events_for_{{ module_name }}(created_{{ module_name }}.id)
+        assert len(events) == 0
+        assert cleaned_count >= 1

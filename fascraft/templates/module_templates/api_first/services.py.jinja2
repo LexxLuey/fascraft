@@ -1,0 +1,373 @@
+"""API-First business logic services for {{ module_name }} domain with comprehensive error handling."""
+
+from typing import List, Optional, Dict, Any
+from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_, desc, asc, func
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
+from .models import {{ module_name_title }} as {{ module_name_title }}Model
+from .schemas import {{ module_name_title }}Create, {{ module_name_title }}Update, {{ module_name_title }}Priority
+from config.exceptions import NotFoundError, ConflictError, ValidationError
+
+
+class {{ module_name_title }}Service:
+    """Service class for {{ module_name }} operations with API-first design principles."""
+    
+    @staticmethod
+    def get_{{ module_name }}(db: Session, {{ module_name }}_id: int) -> {{ module_name_title }}Model:
+        """Get a {{ module_name }} by ID with comprehensive error handling."""
+        try:
+            {{ module_name }} = db.query({{ module_name_title }}Model).filter(
+                and_(
+                    {{ module_name_title }}Model.id == {{ module_name }}_id,
+                    {{ module_name_title }}Model.is_active == True
+                )
+            ).first()
+            
+            if not {{ module_name }}:
+                raise NotFoundError(
+                    f"{{ module_name_title }} with id { {{ module_name }}_id } not found",
+                    "Verify the ID is correct or check if the {{ module_name }} has been deleted"
+                )
+            
+            return {{ module_name }}
+            
+        except SQLAlchemyError as e:
+            raise ValidationError(
+                f"Database error while retrieving {{ module_name }} { {{ module_name }}_id }",
+                f"Database operation failed: {str(e)}"
+            )
+    
+    @staticmethod
+    def get_{{ module_name }}_by_slug(db: Session, slug: str) -> {{ module_name_title }}Model:
+        """Get a {{ module_name }} by slug with comprehensive error handling."""
+        try:
+            {{ module_name }} = db.query({{ module_name_title }}Model).filter(
+                and_(
+                    {{ module_name_title }}Model.slug == slug,
+                    {{ module_name_title }}Model.is_active == True
+                )
+            ).first()
+            
+            if not {{ module_name }}:
+                raise NotFoundError(
+                    f"{{ module_name_title }} with slug '{slug}' not found",
+                    "Verify the slug is correct or check if the {{ module_name }} has been deleted"
+                )
+            
+            return {{ module_name }}
+            
+        except SQLAlchemyError as e:
+            raise ValidationError(
+                f"Database error while retrieving {{ module_name }} by slug '{slug}'",
+                f"Database operation failed: {str(e)}"
+            )
+    
+    @staticmethod
+    def get_{{ module_name }}s(
+        db: Session, 
+        skip: int = 0, 
+        limit: int = 100,
+        active_only: bool = True,
+        featured_only: bool = False,
+        priority_filter: Optional[{{ module_name_title }}Priority] = None,
+        search_query: Optional[str] = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc"
+    ) -> List[{{ module_name_title }}Model]:
+        """Get {{ module_name }}s with advanced filtering, searching, and sorting."""
+        try:
+            query = db.query({{ module_name_title }}Model)
+            
+            # Apply filters
+            if active_only:
+                query = query.filter({{ module_name_title }}Model.is_active == True)
+            
+            if featured_only:
+                query = query.filter({{ module_name_title }}Model.is_featured == True)
+            
+            if priority_filter is not None:
+                query = query.filter({{ module_name_title }}Model.priority == priority_filter)
+            
+            # Apply search
+            if search_query:
+                search_filter = or_(
+                    {{ module_name_title }}Model.name.ilike(f"%{search_query}%"),
+                    {{ module_name_title }}Model.description.ilike(f"%{search_query}%"),
+                    {{ module_name_title }}Model.slug.ilike(f"%{search_query}%")
+                )
+                query = query.filter(search_filter)
+            
+            # Apply sorting
+            if hasattr({{ module_name_title }}Model, sort_by):
+                sort_column = getattr({{ module_name_title }}Model, sort_by)
+                if sort_order.lower() == "desc":
+                    query = query.order_by(desc(sort_column))
+                else:
+                    query = query.order_by(asc(sort_column))
+            else:
+                # Default sorting by creation date
+                query = query.order_by(desc({{ module_name_title }}Model.created_at))
+            
+            return query.offset(skip).limit(limit).all()
+            
+        except SQLAlchemyError as e:
+            raise ValidationError(
+                f"Database error while retrieving {{ module_name }}s",
+                f"Database operation failed: {str(e)}"
+            )
+    
+    @staticmethod
+    def count_{{ module_name }}s(
+        db: Session,
+        active_only: bool = True,
+        featured_only: bool = False,
+        priority_filter: Optional[{{ module_name_title }}Priority] = None,
+        search_query: Optional[str] = None
+    ) -> int:
+        """Count {{ module_name }}s with the same filtering options."""
+        try:
+            query = db.query(func.count({{ module_name_title }}Model.id))
+            
+            # Apply the same filters as get_{{ module_name }}s
+            if active_only:
+                query = query.filter({{ module_name_title }}Model.is_active == True)
+            
+            if featured_only:
+                query = query.filter({{ module_name_title }}Model.is_featured == True)
+            
+            if priority_filter is not None:
+                query = query.filter({{ module_name_title }}Model.priority == priority_filter)
+            
+            if search_query:
+                search_filter = or_(
+                    {{ module_name_title }}Model.name.ilike(f"%{search_query}%"),
+                    {{ module_name_title }}Model.description.ilike(f"%{search_query}%"),
+                    {{ module_name_title }}Model.slug.ilike(f"%{search_query}%")
+                )
+                query = query.filter(search_filter)
+            
+            return query.scalar()
+            
+        except SQLAlchemyError as e:
+            raise ValidationError(
+                f"Database error while counting {{ module_name }}s",
+                f"Database operation failed: {str(e)}"
+            )
+    
+    @staticmethod
+    def create_{{ module_name }}(db: Session, {{ module_name }}_data: {{ module_name_title }}Create) -> {{ module_name_title }}Model:
+        """Create a new {{ module_name }} with comprehensive validation."""
+        try:
+            # Check if {{ module_name }} with same name already exists
+            existing_{{ module_name }} = db.query({{ module_name_title }}Model).filter(
+                and_(
+                    {{ module_name_title }}Model.name == {{ module_name }}_data.name,
+                    {{ module_name_title }}Model.is_active == True
+                )
+            ).first()
+            
+            if existing_{{ module_name }}:
+                raise ConflictError(
+                    f"{{ module_name_title }} with name '{ {{ module_name }}_data.name }' already exists",
+                    "Use a different name or update the existing {{ module_name }}"
+                )
+            
+            # Check if {{ module_name }} with same slug already exists
+            existing_slug = db.query({{ module_name_title }}Model).filter(
+                and_(
+                    {{ module_name_title }}Model.slug == {{ module_name }}_data.slug,
+                    {{ module_name_title }}Model.is_active == True
+                )
+            ).first()
+            
+            if existing_slug:
+                raise ConflictError(
+                    f"{{ module_name_title }} with slug '{ {{ module_name }}_data.slug }' already exists",
+                    "Use a different slug or update the existing {{ module_name }}"
+                )
+            
+            # Create new {{ module_name }}
+            db_{{ module_name }} = {{ module_name_title }}Model(**{{ module_name }}_data.model_dump())
+            db.add(db_{{ module_name }})
+            db.commit()
+            db.refresh(db_{{ module_name }})
+            
+            return db_{{ module_name }}
+            
+        except IntegrityError as e:
+            db.rollback()
+            raise ConflictError(
+                f"Failed to create {{ module_name }} due to data integrity issues",
+                f"Database constraint violation: {str(e)}"
+            )
+        except SQLAlchemyError as e:
+            db.rollback()
+            raise ValidationError(
+                f"Database error while creating {{ module_name }}",
+                f"Database operation failed: {str(e)}"
+            )
+    
+    @staticmethod
+    def update_{{ module_name }}(
+        db: Session, 
+        {{ module_name }}_id: int, 
+        {{ module_name }}_data: {{ module_name_title }}Update
+    ) -> {{ module_name_title }}Model:
+        """Update an existing {{ module_name }} with comprehensive validation."""
+        try:
+            db_{{ module_name }} = {{ module_name_title }}Service.get_{{ module_name }}(db, {{ module_name }}_id)
+            
+            # Check for name conflicts if name is being updated
+            if {{ module_name }}_data.name and {{ module_name }}_data.name != db_{{ module_name }}.name:
+                existing_{{ module_name }} = db.query({{ module_name_title }}Model).filter(
+                    and_(
+                        {{ module_name_title }}Model.name == {{ module_name }}_data.name,
+                        {{ module_name_title }}Model.id != {{ module_name }}_id,
+                        {{ module_name_title }}Model.is_active == True
+                    )
+                ).first()
+                
+                if existing_{{ module_name }}:
+                    raise ConflictError(
+                        f"{{ module_name_title }} with name '{ {{ module_name }}_data.name }' already exists",
+                        "Use a different name or update the existing {{ module_name }}"
+                    )
+            
+            # Check for slug conflicts if slug is being updated
+            if {{ module_name }}_data.slug and {{ module_name }}_data.slug != db_{{ module_name }}.slug:
+                existing_slug = db.query({{ module_name_title }}Model).filter(
+                    and_(
+                        {{ module_name_title }}Model.slug == {{ module_name }}_data.slug,
+                        {{ module_name_title }}Model.id != {{ module_name }}_id,
+                        {{ module_name_title }}Model.is_active == True
+                    )
+                ).first()
+                
+                if existing_slug:
+                    raise ConflictError(
+                        f"{{ module_name_title }} with slug '{ {{ module_name }}_data.slug }' already exists",
+                        "Use a different slug or update the existing {{ module_name }}"
+                    )
+            
+            # Update fields
+            update_data = {{ module_name }}_data.model_dump(exclude_unset=True)
+            for field, value in update_data.items():
+                setattr(db_{{ module_name }}, field, value)
+            
+            db.commit()
+            db.refresh(db_{{ module_name }})
+            
+            return db_{{ module_name }}
+            
+        except IntegrityError as e:
+            db.rollback()
+            raise ConflictError(
+                f"Failed to update {{ module_name }} due to data integrity issues",
+                f"Database constraint violation: {str(e)}"
+            )
+        except SQLAlchemyError as e:
+            db.rollback()
+            raise ValidationError(
+                f"Database error while updating {{ module_name }}",
+                f"Database operation failed: {str(e)}"
+            )
+    
+    @staticmethod
+    def delete_{{ module_name }}(db: Session, {{ module_name }}_id: int) -> bool:
+        """Soft delete a {{ module_name }} (set is_active to False)."""
+        try:
+            db_{{ module_name }} = {{ module_name_title }}Service.get_{{ module_name }}(db, {{ module_name }}_id)
+            
+            db_{{ module_name }}.is_active = False
+            db.commit()
+            
+            return True
+            
+        except SQLAlchemyError as e:
+            db.rollback()
+            raise ValidationError(
+                f"Database error while deleting {{ module_name }}",
+                f"Database operation failed: {str(e)}"
+            )
+    
+    @staticmethod
+    def hard_delete_{{ module_name }}(db: Session, {{ module_name }}_id: int) -> bool:
+        """Hard delete a {{ module_name }} from database."""
+        try:
+            db_{{ module_name }} = {{ module_name_title }}Service.get_{{ module_name }}(db, {{ module_name }}_id)
+            
+            db.delete(db_{{ module_name }})
+            db.commit()
+            
+            return True
+            
+        except SQLAlchemyError as e:
+            db.rollback()
+            raise ValidationError(
+                f"Database error while hard deleting {{ module_name }}",
+                f"Database operation failed: {str(e)}"
+            )
+    
+    @staticmethod
+    def bulk_update_priority(
+        db: Session, 
+        {{ module_name }}_ids: List[int], 
+        priority: {{ module_name_title }}Priority
+    ) -> int:
+        """Bulk update priority for multiple {{ module_name }}s."""
+        try:
+            result = db.query({{ module_name_title }}Model).filter(
+                and_(
+                    {{ module_name_title }}Model.id.in_({{ module_name }}_ids),
+                    {{ module_name_title }}Model.is_active == True
+                )
+            ).update(
+                { {{ module_name_title }}Model.priority: priority },
+                synchronize_session=False
+            )
+            
+            db.commit()
+            return result
+            
+        except SQLAlchemyError as e:
+            db.rollback()
+            raise ValidationError(
+                f"Database error while bulk updating {{ module_name }} priorities",
+                f"Database operation failed: {str(e)}"
+            )
+    
+    @staticmethod
+    def get_{{ module_name }}_statistics(db: Session) -> Dict[str, Any]:
+        """Get comprehensive statistics about {{ module_name }}s."""
+        try:
+            total = db.query(func.count({{ module_name_title }}Model.id)).scalar()
+            active = db.query(func.count({{ module_name_title }}Model.id)).filter(
+                {{ module_name_title }}Model.is_active == True
+            ).scalar()
+            featured = db.query(func.count({{ module_name_title }}Model.id)).filter(
+                {{ module_name_title }}Model.is_featured == True
+            ).scalar()
+            
+            # Priority distribution
+            priority_stats = db.query(
+                {{ module_name_title }}Model.priority,
+                func.count({{ module_name_title }}Model.id)
+            ).filter(
+                {{ module_name_title }}Model.is_active == True
+            ).group_by({{ module_name_title }}Model.priority).all()
+            
+            return {
+                "total": total,
+                "active": active,
+                "inactive": total - active,
+                "featured": featured,
+                "priority_distribution": dict(priority_stats),
+                "completion_percentage": (active / total * 100) if total > 0 else 0
+            }
+            
+        except SQLAlchemyError as e:
+            raise ValidationError(
+                f"Database error while retrieving {{ module_name }} statistics",
+                f"Database operation failed: {str(e)}"
+            )

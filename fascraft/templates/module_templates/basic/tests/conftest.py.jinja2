@@ -1,0 +1,40 @@
+"""Pytest configuration for {{ module_name }} module tests."""
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from {{ module_name }}.models import Base
+
+
+@pytest.fixture(scope="session")
+def test_engine():
+    """Create test database engine."""
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(bind=engine)
+    yield engine
+    Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture
+def db_session(test_engine):
+    """Create database session for each test."""
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.rollback()
+        session.close()
+
+
+@pytest.fixture
+def {{ module_name }}_service(db_session):
+    """Create {{ module_name }} service with test database."""
+    from {{ module_name }}.services import {{ module_name_title }}Service
+    return {{ module_name_title }}Service(db_session)

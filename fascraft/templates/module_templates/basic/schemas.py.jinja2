@@ -1,0 +1,37 @@
+"""Basic schemas for {{ module_name }} module."""
+
+from datetime import datetime
+from typing import Optional
+from pydantic import BaseModel, Field
+
+
+class {{ module_name|title }}Base(BaseModel):
+    """Base {{ module_name }} schema."""
+    
+    name: str = Field(..., min_length=1, max_length=100, description="Name of the {{ module_name }}")
+    description: Optional[str] = Field(None, max_length=500, description="Description of the {{ module_name }}")
+    is_active: bool = Field(True, description="Whether the {{ module_name }} is active")
+
+
+class {{ module_name|title }}Create({{ module_name|title }}Base):
+    """Schema for creating a {{ module_name }}."""
+    pass
+
+
+class {{ module_name|title }}Update(BaseModel):
+    """Schema for updating a {{ module_name }}."""
+    
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+    is_active: Optional[bool] = None
+
+
+class {{ module_name|title }}Response({{ module_name|title }}Base):
+    """Schema for {{ module_name }} response."""
+    
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
