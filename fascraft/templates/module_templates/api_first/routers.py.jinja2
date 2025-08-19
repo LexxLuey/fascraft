@@ -1,0 +1,419 @@
+"""API-First routers for {{ module_name }} domain with comprehensive OpenAPI documentation."""
+
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, Path, status, Response
+from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
+
+from config.database import get_db
+from .schemas import (
+    {{ module_name_title }}, 
+    {{ module_name_title }}Create, 
+    {{ module_name_title }}Update, 
+    {{ module_name_title }}List,
+    {{ module_name_title }}Response,
+    {{ module_name_title }}Priority
+)
+from .services import {{ module_name_title }}Service
+from .models import {{ module_name_title }} as {{ module_name_title }}Model
+
+router = APIRouter(
+    prefix="/{{ module_name }}s",
+    tags=["{{ module_name }}s"],
+    responses={
+        404: {"description": "{{ module_name_title }} not found"},
+        422: {"description": "Validation error"},
+        500: {"description": "Internal server error"}
+    }
+)
+
+
+@router.get(
+    "/",
+    response_model={{ module_name_title }}List,
+    summary="List {{ module_name }}s",
+    description="Retrieve a paginated list of {{ module_name }}s with advanced filtering, searching, and sorting options.",
+    response_description="Paginated list of {{ module_name }}s with metadata"
+)
+async def get_{{ module_name }}s(
+    skip: int = Query(
+        0, 
+        ge=0, 
+        description="Number of items to skip for pagination",
+        example=0
+    ),
+    limit: int = Query(
+        100, 
+        ge=1, 
+        le=1000, 
+        description="Number of items to return per page",
+        example=10
+    ),
+    active_only: bool = Query(
+        True, 
+        description="Return only active {{ module_name }}s",
+        example=True
+    ),
+    featured_only: bool = Query(
+        False, 
+        description="Return only featured {{ module_name }}s",
+        example=False
+    ),
+    priority_filter: Optional[{{ module_name_title }}Priority] = Query(
+        None,
+        description="Filter by priority level",
+        example={{ module_name_title }}Priority.HIGH
+    ),
+    search_query: Optional[str] = Query(
+        None,
+        min_length=1,
+        max_length=100,
+        description="Search query for name, description, or slug",
+        example="sample"
+    ),
+    sort_by: str = Query(
+        "created_at",
+        description="Field to sort by",
+        example="name"
+    ),
+    sort_order: str = Query(
+        "desc",
+        regex="^(asc|desc)$",
+        description="Sort order (asc or desc)",
+        example="desc"
+    ),
+    db: Session = Depends(get_db)
+):
+    """Get all {{ module_name }}s with advanced filtering and pagination."""
+    try:
+        {{ module_name }}s = {{ module_name_title }}Service.get_{{ module_name }}s(
+            db, 
+            skip=skip, 
+            limit=limit,
+            active_only=active_only,
+            featured_only=featured_only,
+            priority_filter=priority_filter,
+            search_query=search_query,
+            sort_by=sort_by,
+            sort_order=sort_order
+        )
+        
+        # Get total count for pagination
+        total = {{ module_name_title }}Service.count_{{ module_name }}s(
+            db,
+            active_only=active_only,
+            featured_only=featured_only,
+            priority_filter=priority_filter,
+            search_query=search_query
+        )
+        
+        # Calculate pagination metadata
+        has_next = (skip + limit) < total
+        has_prev = skip > 0
+        current_page = (skip // limit) + 1
+        
+        return {{ module_name_title }}List(
+            items={{ module_name }}s,
+            total=total,
+            page=current_page,
+            size=limit,
+            has_next=has_next,
+            has_prev=has_prev
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve {{ module_name }}s: {str(e)}"
+        )
+
+
+@router.get(
+    "/{ {{ module_name }}_id }",
+    response_model={{ module_name_title }}Response,
+    summary="Get {{ module_name }} by ID",
+    description="Retrieve a specific {{ module_name }} by its unique identifier.",
+    response_description="{{ module_name_title }} data with metadata and links"
+)
+async def get_{{ module_name }}(
+    {{ module_name }}_id: int = Path(
+        ..., 
+        gt=0, 
+        description="Unique identifier of the {{ module_name }}",
+        example=1
+    ),
+    db: Session = Depends(get_db)
+):
+    """Get a specific {{ module_name }} by ID."""
+    try:
+        {{ module_name }} = {{ module_name_title }}Service.get_{{ module_name }}(db, {{ module_name }}_id)
+        
+        return {{ module_name_title }}Response(
+            data={{ module_name }},
+            meta={
+                "type": "{{ module_name }}",
+                "version": {{ module_name }}.api_version,
+                "timestamp": "{{ '{{' }} datetime.utcnow().isoformat() {{ '}}' }}"
+            },
+            links={
+                "self": f"/api/v1/{{ module_name }}s/{ {{ module_name }}_id }",
+                "collection": "/api/v1/{{ module_name }}s"
+            }
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
+@router.get(
+    "/slug/{slug}",
+    response_model={{ module_name_title }}Response,
+    summary="Get {{ module_name }} by slug",
+    description="Retrieve a specific {{ module_name }} by its URL-friendly slug.",
+    response_description="{{ module_name_title }} data with metadata and links"
+)
+async def get_{{ module_name }}_by_slug(
+    slug: str = Path(
+        ..., 
+        min_length=1,
+        max_length=120,
+        description="URL-friendly identifier of the {{ module_name }}",
+        example="sample-{{ module_name }}"
+    ),
+    db: Session = Depends(get_db)
+):
+    """Get a specific {{ module_name }} by slug."""
+    try:
+        {{ module_name }} = {{ module_name_title }}Service.get_{{ module_name }}_by_slug(db, slug)
+        
+        return {{ module_name_title }}Response(
+            data={{ module_name }},
+            meta={
+                "type": "{{ module_name }}",
+                "version": {{ module_name }}.api_version,
+                "timestamp": "{{ '{{' }} datetime.utcnow().isoformat() {{ '}}' }}"
+            },
+            links={
+                "self": f"/api/v1/{{ module_name }}s/slug/{slug}",
+                "collection": "/api/v1/{{ module_name }}s"
+            }
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
+@router.post(
+    "/",
+    response_model={{ module_name_title }}Response,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create new {{ module_name }}",
+    description="Create a new {{ module_name }} with comprehensive validation and conflict checking.",
+    response_description="Newly created {{ module_name }} with metadata and links"
+)
+async def create_{{ module_name }}(
+    {{ module_name }}_data: {{ module_name_title }}Create,
+    db: Session = Depends(get_db)
+):
+    """Create a new {{ module_name }}."""
+    try:
+        {{ module_name }} = {{ module_name_title }}Service.create_{{ module_name }}(db, {{ module_name }}_data)
+        
+        return {{ module_name_title }}Response(
+            data={{ module_name }},
+            meta={
+                "type": "{{ module_name }}",
+                "version": {{ module_name }}.api_version,
+                "timestamp": "{{ '{{' }} datetime.utcnow().isoformat() {{ '}}' }}"
+            },
+            links={
+                "self": f"/api/v1/{{ module_name }}s/{ {{ module_name }}.id }",
+                "collection": "/api/v1/{{ module_name }}s"
+            }
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.put(
+    "/{ {{ module_name }}_id }",
+    response_model={{ module_name_title }}Response,
+    summary="Update {{ module_name }}",
+    description="Update an existing {{ module_name }} with comprehensive validation and conflict checking.",
+    response_description="Updated {{ module_name }} with metadata and links"
+)
+async def update_{{ module_name }}(
+    {{ module_name }}_id: int = Path(
+        ..., 
+        gt=0, 
+        description="Unique identifier of the {{ module_name }} to update",
+        example=1
+    ),
+    {{ module_name }}_data: {{ module_name_title }}Update,
+    db: Session = Depends(get_db)
+):
+    """Update an existing {{ module_name }}."""
+    try:
+        {{ module_name }} = {{ module_name_title }}Service.update_{{ module_name }}(db, {{ module_name }}_id, {{ module_name }}_data)
+        
+        return {{ module_name_title }}Response(
+            data={{ module_name }},
+            meta={
+                "type": "{{ module_name }}",
+                "version": {{ module_name }}.api_version,
+                "timestamp": "{{ '{{' }} datetime.utcnow().isoformat() {{ '}}' }}"
+            },
+            links={
+                "self": f"/api/v1/{{ module_name }}s/{ {{ module_name }}_id }",
+                "collection": "/api/v1/{{ module_name }}s"
+            }
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.delete(
+    "/{ {{ module_name }}_id }",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete {{ module_name }}",
+    description="Soft delete a {{ module_name }} by setting is_active to False.",
+    response_description="No content on successful deletion"
+)
+async def delete_{{ module_name }}(
+    {{ module_name }}_id: int = Path(
+        ..., 
+        gt=0, 
+        description="Unique identifier of the {{ module_name }} to delete",
+        example=1
+    ),
+    db: Session = Depends(get_db)
+):
+    """Soft delete a {{ module_name }} (set is_active to False)."""
+    try:
+        {{ module_name_title }}Service.delete_{{ module_name }}(db, {{ module_name }}_id)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
+@router.delete(
+    "/{ {{ module_name }}_id }/hard",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Hard delete {{ module_name }}",
+    description="Permanently remove a {{ module_name }} from the database. This action cannot be undone.",
+    response_description="No content on successful deletion"
+)
+async def hard_delete_{{ module_name }}(
+    {{ module_name }}_id: int = Path(
+        ..., 
+        gt=0, 
+        description="Unique identifier of the {{ module_name }} to permanently delete",
+        example=1
+    ),
+    db: Session = Depends(get_db)
+):
+    """Hard delete a {{ module_name }} from database."""
+    try:
+        {{ module_name_title }}Service.hard_delete_{{ module_name }}(db, {{ module_name }}_id)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
+@router.patch(
+    "/{ {{ module_name }}_id }/priority",
+    response_model={{ module_name_title }}Response,
+    summary="Update {{ module_name }} priority",
+    description="Update the priority level of a specific {{ module_name }}.",
+    response_description="Updated {{ module_name }} with new priority"
+)
+async def update_{{ module_name }}_priority(
+    {{ module_name }}_id: int = Path(
+        ..., 
+        gt=0, 
+        description="Unique identifier of the {{ module_name }}",
+        example=1
+    ),
+    priority: {{ module_name_title }}Priority = Query(
+        ..., 
+        description="New priority level for the {{ module_name }}",
+        example={{ module_name_title }}Priority.HIGH
+    ),
+    db: Session = Depends(get_db)
+):
+    """Update the priority of a specific {{ module_name }}."""
+    try:
+        {{ module_name }} = {{ module_name_title }}Service.get_{{ module_name }}(db, {{ module_name }}_id)
+        {{ module_name }}.priority = priority
+        db.commit()
+        db.refresh({{ module_name }})
+        
+        return {{ module_name_title }}Response(
+            data={{ module_name }},
+            meta={
+                "type": "{{ module_name }}",
+                "version": {{ module_name }}.api_version,
+                "timestamp": "{{ '{{' }} datetime.utcnow().isoformat() {{ '}}' }}"
+            },
+            links={
+                "self": f"/api/v1/{{ module_name }}s/{ {{ module_name }}_id }",
+                "collection": "/api/v1/{{ module_name }}s"
+            }
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.get(
+    "/statistics/overview",
+    summary="Get {{ module_name }} statistics",
+    description="Retrieve comprehensive statistics about {{ module_name }}s including counts, distributions, and metrics.",
+    response_description="Statistical overview of {{ module_name }}s"
+)
+async def get_{{ module_name }}_statistics(
+    db: Session = Depends(get_db)
+):
+    """Get comprehensive statistics about {{ module_name }}s."""
+    try:
+        stats = {{ module_name_title }}Service.get_{{ module_name }}_statistics(db)
+        
+        return {
+            "data": stats,
+            "meta": {
+                "type": "{{ module_name }}_statistics",
+                "version": "v1",
+                "timestamp": "{{ '{{' }} datetime.utcnow().isoformat() {{ '}}' }}"
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve statistics: {str(e)}"
+        )

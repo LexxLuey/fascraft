@@ -1,0 +1,97 @@
+"""Integration tests for {{ module_name }} module."""
+
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from {{ module_name }}.models import Base
+from {{ module_name }}.services import {{ module_name_title }}Service
+from {{ module_name }}.schemas import {{ module_name_title }}Create, {{ module_name_title }}Update
+
+
+class Test{{ module_name_title }}Integration:
+    """Integration tests for {{ module_name_title }} module."""
+    
+    @pytest.fixture
+    def db_session(self):
+        """Create in-memory database session for testing."""
+        engine = create_engine(
+            "sqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+        TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        Base.metadata.create_all(bind=engine)
+        
+        session = TestingSessionLocal()
+        try:
+            yield session
+        finally:
+            session.close()
+            Base.metadata.drop_all(bind=engine)
+    
+    @pytest.fixture
+    def {{ module_name }}_service(self, db_session):
+        """Create {{ module_name }} service with test database."""
+        return {{ module_name_title }}Service(db_session)
+    
+    def test_create_and_retrieve_{{ module_name }}(self, {{ module_name }}_service):
+        """Test creating and retrieving a {{ module_name }}."""
+        # Create {{ module_name }}
+        {{ module_name }}_data = {{ module_name_title }}Create(name="Test {{ module_name_title }}")
+        created_{{ module_name }} = {{ module_name }}_service.create({{ module_name }}_data)
+        
+        assert created_{{ module_name }}.id is not None
+        assert created_{{ module_name }}.name == "Test {{ module_name_title }}"
+        
+        # Retrieve {{ module_name }}
+        retrieved_{{ module_name }} = {{ module_name }}_service.get_by_id(created_{{ module_name }}.id)
+        assert retrieved_{{ module_name }}.name == "Test {{ module_name_title }}"
+    
+    def test_update_{{ module_name }}(self, {{ module_name }}_service):
+        """Test updating a {{ module_name }}."""
+        # Create {{ module_name }}
+        {{ module_name }}_data = {{ module_name_title }}Create(name="Original Name")
+        created_{{ module_name }} = {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Update {{ module_name }}
+        update_data = {{ module_name_title }}Update(name="Updated Name")
+        updated_{{ module_name }} = {{ module_name }}_service.update(created_{{ module_name }}.id, update_data)
+        
+        assert updated_{{ module_name }}.name == "Updated Name"
+        
+        # Verify in database
+        retrieved_{{ module_name }} = {{ module_name }}_service.get_by_id(created_{{ module_name }}.id)
+        assert retrieved_{{ module_name }}.name == "Updated Name"
+    
+    def test_delete_{{ module_name }}(self, {{ module_name }}_service):
+        """Test deleting a {{ module_name }}."""
+        # Create {{ module_name }}
+        {{ module_name }}_data = {{ module_name_title }}Create(name="To Delete")
+        created_{{ module_name }} = {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Delete {{ module_name }}
+        {{ module_name }}_service.delete(created_{{ module_name }}.id)
+        
+        # Verify deletion
+        with pytest.raises(Exception):
+            {{ module_name }}_service.get_by_id(created_{{ module_name }}.id)
+    
+    def test_list_{{ module_name }}s(self, {{ module_name }}_service):
+        """Test listing {{ module_name }}s."""
+        # Create multiple {{ module_name }}s
+        names = ["First", "Second", "Third"]
+        for name in names:
+            {{ module_name }}_data = {{ module_name_title }}Create(name=name)
+            {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # List all {{ module_name }}s
+        {{ module_name }}s = {{ module_name }}_service.get_all()
+        assert len({{ module_name }}s) == 3
+        
+        # Verify names
+        retrieved_names = [{{ module_name }}.name for {{ module_name }} in {{ module_name }}s]
+        for name in names:
+            assert name in retrieved_names

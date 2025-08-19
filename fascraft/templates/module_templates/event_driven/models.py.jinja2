@@ -1,0 +1,131 @@
+"""Event-Driven models for {{ module_name }} domain with event tracking and async support."""
+
+from datetime import datetime
+from typing import Optional, List
+from sqlalchemy import Column, DateTime, Integer, String, Text, Boolean, Index, ForeignKey, JSON
+from sqlalchemy.sql import func
+from sqlalchemy.orm import validates, relationship
+
+from config.database import Base
+
+
+class {{ module_name_title }}Event(Base):
+    """Event model for tracking {{ module_name }} state changes."""
+    
+    __tablename__ = "{{ module_name }}_events"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    event_type = Column(String(50), nullable=False, index=True, doc="Type of event (created, updated, deleted, etc.)")
+    event_data = Column(JSON, nullable=True, doc="Event payload data")
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True, doc="Event timestamp")
+    user_id = Column(Integer, nullable=True, index=True, doc="User who triggered the event")
+    session_id = Column(String(100), nullable=True, doc="Session identifier")
+    
+    # Relationship to {{ module_name }}
+    {{ module_name }}_id = Column(Integer, ForeignKey("{{ module_name }}s.id"), nullable=False, index=True)
+    {{ module_name }} = relationship("{{ module_name_title }}", back_populates="events")
+    
+    __table_args__ = (
+        Index('idx_{{ module_name }}_event_type_timestamp', 'event_type', 'timestamp'),
+        Index('idx_{{ module_name }}_event_user_timestamp', 'user_id', 'timestamp'),
+    )
+    
+    def __repr__(self):
+        return f"<{{ module_name_title }}Event(id={self.id}, type='{self.event_type}', timestamp='{self.timestamp}')>"
+
+
+class {{ module_name_title }}(Base):
+    """{{ module_name_title }} model with event-driven architecture support."""
+    
+    __tablename__ = "{{ module_name }}s"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False, index=True, doc="Display name of the {{ module_name }}")
+    slug = Column(String(120), unique=True, nullable=False, index=True, doc="URL-friendly identifier")
+    description = Column(Text, nullable=True, doc="Detailed description of the {{ module_name }}")
+    
+    # Status and metadata
+    is_active = Column(Boolean, default=True, index=True, doc="Whether the {{ module_name }} is currently active")
+    status = Column(String(20), default="draft", index=True, doc="Current status (draft, active, archived, etc.)")
+    
+    # Event-driven fields
+    last_event_at = Column(DateTime(timezone=True), nullable=True, doc="Timestamp of last event")
+    event_count = Column(Integer, default=0, doc="Total number of events for this {{ module_name }}")
+    
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True, doc="Creation timestamp")
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), doc="Last update timestamp")
+    
+    # Relationships
+    events = relationship("{{ module_name_title }}Event", back_populates="{{ module_name }}", cascade="all, delete-orphan")
+    
+    # Performance indexes
+    __table_args__ = (
+        Index('idx_{{ module_name }}_status_active', 'status', 'is_active'),
+        Index('idx_{{ module_name }}_event_count', 'event_count'),
+        Index('idx_{{ module_name }}_last_event', 'last_event_at'),
+    )
+    
+    @validates('name')
+    def validate_name(self, key, name):
+        """Validate the name field."""
+        if not name or not name.strip():
+            raise ValueError("Name cannot be empty")
+        if len(name) > 100:
+            raise ValueError("Name cannot exceed 100 characters")
+        return name.strip()
+    
+    @validates('slug')
+    def validate_slug(self, key, slug):
+        """Validate the slug field."""
+        if not slug or not slug.strip():
+            raise ValueError("Slug cannot be empty")
+        if not slug.replace('-', '').replace('_', '').isalnum():
+            raise ValueError("Slug can only contain letters, numbers, hyphens, and underscores")
+        if len(slug) > 120:
+            raise ValueError("Slug cannot exceed 120 characters")
+        return slug.lower().strip()
+    
+    @validates('status')
+    def validate_status(self, key, status):
+        """Validate the status field."""
+        valid_statuses = ["draft", "active", "archived", "pending", "rejected"]
+        if status not in valid_statuses:
+            raise ValueError(f"Status must be one of: {', '.join(valid_statuses)}")
+        return status
+    
+    def __repr__(self):
+        return f"<{{ module_name_title }}(id={self.id}, name='{self.name}', status='{self.status}')>"
+    
+    def to_dict(self):
+        """Convert model to dictionary for API responses."""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'slug': self.slug,
+            'description': self.description,
+            'is_active': self.is_active,
+            'status': self.status,
+            'last_event_at': self.last_event_at.isoformat() if self.last_event_at else None,
+            'event_count': self.event_count,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+    
+    def add_event(self, event_type: str, event_data: Optional[dict] = None, user_id: Optional[int] = None, session_id: Optional[str] = None):
+        """Add an event to this {{ module_name }}."""
+        from .models import {{ module_name_title }}Event
+        
+        event = {{ module_name_title }}Event(
+            event_type=event_type,
+            event_data=event_data,
+            user_id=user_id,
+            session_id=session_id,
+            {{ module_name }}_id=self.id
+        )
+        
+        self.events.append(event)
+        self.last_event_at = datetime.utcnow()
+        self.event_count += 1
+        
+        return event

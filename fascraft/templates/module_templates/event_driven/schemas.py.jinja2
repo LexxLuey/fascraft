@@ -1,0 +1,178 @@
+"""Pydantic schemas for {{ module_name_title }} module with event-driven architecture."""
+
+from datetime import datetime
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field, validator, computed_field
+from enum import Enum
+
+
+class EventStatus(str, Enum):
+    """Event processing status."""
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class EventPriority(str, Enum):
+    """Event priority levels."""
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class {{ module_name_title }}Base(BaseModel):
+    """Base schema for {{ module_name_title }} with event fields."""
+    
+    name: str = Field(..., min_length=1, max_length=100, description="Name of the {{ module_name_title }}")
+    description: Optional[str] = Field(None, max_length=500, description="Description of the {{ module_name_title }}")
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional metadata")
+    
+    # Event-driven fields
+    event_source: str = Field(..., description="Source of the event")
+    event_type: str = Field(..., description="Type of event")
+    priority: EventPriority = Field(default=EventPriority.NORMAL, description="Event priority")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "name": "Sample {{ module_name_title }}",
+                "description": "A sample {{ module_name_title }} for testing",
+                "metadata": {"category": "test", "tags": ["sample"]},
+                "event_source": "user_action",
+                "event_type": "creation",
+                "priority": "normal"
+            }
+        }
+
+
+class {{ module_name_title }}Create({{ module_name_title }}Base):
+    """Schema for creating a new {{ module_name_title }}."""
+    
+    @validator('name')
+    def validate_name(cls, v):
+        if not v.strip():
+            raise ValueError('Name cannot be empty or whitespace')
+        return v.strip()
+
+
+class {{ module_name_title }}Update(BaseModel):
+    """Schema for updating an existing {{ module_name_title }}."""
+    
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+    metadata: Optional[Dict[str, Any]] = None
+    event_source: Optional[str] = None
+    event_type: Optional[str] = None
+    priority: Optional[EventPriority] = None
+
+
+class {{ module_name_title }}Response({{ module_name_title }}Base):
+    """Schema for {{ module_name_title }} response with computed fields."""
+    
+    id: int = Field(..., description="Unique identifier")
+    created_at: datetime = Field(..., description="Creation timestamp")
+    updated_at: datetime = Field(..., description="Last update timestamp")
+    event_status: EventStatus = Field(..., description="Current event status")
+    event_id: Optional[str] = Field(None, description="Associated event ID")
+    
+    @computed_field
+    @property
+    def is_active(self) -> bool:
+        """Check if the {{ module_name_title }} is active."""
+        return self.event_status not in [EventStatus.FAILED, EventStatus.CANCELLED]
+    
+    @computed_field
+    @property
+    def event_age(self) -> str:
+        """Get the age of the event."""
+        age = datetime.utcnow() - self.created_at
+        if age.days > 0:
+            return f"{age.days} days ago"
+        elif age.seconds > 3600:
+            hours = age.seconds // 3600
+            return f"{hours} hours ago"
+        elif age.seconds > 60:
+            minutes = age.seconds // 60
+            return f"{minutes} minutes ago"
+        else:
+            return "Just now"
+    
+    class Config:
+        from_attributes = True
+        schema_extra = {
+            "example": {
+                "id": 1,
+                "name": "Sample {{ module_name_title }}",
+                "description": "A sample {{ module_name_title }} for testing",
+                "metadata": {"category": "test", "tags": ["sample"]},
+                "event_source": "user_action",
+                "event_type": "creation",
+                "priority": "normal",
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+                "event_status": "pending",
+                "event_id": "evt_123456789"
+            }
+        }
+
+
+class {{ module_name_title }}ListResponse(BaseModel):
+    """Schema for paginated {{ module_name_title }} list response."""
+    
+    items: List[{{ module_name_title }}Response] = Field(..., description="List of {{ module_name_plural }}")
+    total: int = Field(..., description="Total number of {{ module_name_plural }}")
+    page: int = Field(..., description="Current page number")
+    size: int = Field(..., description="Page size")
+    pages: int = Field(..., description="Total number of pages")
+    
+    @computed_field
+    @property
+    def has_next(self) -> bool:
+        """Check if there's a next page."""
+        return self.page < self.pages
+    
+    @computed_field
+    @property
+    def has_previous(self) -> bool:
+        """Check if there's a previous page."""
+        return self.page > 1
+
+
+class EventLogEntry(BaseModel):
+    """Schema for event log entries."""
+    
+    event_id: str = Field(..., description="Unique event identifier")
+    event_type: str = Field(..., description="Type of event")
+    event_source: str = Field(..., description="Source of the event")
+    status: EventStatus = Field(..., description="Event status")
+    message: str = Field(..., description="Event message")
+    timestamp: datetime = Field(..., description="Event timestamp")
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Event metadata")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "event_id": "evt_123456789",
+                "event_type": "creation",
+                "event_source": "user_action",
+                "status": "completed",
+                "message": "{{ module_name_title }} created successfully",
+                "timestamp": "2024-01-01T00:00:00Z",
+                "metadata": {"user_id": 123, "ip_address": "192.168.1.1"}
+            }
+        }
+
+
+class EventFilter(BaseModel):
+    """Schema for filtering events."""
+    
+    event_type: Optional[str] = Field(None, description="Filter by event type")
+    event_source: Optional[str] = Field(None, description="Filter by event source")
+    status: Optional[EventStatus] = Field(None, description="Filter by event status")
+    priority: Optional[EventPriority] = Field(None, description="Filter by priority")
+    start_date: Optional[datetime] = Field(None, description="Start date for filtering")
+    end_date: Optional[datetime] = Field(None, description="End date for filtering")
+    search: Optional[str] = Field(None, description="Search term for name/description")

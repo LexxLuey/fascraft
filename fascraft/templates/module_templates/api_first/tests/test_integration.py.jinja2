@@ -1,0 +1,141 @@
+"""Integration tests for {{ module_name }} API module."""
+
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from {{ module_name }}.models import Base
+from {{ module_name }}.services import {{ module_name_title }}Service
+from {{ module_name }}.schemas import {{ module_name_title }}Create, {{ module_name_title }}Update
+from {{ module_name }}.routers import router
+
+
+class Test{{ module_name_title }}APIIntegration:
+    """Integration tests for {{ module_name_title }} API."""
+    
+    @pytest.fixture
+    def db_session(self):
+        """Create in-memory database session for testing."""
+        engine = create_engine(
+            "sqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+        TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        Base.metadata.create_all(bind=engine)
+        
+        session = TestingSessionLocal()
+        try:
+            yield session
+        finally:
+            session.close()
+            Base.metadata.drop_all(bind=engine)
+    
+    @pytest.fixture
+    def {{ module_name }}_service(self, db_session):
+        """Create {{ module_name }} service with test database."""
+        return {{ module_name_title }}Service(db_session)
+    
+    @pytest.fixture
+    def client(self, {{ module_name }}_service):
+        """Create test client with mocked dependencies."""
+        from fastapi import FastAPI
+        from {{ module_name }}.dependencies import get_{{ module_name }}_service
+        
+        app = FastAPI()
+        app.include_router(router, prefix="/{{ module_name }}s")
+        
+        # Override dependency
+        app.dependency_overrides[get_{{ module_name }}_service] = lambda: {{ module_name }}_service
+        
+        return TestClient(app)
+    
+    def test_create_{{ module_name }}_api(self, client):
+        """Test creating {{ module_name }} via API."""
+        response = client.post(
+            "/{{ module_name }}s/",
+            json={"name": "Test {{ module_name_title }}", "description": "Test description"}
+        )
+        
+        assert response.status_code == 201
+        data = response.json()
+        assert data["name"] == "Test {{ module_name_title }}"
+        assert data["description"] == "Test description"
+        assert "id" in data
+    
+    def test_get_{{ module_name }}_api(self, client, {{ module_name }}_service):
+        """Test getting {{ module_name }} via API."""
+        # Create {{ module_name }} first
+        {{ module_name }}_data = {{ module_name_title }}Create(name="Test {{ module_name_title }}", description="Test")
+        created_{{ module_name }} = {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Get via API
+        response = client.get(f"/{{ module_name }}s/{created_{{ module_name }}.id}")
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["name"] == "Test {{ module_name_title }}"
+    
+    def test_update_{{ module_name }}_api(self, client, {{ module_name }}_service):
+        """Test updating {{ module_name }} via API."""
+        # Create {{ module_name }} first
+        {{ module_name }}_data = {{ module_name_title }}Create(name="Original", description="Original")
+        created_{{ module_name }} = {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Update via API
+        response = client.put(
+            f"/{{ module_name }}s/{created_{{ module_name }}.id}",
+            json={"name": "Updated", "description": "Updated"}
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["name"] == "Updated"
+        assert data["description"] == "Updated"
+    
+    def test_delete_{{ module_name }}_api(self, client, {{ module_name }}_service):
+        """Test deleting {{ module_name }} via API."""
+        # Create {{ module_name }} first
+        {{ module_name }}_data = {{ module_name_title }}Create(name="To Delete", description="Delete me")
+        created_{{ module_name }} = {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Delete via API
+        response = client.delete(f"/{{ module_name }}s/{created_{{ module_name }}.id}")
+        
+        assert response.status_code == 204
+        
+        # Verify deletion
+        get_response = client.get(f"/{{ module_name }}s/{created_{{ module_name }}.id}")
+        assert get_response.status_code == 404
+    
+    def test_list_{{ module_name }}s_api(self, client, {{ module_name }}_service):
+        """Test listing {{ module_name }}s via API."""
+        # Create multiple {{ module_name }}s
+        names = ["First", "Second", "Third"]
+        for name in names:
+            {{ module_name }}_data = {{ module_name_title }}Create(name=name, description=f"Description for {name}")
+            {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # List via API
+        response = client.get("/{{ module_name }}s/")
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 3
+        
+        # Verify names
+        retrieved_names = [item["name"] for item in data]
+        for name in names:
+            assert name in retrieved_names
+    
+    def test_validation_errors(self, client):
+        """Test API validation error handling."""
+        # Test missing required field
+        response = client.post("/{{ module_name }}s/", json={"description": "Missing name"})
+        assert response.status_code == 422
+        
+        # Test invalid data type
+        response = client.post("/{{ module_name }}s/", json={"name": 123, "description": "Invalid"})
+        assert response.status_code == 422

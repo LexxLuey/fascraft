@@ -1,0 +1,50 @@
+"""Basic services for {{ module_name }} module."""
+
+from typing import List, Optional
+from sqlalchemy.orm import Session
+from . import models, schemas
+
+
+class {{ module_name|title }}Service:
+    """Service for {{ module_name }} operations."""
+    
+    @staticmethod
+    def create_{{ module_name }}(db: Session, {{ module_name }}: schemas.{{ module_name|title }}Create) -> models.{{ module_name|title }}Model:
+        """Create a new {{ module_name }}."""
+        db_{{ module_name }} = models.{{ module_name|title }}Model(**{{ module_name }}.model_dump())
+        db.add(db_{{ module_name }})
+        db.commit()
+        db.refresh(db_{{ module_name }})
+        return db_{{ module_name }}
+    
+    @staticmethod
+    def get_{{ module_name }}(db: Session, {{ module_name }}_id: int) -> Optional[models.{{ module_name|title }}Model]:
+        """Get a {{ module_name }} by ID."""
+        return db.query(models.{{ module_name|title }}Model).filter(models.{{ module_name|title }}Model.id == {{ module_name }}_id).first()
+    
+    @staticmethod
+    def get_{{ module_name }}s(db: Session, skip: int = 0, limit: int = 100) -> List[models.{{ module_name|title }}Model]:
+        """Get all {{ module_name }}s with pagination."""
+        return db.query(models.{{ module_name|title }}Model).offset(skip).limit(limit).all()
+    
+    @staticmethod
+    def update_{{ module_name }}(db: Session, {{ module_name }}_id: int, {{ module_name }}: schemas.{{ module_name|title }}Update) -> Optional[models.{{ module_name|title }}Model]:
+        """Update a {{ module_name }}."""
+        db_{{ module_name }} = db.query(models.{{ module_name|title }}Model).filter(models.{{ module_name|title }}Model.id == {{ module_name }}_id).first()
+        if db_{{ module_name }}:
+            update_data = {{ module_name }}.model_dump(exclude_unset=True)
+            for field, value in update_data.items():
+                setattr(db_{{ module_name }}, field, value)
+            db.commit()
+            db.refresh(db_{{ module_name }})
+        return db_{{ module_name }}
+    
+    @staticmethod
+    def delete_{{ module_name }}(db: Session, {{ module_name }}_id: int) -> bool:
+        """Delete a {{ module_name }}."""
+        db_{{ module_name }} = db.query(models.{{ module_name|title }}Model).filter(models.{{ module_name|title }}Model.id == {{ module_name }}_id).first()
+        if db_{{ module_name }}:
+            db.delete(db_{{ module_name }})
+            db.commit()
+            return True
+        return False

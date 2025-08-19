@@ -1,0 +1,20 @@
+"""Admin Panel {{ module_name_title }} domain module with role-based access control.
+
+This module provides administrative functionality with:
+- Role-based access control (RBAC)
+- Comprehensive audit logging
+- Approval workflows
+- User activity tracking
+- Administrative interfaces
+- Security and compliance features
+"""
+
+from . import models, schemas, services, routers
+
+__all__ = ["models", "schemas", "services", "routers"]
+
+# Module metadata for API documentation
+__version__ = "1.0.0"
+__api_version__ = "v1"
+__description__ = "Admin Panel {{ module_name_title }} domain module with role-based access control"
+__tags__ = ["{{ module_name }}s", "admin-panel", "rbac", "audit", "security"]

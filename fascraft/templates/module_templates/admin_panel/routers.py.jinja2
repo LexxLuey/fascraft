@@ -1,0 +1,480 @@
+"""FastAPI routers for {{ module_name_title }} admin panel module."""
+
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, Header, Request
+from sqlalchemy.orm import Session
+
+from .schemas import (
+    {{ module_name_title }}Create, {{ module_name_title }}Update, {{ module_name_title }}Response,
+    {{ module_name_title }}ListResponse, AdminFilter, ApprovalRequest, ApprovalResponse,
+    UserPermission, AdminStats, UserRole, ApprovalStatus
+)
+from .services import {{ module_name_title }}AdminService, UserPermissionService
+from .models import {{ module_name_title }}, AuditLog
+
+# Import database dependency and auth dependencies (adjust paths as needed)
+# from ...database import get_db
+# from ...auth import get_current_user, get_current_user_role
+
+router = APIRouter(
+    prefix="/admin/{{ module_name_plural }}",
+    tags=["Admin {{ module_name_plural }}"],
+    responses={404: {"description": "Not found"}},
+)
+
+
+@router.post("/", response_model={{ module_name_title }}Response, status_code=201)
+def create_{{ module_name }}(
+    {{ module_name }}_data: {{ module_name_title }}Create,
+    request: Request,
+    # db: Session = Depends(get_db),
+    # current_user: str = Depends(get_current_user),
+    # current_user_role: UserRole = Depends(get_current_user_role)
+    db: Session = None,  # Placeholder - adjust based on your project structure
+    current_user: str = "admin@example.com",  # Placeholder
+    current_user_role: UserRole = UserRole.ADMIN  # Placeholder
+):
+    """
+    Create a new {{ module_name_title }} with admin controls.
+    
+    Requires appropriate permissions based on user role.
+    """
+    try:
+        service = {{ module_name_title }}AdminService(db)
+        
+        # Get client IP and user agent
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent")
+        
+        created_{{ module_name }} = service.create_{{ module_name }}(
+            {{ module_name }}_data, current_user, current_user_role, ip_address, user_agent
+        )
+        return created_{{ module_name }}
+        
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create {{ module_name_title }}: {str(e)}")
+
+
+@router.get("/", response_model={{ module_name_title }}ListResponse)
+def get_{{ module_name_plural }}(
+    skip: int = Query(0, ge=0, description="Number of items to skip"),
+    limit: int = Query(100, ge=1, le=1000, description="Number of items to return"),
+    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    approval_status: Optional[ApprovalStatus] = Query(None, description="Filter by approval status"),
+    created_by: Optional[str] = Query(None, description="Filter by creator"),
+    updated_by: Optional[str] = Query(None, description="Filter by last updater"),
+    requires_approval: Optional[bool] = Query(None, description="Filter by approval requirement"),
+    search: Optional[str] = Query(None, description="Search term for name/description"),
+    # db: Session = Depends(get_db),
+    # current_user: str = Depends(get_current_user),
+    # current_user_role: UserRole = Depends(get_current_user_role)
+    db: Session = None,  # Placeholder - adjust based on your project structure
+    current_user: str = "admin@example.com",  # Placeholder
+    current_user_role: UserRole = UserRole.ADMIN  # Placeholder
+):
+    """
+    Get {{ module_name_plural }} with admin filtering and pagination.
+    
+    Supports comprehensive filtering for administrative purposes.
+    """
+    try:
+        service = {{ module_name_title }}AdminService(db)
+        
+        # Build filters
+        filters = AdminFilter(
+            is_active=is_active,
+            approval_status=approval_status,
+            created_by=created_by,
+            updated_by=updated_by,
+            requires_approval=requires_approval,
+            search=search
+        )
+        
+        # Get {{ module_name_plural }} with filters
+        {{ module_name_plural }} = service.get_{{ module_name_plural }}(skip, limit, filters, current_user, current_user_role)
+        
+        # Get total count for pagination
+        total_query = db.query({{ module_name_title }})
+        if filters:
+            total_query = service._apply_admin_filters(total_query, filters)
+        total = total_query.count()
+        
+        # Calculate pagination info
+        pages = (total + limit - 1) // limit if total > 0 else 0
+        
+        return {{ module_name_title }}ListResponse(
+            items={{ module_name_plural }},
+            total=total,
+            page=(skip // limit) + 1,
+            size=limit,
+            pages=pages
+        )
+        
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve {{ module_name_plural }}: {str(e)}")
+
+
+@router.get("/{ {{ module_name }}_id}", response_model={{ module_name_title }}Response)
+def get_{{ module_name }}(
+    {{ module_name }}_id: int,
+    # db: Session = Depends(get_db),
+    # current_user: str = Depends(get_current_user),
+    # current_user_role: UserRole = Depends(get_current_user_role)
+    db: Session = None,  # Placeholder - adjust based on your project structure
+    current_user: str = "admin@example.com",  # Placeholder
+    current_user_role: UserRole = UserRole.ADMIN  # Placeholder
+):
+    """
+    Get a specific {{ module_name_title }} by ID with permission check.
+    
+    Returns detailed information including approval status and audit trail.
+    """
+    try:
+        service = {{ module_name_title }}AdminService(db)
+        {{ module_name }} = service.get_{{ module_name }}({{ module_name }}_id, current_user, current_user_role)
+        
+        if not {{ module_name }}:
+            raise HTTPException(status_code=404, detail=f"{{ module_name_title }} with ID { {{ module_name }}_id} not found")
+        
+        return {{ module_name }}
+        
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve {{ module_name_title }}: {str(e)}")
+
+
+@router.put("/{ {{ module_name }}_id}", response_model={{ module_name_title }}Response)
+def update_{{ module_name }}(
+    {{ module_name }}_id: int,
+    {{ module_name }}_data: {{ module_name_title }}Update,
+    request: Request,
+    # db: Session = Depends(get_db),
+    # current_user: str = Depends(get_current_user),
+    # current_user_role: UserRole = Depends(get_current_user_role)
+    db: Session = None,  # Placeholder - adjust based on your project structure
+    current_user: str = "admin@example.com",  # Placeholder
+    current_user_role: UserRole = UserRole.ADMIN  # Placeholder
+):
+    """
+    Update an existing {{ module_name_title }} with admin controls.
+    
+    Requires appropriate permissions and may trigger approval workflow.
+    """
+    try:
+        service = {{ module_name_title }}AdminService(db)
+        
+        # Get client IP and user agent
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent")
+        
+        updated_{{ module_name }} = service.update_{{ module_name }}(
+            {{ module_name }}_id, {{ module_name }}_data, current_user, current_user_role, ip_address, user_agent
+        )
+        
+        if not updated_{{ module_name }}:
+            raise HTTPException(status_code=404, detail=f"{{ module_name_title }} with ID { {{ module_name }}_id} not found")
+        
+        return updated_{{ module_name }}
+        
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update {{ module_name_title }}: {str(e)}")
+
+
+@router.delete("/{ {{ module_name }}_id}")
+def delete_{{ module_name }}(
+    {{ module_name }}_id: int,
+    request: Request,
+    # db: Session = Depends(get_db),
+    # current_user: str = Depends(get_current_user),
+    # current_user_role: UserRole = Depends(get_current_user_role)
+    db: Session = None,  # Placeholder - adjust based on your project structure
+    current_user: str = "admin@example.com",  # Placeholder
+    current_user_role: UserRole = UserRole.ADMIN  # Placeholder
+):
+    """
+    Delete a {{ module_name_title }} with admin controls.
+    
+    Requires delete permissions and logs the action for audit purposes.
+    """
+    try:
+        service = {{ module_name_title }}AdminService(db)
+        
+        # Get client IP and user agent
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent")
+        
+        success = service.delete_{{ module_name }}({{ module_name }}_id, current_user, current_user_role, ip_address, user_agent)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail=f"{{ module_name_title }} with ID { {{ module_name }}_id} not found")
+        
+        return {"message": f"{{ module_name_title }} with ID { {{ module_name }}_id} deleted successfully"}
+        
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete {{ module_name_title }}: {str(e)}")
+
+
+@router.post("/approve", response_model=ApprovalResponse)
+def approve_{{ module_name }}(
+    approval_request: ApprovalRequest,
+    approved: bool = Query(..., description="Whether to approve or reject"),
+    comments: Optional[str] = Query(None, description="Approval comments"),
+    # db: Session = Depends(get_db),
+    # current_user: str = Depends(get_current_user),
+    # current_user_role: UserRole = Depends(get_current_user_role)
+    db: Session = None,  # Placeholder - adjust based on your project structure
+    current_user: str = "admin@example.com",  # Placeholder
+    current_user_role: UserRole = UserRole.ADMIN  # Placeholder
+):
+    """
+    Approve or reject a {{ module_name_title }} change.
+    
+    Requires approval permissions and logs the decision.
+    """
+    try:
+        service = {{ module_name_title }}AdminService(db)
+        
+        response = service.approve_{{ module_name }}(approval_request, current_user, current_user_role, approved, comments)
+        return response
+        
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process approval: {str(e)}")
+
+
+@router.get("/pending-approvals", response_model=List[{{ module_name_title }}Response])
+def get_pending_approvals(
+    # db: Session = Depends(get_db),
+    # current_user: str = Depends(get_current_user),
+    # current_user_role: UserRole = Depends(get_current_user_role)
+    db: Session = None,  # Placeholder - adjust based on your project structure
+    current_user: str = "admin@example.com",  # Placeholder
+    current_user_role: UserRole = UserRole.ADMIN  # Placeholder
+):
+    """
+    Get {{ module_name_plural }} pending approval.
+    
+    Shows all items that require administrative approval.
+    """
+    try:
+        service = {{ module_name_title }}AdminService(db)
+        pending_{{ module_name_plural }} = service.get_pending_approvals(current_user_role)
+        return pending_{{ module_name_plural }}
+        
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve pending approvals: {str(e)}")
+
+
+@router.get("/stats", response_model=AdminStats)
+def get_admin_stats(
+    # db: Session = Depends(get_db),
+    # current_user: str = Depends(get_current_user),
+    # current_user_role: UserRole = Depends(get_current_user_role)
+    db: Session = None,  # Placeholder - adjust based on your project structure
+    current_user: str = "admin@example.com",  # Placeholder
+    current_user_role: UserRole = UserRole.ADMIN  # Placeholder
+):
+    """
+    Get admin statistics.
+    
+    Provides overview metrics for administrative dashboard.
+    """
+    try:
+        service = {{ module_name_title }}AdminService(db)
+        stats = service.get_admin_stats(current_user_role)
+        return stats
+        
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve admin stats: {str(e)}")
+
+
+@router.get("/audit-log")
+def get_audit_log(
+    skip: int = Query(0, ge=0, description="Number of items to skip"),
+    limit: int = Query(100, ge=1, le=1000, description="Number of items to return"),
+    user_id: Optional[str] = Query(None, description="Filter by user ID"),
+    action: Optional[str] = Query(None, description="Filter by action type"),
+    resource_type: Optional[str] = Query(None, description="Filter by resource type"),
+    resource_id: Optional[int] = Query(None, description="Filter by resource ID"),
+    start_date: Optional[str] = Query(None, description="Start date (ISO format)"),
+    end_date: Optional[str] = Query(None, description="End date (ISO format)"),
+    # db: Session = Depends(get_db),
+    # current_user: str = Depends(get_current_user),
+    # current_user_role: UserRole = Depends(get_current_user_role)
+    db: Session = None,  # Placeholder - adjust based on your project structure
+    current_user: str = "admin@example.com",  # Placeholder
+    current_user_role: UserRole = UserRole.ADMIN  # Placeholder
+):
+    """
+    Get audit log entries.
+    
+    Comprehensive audit trail for administrative monitoring.
+    """
+    try:
+        # Check if user has permission to view audit logs
+        if current_user_role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+            raise HTTPException(status_code=403, detail="Insufficient permissions to view audit logs")
+        
+        query = db.query(AuditLog)
+        
+        # Apply filters
+        if user_id:
+            query = query.filter(AuditLog.user_id == user_id)
+        if action:
+            query = query.filter(AuditLog.action == action)
+        if resource_type:
+            query = query.filter(AuditLog.resource_type == resource_type)
+        if resource_id:
+            query = query.filter(AuditLog.resource_id == resource_id)
+        if start_date:
+            query = query.filter(AuditLog.timestamp >= start_date)
+        if end_date:
+            query = query.filter(AuditLog.timestamp <= end_date)
+        
+        # Get paginated results
+        total = query.count()
+        audit_entries = query.order_by(AuditLog.timestamp.desc()).offset(skip).limit(limit).all()
+        
+        return {
+            "items": audit_entries,
+            "total": total,
+            "page": (skip // limit) + 1,
+            "size": limit,
+            "pages": (total + limit - 1) // limit if total > 0 else 0
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve audit log: {str(e)}")
+
+
+@router.get("/users/permissions/{user_id}", response_model=UserPermission)
+def get_user_permissions(
+    user_id: str,
+    # db: Session = Depends(get_db),
+    # current_user: str = Depends(get_current_user),
+    # current_user_role: UserRole = Depends(get_current_user_role)
+    db: Session = None,  # Placeholder - adjust based on your project structure
+    current_user: str = "admin@example.com",  # Placeholder
+    current_user_role: UserRole = UserRole.ADMIN  # Placeholder
+):
+    """
+    Get permissions for a specific user.
+    
+    Administrative endpoint for user permission management.
+    """
+    try:
+        # Check if user has permission to view user permissions
+        if current_user_role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+            raise HTTPException(status_code=403, detail="Insufficient permissions to view user permissions")
+        
+        service = UserPermissionService(db)
+        user_perm = service.get_user_permissions(user_id)
+        
+        if not user_perm:
+            raise HTTPException(status_code=404, detail=f"Permissions not found for user: {user_id}")
+        
+        return user_perm
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve user permissions: {str(e)}")
+
+
+@router.put("/users/permissions/{user_id}", response_model=UserPermission)
+def update_user_permissions(
+    user_id: str,
+    user_permission: UserPermission,
+    # db: Session = Depends(get_db),
+    # current_user: str = Depends(get_current_user),
+    # current_user_role: UserRole = Depends(get_current_user_role)
+    db: Session = None,  # Placeholder - adjust based on your project structure
+    current_user: str = "admin@example.com",  # Placeholder
+    current_user_role: UserRole = UserRole.ADMIN  # Placeholder
+):
+    """
+    Update user permissions.
+    
+    Administrative endpoint for modifying user access levels.
+    """
+    try:
+        # Check if user has permission to modify user permissions
+        if current_user_role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+            raise HTTPException(status_code=403, detail="Insufficient permissions to modify user permissions")
+        
+        service = UserPermissionService(db)
+        updated_perm = service.update_user_permissions(
+            user_id=user_id,
+            role=user_permission.role,
+            permissions=user_permission.permissions,
+            can_approve=user_permission.can_approve,
+            can_delete=user_permission.can_delete,
+            can_export=user_permission.can_export
+        )
+        
+        return updated_perm
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update user permissions: {str(e)}")
+
+
+@router.delete("/users/permissions/{user_id}")
+def delete_user_permissions(
+    user_id: str,
+    # db: Session = Depends(get_db),
+    # current_user: str = Depends(get_current_user),
+    # current_user_role: UserRole = Depends(get_current_user_role)
+    db: Session = None,  # Placeholder - adjust based on your project structure
+    current_user: str = "admin@example.com",  # Placeholder
+    current_user_role: UserRole = UserRole.ADMIN  # Placeholder
+):
+    """
+    Delete user permissions.
+    
+    Administrative endpoint for removing user access.
+    """
+    try:
+        # Check if user has permission to delete user permissions
+        if current_user_role not in [UserRole.SUPER_ADMIN]:
+            raise HTTPException(status_code=403, detail="Insufficient permissions to delete user permissions")
+        
+        service = UserPermissionService(db)
+        success = service.delete_user_permissions(user_id)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Permissions not found for user: {user_id}")
+        
+        return {"message": f"Permissions deleted for user: {user_id}"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete user permissions: {str(e)}")

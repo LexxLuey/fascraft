@@ -1,0 +1,263 @@
+"""API-First Pydantic schemas for {{ module_name }} domain with comprehensive documentation."""
+
+from datetime import datetime
+from typing import Optional, List
+from enum import Enum
+
+from pydantic import BaseModel, ConfigDict, Field, validator, computed_field
+
+
+class {{ module_name_title }}Status(str, Enum):
+    """Status enumeration for {{ module_name }}s."""
+    
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    DRAFT = "draft"
+    ARCHIVED = "archived"
+
+
+class {{ module_name_title }}Priority(int, Enum):
+    """Priority levels for {{ module_name }}s."""
+    
+    LOW = -1
+    NORMAL = 0
+    HIGH = 1
+    URGENT = 2
+
+
+class {{ module_name_title }}Base(BaseModel):
+    """Base {{ module_name }} schema with comprehensive validation."""
+    
+    model_config = ConfigDict(
+        from_attributes=True,
+        str_strip_whitespace=True,
+        validate_assignment=True,
+        extra="forbid"
+    )
+    
+    name: str = Field(
+        ..., 
+        min_length=1, 
+        max_length=100,
+        description="Display name of the {{ module_name }}",
+        example="Sample {{ module_name }}"
+    )
+    slug: str = Field(
+        ..., 
+        min_length=1, 
+        max_length=120,
+        pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$",
+        description="URL-friendly identifier (lowercase, hyphens allowed)",
+        example="sample-{{ module_name }}"
+    )
+    description: Optional[str] = Field(
+        None,
+        max_length=1000,
+        description="Detailed description of the {{ module_name }}",
+        example="This is a sample {{ module_name }} for demonstration purposes"
+    )
+    is_active: bool = Field(
+        True,
+        description="Whether the {{ module_name }} is currently active"
+    )
+    is_featured: bool = Field(
+        False,
+        description="Whether the {{ module_name }} should be featured"
+    )
+    priority: {{ module_name_title }}Priority = Field(
+        {{ module_name_title }}Priority.NORMAL,
+        description="Priority level for sorting and display"
+    )
+    external_id: Optional[str] = Field(
+        None,
+        max_length=100,
+        description="External system identifier"
+    )
+    
+    @validator('name')
+    def validate_name(cls, v):
+        """Validate the name field."""
+        if not v or not v.strip():
+            raise ValueError("Name cannot be empty")
+        return v.strip()
+    
+    @validator('slug')
+    def validate_slug(cls, v):
+        """Validate the slug field."""
+        if not v or not v.strip():
+            raise ValueError("Slug cannot be empty")
+        return v.lower().strip()
+    
+    @computed_field
+    @property
+    def display_name(self) -> str:
+        """Computed display name with priority indicator."""
+        priority_indicators = {
+            {{ module_name_title }}Priority.LOW: "🔽",
+            {{ module_name_title }}Priority.NORMAL: "",
+            {{ module_name_title }}Priority.HIGH: "🔼",
+            {{ module_name_title }}Priority.URGENT: "🚨"
+        }
+        indicator = priority_indicators.get(self.priority, "")
+        return f"{indicator} {self.name}".strip()
+
+
+class {{ module_name_title }}Create({{ module_name_title }}Base):
+    """Schema for creating a new {{ module_name }}."""
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "New {{ module_name }}",
+                "slug": "new-{{ module_name }}",
+                "description": "A newly created {{ module_name }}",
+                "is_active": True,
+                "is_featured": False,
+                "priority": 0,
+                "external_id": "EXT-001"
+            }
+        }
+
+
+class {{ module_name_title }}Update(BaseModel):
+    """Schema for updating an existing {{ module_name }}."""
+    
+    model_config = ConfigDict(
+        from_attributes=True,
+        str_strip_whitespace=True,
+        validate_assignment=True,
+        extra="forbid"
+    )
+    
+    name: Optional[str] = Field(
+        None,
+        min_length=1, 
+        max_length=100,
+        description="Display name of the {{ module_name }}"
+    )
+    slug: Optional[str] = Field(
+        None,
+        min_length=1, 
+        max_length=120,
+        pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$",
+        description="URL-friendly identifier"
+    )
+    description: Optional[str] = Field(
+        None,
+        max_length=1000,
+        description="Detailed description of the {{ module_name }}"
+    )
+    is_active: Optional[bool] = Field(
+        None,
+        description="Whether the {{ module_name }} is currently active"
+    )
+    is_featured: Optional[bool] = Field(
+        None,
+        description="Whether the {{ module_name }} should be featured"
+    )
+    priority: Optional[{{ module_name_title }}Priority] = Field(
+        None,
+        description="Priority level for sorting and display"
+    )
+    external_id: Optional[str] = Field(
+        None,
+        max_length=100,
+        description="External system identifier"
+    )
+    
+    @validator('name')
+    def validate_name(cls, v):
+        """Validate the name field."""
+        if v is not None and (not v or not v.strip()):
+            raise ValueError("Name cannot be empty")
+        return v.strip() if v else v
+    
+    @validator('slug')
+    def validate_slug(cls, v):
+        """Validate the slug field."""
+        if v is not None and (not v or not v.strip()):
+            raise ValueError("Slug cannot be empty")
+        return v.lower().strip() if v else v
+
+
+class {{ module_name_title }}({{ module_name_title }}Base):
+    """Complete {{ module_name }} schema with all fields."""
+    
+    id: int = Field(..., description="Unique identifier for the {{ module_name }}")
+    api_version: str = Field(..., description="API version this {{ module_name }} was created with")
+    created_at: datetime = Field(..., description="Creation timestamp")
+    updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "id": 1,
+                "name": "Sample {{ module_name }}",
+                "slug": "sample-{{ module_name }}",
+                "description": "This is a sample {{ module_name }}",
+                "is_active": True,
+                "is_featured": False,
+                "priority": 0,
+                "external_id": "EXT-001",
+                "api_version": "v1",
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T12:00:00Z"
+            }
+        }
+
+
+class {{ module_name_title }}List(BaseModel):
+    """Schema for {{ module_name }} list response with pagination and metadata."""
+    
+    items: List[{{ module_name_title }}] = Field(..., description="List of {{ module_name }}s")
+    total: int = Field(..., description="Total number of {{ module_name }}s")
+    page: int = Field(..., description="Current page number")
+    size: int = Field(..., description="Number of items per page")
+    has_next: bool = Field(..., description="Whether there are more pages")
+    has_prev: bool = Field(..., description="Whether there are previous pages")
+    
+    @computed_field
+    @property
+    def total_pages(self) -> int:
+        """Calculate total number of pages."""
+        return (self.total + self.size - 1) // self.size
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "items": [],
+                "total": 0,
+                "page": 1,
+                "size": 10,
+                "has_next": False,
+                "has_prev": False
+            }
+        }
+
+
+class {{ module_name_title }}Response(BaseModel):
+    """Standard API response wrapper for {{ module_name }} operations."""
+    
+    data: {{ module_name_title }} = Field(..., description="The {{ module_name }} data")
+    meta: dict = Field(..., description="Response metadata")
+    links: Optional[dict] = Field(None, description="Related resource links")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "data": {
+                    "id": 1,
+                    "name": "Sample {{ module_name }}",
+                    "slug": "sample-{{ module_name }}"
+                },
+                "meta": {
+                    "type": "{{ module_name }}",
+                    "version": "v1",
+                    "timestamp": "2024-01-01T00:00:00Z"
+                },
+                "links": {
+                    "self": "/api/v1/{{ module_name }}s/1",
+                    "collection": "/api/v1/{{ module_name }}s"
+                }
+            }
+        }

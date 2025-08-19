@@ -233,7 +233,10 @@ class PartialFailureError(FasCraftError):
 
     def __init__(self, message: str, warnings: list[str]):
         self.warnings = warnings
-        super().__init__(message, "Operation completed with warnings - some features may not work correctly")
+        super().__init__(
+            message,
+            "Operation completed with warnings - some features may not work correctly",
+        )
 
 
 class NetworkPathError(FileSystemError):

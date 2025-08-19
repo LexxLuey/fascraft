@@ -1,0 +1,93 @@
+"""Pydantic schemas for {{ module_name_title }} microservice module."""
+
+from datetime import datetime
+from typing import Optional, List
+from pydantic import BaseModel, Field, validator
+
+
+class {{ module_name_title }}Base(BaseModel):
+    """Base schema for {{ module_name_title }} microservice."""
+    
+    name: str = Field(..., min_length=1, max_length=50, description="Name of the {{ module_name_title }}")
+    description: Optional[str] = Field(None, max_length=200, description="Brief description")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "name": "Sample {{ module_name_title }}",
+                "description": "A sample {{ module_name_title }} for testing"
+            }
+        }
+
+
+class {{ module_name_title }}Create({{ module_name_title }}Base):
+    """Schema for creating a new {{ module_name_title }}."""
+    
+    @validator('name')
+    def validate_name(cls, v):
+        if not v.strip():
+            raise ValueError('Name cannot be empty or whitespace')
+        return v.strip()
+
+
+class {{ module_name_title }}Update(BaseModel):
+    """Schema for updating an existing {{ module_name_title }}."""
+    
+    name: Optional[str] = Field(None, min_length=1, max_length=50)
+    description: Optional[str] = Field(None, max_length=200)
+
+
+class {{ module_name_title }}Response({{ module_name_title }}Base):
+    """Schema for {{ module_name_title }} response."""
+    
+    id: int = Field(..., description="Unique identifier")
+    created_at: datetime = Field(..., description="Creation timestamp")
+    updated_at: datetime = Field(..., description="Last update timestamp")
+    
+    class Config:
+        from_attributes = True
+        schema_extra = {
+            "example": {
+                "id": 1,
+                "name": "Sample {{ module_name_title }}",
+                "description": "A sample {{ module_name_title }} for testing",
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z"
+            }
+        }
+
+
+class {{ module_name_title }}ListResponse(BaseModel):
+    """Schema for {{ module_name_title }} list response."""
+    
+    items: List[{{ module_name_title }}Response] = Field(..., description="List of {{ module_name_plural }}")
+    total: int = Field(..., description="Total number of {{ module_name_plural }}")
+    page: int = Field(..., description="Current page number")
+    size: int = Field(..., description="Page size")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "items": [],
+                "total": 0,
+                "page": 1,
+                "size": 10
+            }
+        }
+
+
+class HealthCheck(BaseModel):
+    """Schema for health check response."""
+    
+    status: str = Field(..., description="Service status")
+    timestamp: datetime = Field(..., description="Health check timestamp")
+    version: str = Field(..., description="Service version")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "status": "healthy",
+                "timestamp": "2024-01-01T00:00:00Z",
+                "version": "1.0.0"
+            }
+        }

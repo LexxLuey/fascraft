@@ -1,0 +1,259 @@
+"""Tests for {{ module_name_title }} Event-Driven models."""
+
+import pytest
+from datetime import datetime
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from .models import {{ module_name_title }}, EventLog, EventStatus, EventPriority
+
+
+@pytest.fixture
+def db_session():
+    """Create a test database session."""
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    
+    # Create tables
+    from .models import Base
+    Base.metadata.create_all(bind=engine)
+    
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+class Test{{ module_name_title }}Model:
+    """Test the {{ module_name_title }} model with event-driven features."""
+    
+    def test_create_{{ module_name }}_with_event_fields(self, db_session):
+        """Test creating a {{ module_name_title }} with event tracking fields."""
+        {{ module_name }} = {{ module_name_title }}(
+            name="Test {{ module_name_title }}",
+            description="Test description",
+            metadata={"category": "test"},
+            event_source="user_action",
+            event_type="creation",
+            priority=EventPriority.NORMAL
+        )
+        
+        db_session.add({{ module_name }})
+        db_session.commit()
+        db_session.refresh({{ module_name }})
+        
+        assert {{ module_name }}.id is not None
+        assert {{ module_name }}.name == "Test {{ module_name_title }}"
+        assert {{ module_name }}.event_source == "user_action"
+        assert {{ module_name }}.event_type == "creation"
+        assert {{ module_name }}.priority == EventPriority.NORMAL
+        assert {{ module_name }}.event_status == EventStatus.PENDING
+        assert {{ module_name }}.created_at is not None
+        assert {{ module_name }}.updated_at is not None
+    
+    def test_{{ module_name }}_event_status_transitions(self, db_session):
+        """Test {{ module_name_title }} event status transitions."""
+        {{ module_name }} = {{ module_name_title }}(
+            name="Status Test {{ module_name_title }}",
+            event_source="system",
+            event_type="test",
+            priority=EventPriority.HIGH
+        )
+        
+        db_session.add({{ module_name }})
+        db_session.commit()
+        
+        # Test status transitions
+        assert {{ module_name }}.event_status == EventStatus.PENDING
+        
+        {{ module_name }}.event_status = EventStatus.PROCESSING
+        db_session.commit()
+        assert {{ module_name }}.event_status == EventStatus.PROCESSING
+        
+        {{ module_name }}.event_status = EventStatus.COMPLETED
+        db_session.commit()
+        assert {{ module_name }}.event_status == EventStatus.COMPLETED
+    
+    def test_{{ module_name }}_priority_levels(self, db_session):
+        """Test {{ module_name_title }} priority levels."""
+        priorities = [EventPriority.LOW, EventPriority.NORMAL, EventPriority.HIGH, EventPriority.CRITICAL]
+        
+        for priority in priorities:
+            {{ module_name }} = {{ module_name_title }}(
+                name=f"Priority {priority.value} {{ module_name_title }}",
+                event_source="test",
+                event_type="priority_test",
+                priority=priority
+            )
+            db_session.add({{ module_name }})
+        
+        db_session.commit()
+        
+        # Verify all priorities were saved correctly
+        saved_{{ module_name_plural }} = db_session.query({{ module_name_title }}).filter(
+            {{ module_name_title }}.event_type == "priority_test"
+        ).all()
+        
+        assert len(saved_{{ module_name_plural }}) == 4
+        saved_priorities = [{{ module_name }}.priority for {{ module_name }} in saved_{{ module_name_plural }}]
+        assert set(saved_priorities) == set(priorities)
+    
+    def test_{{ module_name }}_metadata_storage(self, db_session):
+        """Test {{ module_name_title }} metadata storage."""
+        test_metadata = {
+            "category": "test",
+            "tags": ["event-driven", "test"],
+            "user_id": 123,
+            "session_id": "abc123"
+        }
+        
+        {{ module_name }} = {{ module_name_title }}(
+            name="Metadata Test {{ module_name_title }}",
+            event_source="test",
+            event_type="metadata_test",
+            priority=EventPriority.NORMAL,
+            metadata=test_metadata
+        )
+        
+        db_session.add({{ module_name }})
+        db_session.commit()
+        db_session.refresh({{ module_name }})
+        
+        assert {{ module_name }}.metadata == test_metadata
+        assert {{ module_name }}.metadata["category"] == "test"
+        assert {{ module_name }}.metadata["tags"] == ["event-driven", "test"]
+
+
+class TestEventLogModel:
+    """Test the EventLog model."""
+    
+    def test_create_event_log(self, db_session):
+        """Test creating an event log entry."""
+        event_log = EventLog(
+            event_type="test_event",
+            event_source="test_system",
+            status=EventStatus.COMPLETED,
+            message="Test event message",
+            metadata={"test_key": "test_value"}
+        )
+        
+        db_session.add(event_log)
+        db_session.commit()
+        db_session.refresh(event_log)
+        
+        assert event_log.id is not None
+        assert event_log.event_type == "test_event"
+        assert event_log.event_source == "test_system"
+        assert event_log.status == EventStatus.COMPLETED
+        assert event_log.message == "Test event message"
+        assert event_log.metadata == {"test_key": "test_value"}
+        assert event_log.timestamp is not None
+    
+    def test_event_log_status_enum(self, db_session):
+        """Test event log status enum values."""
+        statuses = [EventStatus.PENDING, EventStatus.PROCESSING, EventStatus.COMPLETED, EventStatus.FAILED, EventStatus.CANCELLED]
+        
+        for status in statuses:
+            event_log = EventLog(
+                event_type="status_test",
+                event_source="test",
+                status=status,
+                message=f"Testing status: {status.value}"
+            )
+            db_session.add(event_log)
+        
+        db_session.commit()
+        
+        # Verify all statuses were saved
+        saved_logs = db_session.query(EventLog).filter(
+            EventLog.event_type == "status_test"
+        ).all()
+        
+        assert len(saved_logs) == 5
+        saved_statuses = [log.status for log in saved_logs]
+        assert set(saved_statuses) == set(statuses)
+    
+    def test_event_log_metadata_storage(self, db_session):
+        """Test event log metadata storage."""
+        complex_metadata = {
+            "user_id": 456,
+            "ip_address": "192.168.1.1",
+            "user_agent": "Mozilla/5.0",
+            "request_data": {
+                "method": "POST",
+                "endpoint": "/api/test",
+                "params": {"id": 123}
+            }
+        }
+        
+        event_log = EventLog(
+            event_type="complex_event",
+            event_source="api",
+            status=EventStatus.COMPLETED,
+            message="Complex event with metadata",
+            metadata=complex_metadata
+        )
+        
+        db_session.add(event_log)
+        db_session.commit()
+        db_session.refresh(event_log)
+        
+        assert event_log.metadata == complex_metadata
+        assert event_log.metadata["user_id"] == 456
+        assert event_log.metadata["request_data"]["method"] == "POST"
+        assert event_log.metadata["request_data"]["params"]["id"] == 123
+
+
+class TestModelRelationships:
+    """Test relationships between models."""
+    
+    def test_{{ module_name }}_and_event_log_relationship(self, db_session):
+        """Test relationship between {{ module_name_title }} and EventLog."""
+        # Create a {{ module_name_title }}
+        {{ module_name }} = {{ module_name_title }}(
+            name="Relationship Test {{ module_name_title }}",
+            event_source="test",
+            event_type="relationship_test",
+            priority=EventPriority.NORMAL
+        )
+        
+        db_session.add({{ module_name }})
+        db_session.commit()
+        db_session.refresh({{ module_name }})
+        
+        # Create event logs for this {{ module_name_title }}
+        event_logs = [
+            EventLog(
+                event_type="creation",
+                event_source="test",
+                status=EventStatus.COMPLETED,
+                message=f"{{ module_name_title }} { {{ module_name }}.id} created",
+                metadata={"{{ module_name }}_id": {{ module_name }}.id}
+            ),
+            EventLog(
+                event_type="update",
+                event_source="test",
+                status=EventStatus.COMPLETED,
+                message=f"{{ module_name_title }} { {{ module_name }}.id} updated",
+                metadata={"{{ module_name }}_id": {{ module_name }}.id}
+            )
+        ]
+        
+        for log in event_logs:
+            db_session.add(log)
+        
+        db_session.commit()
+        
+        # Verify event logs were created
+        saved_logs = db_session.query(EventLog).filter(
+            EventLog.metadata.contains({"{{ module_name }}_id": {{ module_name }}.id})
+        ).all()
+        
+        assert len(saved_logs) == 2
+        assert all(log.metadata["{{ module_name }}_id"] == {{ module_name }}.id for log in saved_logs)

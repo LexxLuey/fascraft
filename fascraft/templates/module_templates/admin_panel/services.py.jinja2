@@ -1,0 +1,448 @@
+"""Business logic services for {{ module_name_title }} admin panel module."""
+
+import logging
+from datetime import datetime, timedelta
+from typing import List, Optional, Dict, Any
+from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_, desc, asc
+
+from .models import {{ module_name_title }}, AuditLog, UserPermission
+from .schemas import (
+    {{ module_name_title }}Create, {{ module_name_title }}Update, AdminFilter, 
+    ApprovalRequest, ApprovalResponse, UserRole, ApprovalStatus, AuditAction
+)
+
+logger = logging.getLogger(__name__)
+
+
+class {{ module_name_title }}AdminService:
+    """Service class for {{ module_name_title }} admin operations."""
+    
+    def __init__(self, db: Session):
+        self.db = db
+    
+    def create_{{ module_name }}(self, {{ module_name }}_data: {{ module_name_title }}Create, user_id: str, 
+                                user_role: UserRole, ip_address: Optional[str] = None, 
+                                user_agent: Optional[str] = None) -> {{ module_name_title }}:
+        """Create a new {{ module_name_title }} with admin controls."""
+        try:
+            # Check if user has permission to create
+            if not self._can_create(user_role):
+                raise PermissionError(f"User with role {user_role} cannot create {{ module_name_plural }}")
+            
+            # Set approval status based on requirements
+            approval_status = ApprovalStatus.PENDING if {{ module_name }}_data.requires_approval else ApprovalStatus.APPROVED
+            
+            db_{{ module_name }} = {{ module_name_title }}(
+                name={{ module_name }}_data.name,
+                description={{ module_name }}_data.description,
+                is_active={{ module_name }}_data.is_active,
+                requires_approval={{ module_name }}_data.requires_approval,
+                created_by=user_id,
+                updated_by=user_id,
+                approval_status=approval_status
+            )
+            
+            self.db.add(db_{{ module_name }})
+            self.db.commit()
+            self.db.refresh(db_{{ module_name }})
+            
+            # Log the creation
+            self._log_audit(
+                user_id=user_id,
+                action=AuditAction.CREATE,
+                resource_type="{{ module_name_title }}",
+                resource_id=db_{{ module_name }}.id,
+                details={"name": db_{{ module_name }}.name},
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+            
+            logger.info(f"Created {{ module_name_title }} with ID: {db_{{ module_name }}.id} by user: {user_id}")
+            return db_{{ module_name }}
+            
+        except Exception as e:
+            logger.error(f"Error creating {{ module_name_title }}: {str(e)}")
+            raise
+    
+    def get_{{ module_name }}(self, {{ module_name }}_id: int, user_id: str, user_role: UserRole) -> Optional[{{ module_name_title }}]:
+        """Get a {{ module_name_title }} by ID with permission check."""
+        try:
+            # Check if user has permission to read
+            if not self._can_read(user_role):
+                raise PermissionError(f"User with role {user_role} cannot read {{ module_name_plural }}")
+            
+            {{ module_name }} = self.db.query({{ module_name_title }}).filter({{ module_name_title }}.id == {{ module_name }}_id).first()
+            
+            if {{ module_name }}:
+                # Log the read action
+                self._log_audit(
+                    user_id=user_id,
+                    action=AuditAction.READ,
+                    resource_type="{{ module_name_title }}",
+                    resource_id={{ module_name }}_id
+                )
+            
+            return {{ module_name }}
+            
+        except Exception as e:
+            logger.error(f"Error retrieving {{ module_name_title }} { {{ module_name }}_id}: {str(e)}")
+            raise
+    
+    def get_{{ module_name_plural }}(self, skip: int = 0, limit: int = 100, filters: Optional[AdminFilter] = None,
+                                   user_id: str = None, user_role: UserRole = None) -> List[{{ module_name_title }}]:
+        """Get {{ module_name_plural }} with admin filtering and permission check."""
+        try:
+            # Check if user has permission to read
+            if not self._can_read(user_role):
+                raise PermissionError(f"User with role {user_role} cannot read {{ module_name_plural }}")
+            
+            query = self.db.query({{ module_name_title }})
+            
+            if filters:
+                query = self._apply_admin_filters(query, filters)
+            
+            return query.offset(skip).limit(limit).all()
+            
+        except Exception as e:
+            logger.error(f"Error retrieving {{ module_name_plural }}: {str(e)}")
+            raise
+    
+    def update_{{ module_name }}(self, {{ module_name }}_id: int, {{ module_name }}_data: {{ module_name_title }}Update,
+                                user_id: str, user_role: UserRole, ip_address: Optional[str] = None,
+                                user_agent: Optional[str] = None) -> Optional[{{ module_name_title }}]:
+        """Update an existing {{ module_name_title }} with admin controls."""
+        try:
+            # Check if user has permission to update
+            if not self._can_update(user_role):
+                raise PermissionError(f"User with role {user_role} cannot update {{ module_name_plural }}")
+            
+            db_{{ module_name }} = self.get_{{ module_name }}({{ module_name }}_id, user_id, user_role)
+            if not db_{{ module_name }}:
+                return None
+            
+            # Check if {{ module_name_title }} can be edited
+            if not db_{{ module_name }}.can_edit:
+                raise ValueError(f"{{ module_name_title }} { {{ module_name }}_id} cannot be edited at this time")
+            
+            # Store original values for audit
+            original_values = {
+                "name": db_{{ module_name }}.name,
+                "description": db_{{ module_name }}.description,
+                "is_active": db_{{ module_name }}.is_active
+            }
+            
+            # Update fields
+            update_data = {{ module_name }}_data.dict(exclude_unset=True)
+            for field, value in update_data.items():
+                setattr(db_{{ module_name }}, field, value)
+            
+            db_{{ module_name }}.updated_at = datetime.utcnow()
+            db_{{ module_name }}.updated_by = user_id
+            
+            # Set approval status if approval is required
+            if db_{{ module_name }}.requires_approval:
+                db_{{ module_name }}.approval_status = ApprovalStatus.PENDING
+            
+            self.db.commit()
+            self.db.refresh(db_{{ module_name }})
+            
+            # Log the update
+            self._log_audit(
+                user_id=user_id,
+                action=AuditAction.UPDATE,
+                resource_type="{{ module_name_title }}",
+                resource_id={{ module_name }}_id,
+                details={
+                    "original": original_values,
+                    "updated": update_data
+                },
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+            
+            logger.info(f"Updated {{ module_name_title }} with ID: {db_{{ module_name }}.id} by user: {user_id}")
+            return db_{{ module_name }}
+            
+        except Exception as e:
+            logger.error(f"Error updating {{ module_name_title }} { {{ module_name }}_id}: {str(e)}")
+            raise
+    
+    def delete_{{ module_name }}(self, {{ module_name }}_id: int, user_id: str, user_role: UserRole,
+                                ip_address: Optional[str] = None, user_agent: Optional[str] = None) -> bool:
+        """Delete a {{ module_name_title }} with admin controls."""
+        try:
+            # Check if user has permission to delete
+            if not self._can_delete(user_role):
+                raise PermissionError(f"User with role {user_role} cannot delete {{ module_name_plural }}")
+            
+            db_{{ module_name }} = self.get_{{ module_name }}({{ module_name }}_id, user_id, user_role)
+            if not db_{{ module_name }}:
+                return False
+            
+            name = db_{{ module_name }}.name
+            
+            # Log the deletion before actually deleting
+            self._log_audit(
+                user_id=user_id,
+                action=AuditAction.DELETE,
+                resource_type="{{ module_name_title }}",
+                resource_id={{ module_name }}_id,
+                details={"name": name},
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+            
+            self.db.delete(db_{{ module_name }})
+            self.db.commit()
+            
+            logger.info(f"Deleted {{ module_name_title }} with ID: { {{ module_name }}_id} by user: {user_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error deleting {{ module_name_title }} { {{ module_name }}_id}: {str(e)}")
+            raise
+    
+    def approve_{{ module_name }}(self, approval_request: ApprovalRequest, approver_id: str, 
+                                 approver_role: UserRole, approved: bool, comments: Optional[str] = None) -> ApprovalResponse:
+        """Approve or reject a {{ module_name_title }} change."""
+        try:
+            # Check if approver has permission to approve
+            if not self._can_approve(approver_role):
+                raise PermissionError(f"User with role {approver_role} cannot approve changes")
+            
+            db_{{ module_name }} = self.db.query({{ module_name_title }}).filter(
+                {{ module_name_title }}.id == approval_request.{{ module_name }}_id
+            ).first()
+            
+            if not db_{{ module_name }}:
+                raise ValueError(f"{{ module_name_title }} with ID {approval_request.{{ module_name }}_id} not found")
+            
+            if approved:
+                db_{{ module_name }}.approval_status = ApprovalStatus.APPROVED
+                db_{{ module_name }}.approved_by = approver_id
+                db_{{ module_name }}.approved_at = datetime.utcnow()
+                
+                action = AuditAction.APPROVE
+                message = f"{{ module_name_title }} {approval_request.{{ module_name }}_id} approved by {approver_id}"
+            else:
+                db_{{ module_name }}.approval_status = ApprovalStatus.REJECTED
+                
+                action = AuditAction.REJECT
+                message = f"{{ module_name_title }} {approval_request.{{ module_name }}_id} rejected by {approver_id}"
+            
+            self.db.commit()
+            
+            # Log the approval action
+            self._log_audit(
+                user_id=approver_id,
+                action=action,
+                resource_type="{{ module_name_title }}",
+                resource_id=approval_request.{{ module_name }}_id,
+                details={
+                    "action": approval_request.action,
+                    "reason": approval_request.reason,
+                    "comments": comments
+                }
+            )
+            
+            logger.info(message)
+            
+            return ApprovalResponse(
+                {{ module_name }}_id=approval_request.{{ module_name }}_id,
+                approved=approved,
+                approved_by=approver_id,
+                comments=comments
+            )
+            
+        except Exception as e:
+            logger.error(f"Error processing approval for {{ module_name_title }} {approval_request.{{ module_name }}_id}: {str(e)}")
+            raise
+    
+    def get_pending_approvals(self, user_role: UserRole) -> List[{{ module_name_title }}]:
+        """Get {{ module_name_plural }} pending approval."""
+        try:
+            if not self._can_approve(user_role):
+                raise PermissionError(f"User with role {user_role} cannot view pending approvals")
+            
+            return self.db.query({{ module_name_title }}).filter(
+                {{ module_name_title }}.approval_status == ApprovalStatus.PENDING
+            ).all()
+            
+        except Exception as e:
+            logger.error(f"Error retrieving pending approvals: {str(e)}")
+            raise
+    
+    def get_admin_stats(self, user_role: UserRole) -> Dict[str, Any]:
+        """Get admin statistics."""
+        try:
+            if not self._can_read(user_role):
+                raise PermissionError(f"User with role {user_role} cannot view admin stats")
+            
+            total_{{ module_name_plural }} = self.db.query({{ module_name_title }}).count()
+            active_{{ module_name_plural }} = self.db.query({{ module_name_title }}).filter(
+                {{ module_name_title }}.is_active == True
+            ).count()
+            pending_approvals = self.db.query({{ module_name_title }}).filter(
+                {{ module_name_title }}.approval_status == ApprovalStatus.PENDING
+            ).count()
+            
+            # Get recent activities (last 7 days)
+            week_ago = datetime.utcnow() - timedelta(days=7)
+            recent_activities = self.db.query(AuditLog).filter(
+                AuditLog.timestamp >= week_ago
+            ).count()
+            
+            return {
+                "total_{{ module_name_plural }}": total_{{ module_name_plural }},
+                "active_{{ module_name_plural }}": active_{{ module_name_plural }},
+                "pending_approvals": pending_approvals,
+                "recent_activities": recent_activities,
+                "timestamp": datetime.utcnow()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting admin stats: {str(e)}")
+            raise
+    
+    def _can_create(self, user_role: UserRole) -> bool:
+        """Check if user can create {{ module_name_plural }}."""
+        return user_role in [UserRole.EDITOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    
+    def _can_read(self, user_role: UserRole) -> bool:
+        """Check if user can read {{ module_name_plural }}."""
+        return user_role in [UserRole.VIEWER, UserRole.EDITOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    
+    def _can_update(self, user_role: UserRole) -> bool:
+        """Check if user can update {{ module_name_plural }}."""
+        return user_role in [UserRole.EDITOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    
+    def _can_delete(self, user_role: UserRole) -> bool:
+        """Check if user can delete {{ module_name_plural }}."""
+        return user_role in [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    
+    def _can_approve(self, user_role: UserRole) -> bool:
+        """Check if user can approve changes."""
+        return user_role in [UserRole.ADMIN, UserRole.SUPER_ADMIN]
+    
+    def _apply_admin_filters(self, query, filters: AdminFilter):
+        """Apply admin filters to the query."""
+        if filters.is_active is not None:
+            query = query.filter({{ module_name_title }}.is_active == filters.is_active)
+        
+        if filters.approval_status:
+            query = query.filter({{ module_name_title }}.approval_status == filters.approval_status)
+        
+        if filters.created_by:
+            query = query.filter({{ module_name_title }}.created_by == filters.created_by)
+        
+        if filters.updated_by:
+            query = query.filter({{ module_name_title }}.updated_by == filters.updated_by)
+        
+        if filters.requires_approval is not None:
+            query = query.filter({{ module_name_title }}.requires_approval == filters.requires_approval)
+        
+        if filters.start_date:
+            query = query.filter({{ module_name_title }}.created_at >= filters.start_date)
+        
+        if filters.end_date:
+            query = query.filter({{ module_name_title }}.created_at <= filters.end_date)
+        
+        if filters.search:
+            search_term = f"%{filters.search}%"
+            query = query.filter(
+                or_(
+                    {{ module_name_title }}.name.ilike(search_term),
+                    {{ module_name_title }}.description.ilike(search_term)
+                )
+            )
+        
+        return query
+    
+    def _log_audit(self, user_id: str, action: AuditAction, resource_type: str, resource_id: int,
+                   details: Optional[Dict[str, Any]] = None, ip_address: Optional[str] = None,
+                   user_agent: Optional[str] = None):
+        """Log an audit entry."""
+        try:
+            audit_log = AuditLog(
+                user_id=user_id,
+                action=action,
+                resource_type=resource_type,
+                resource_id=resource_id,
+                details=details,
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+            
+            self.db.add(audit_log)
+            self.db.commit()
+            
+        except Exception as e:
+            logger.error(f"Error logging audit entry: {str(e)}")
+            # Don't raise here to avoid breaking the main operation
+
+
+class UserPermissionService:
+    """Service for managing user permissions."""
+    
+    def __init__(self, db: Session):
+        self.db = db
+    
+    def get_user_permissions(self, user_id: str) -> Optional[UserPermission]:
+        """Get permissions for a specific user."""
+        return self.db.query(UserPermission).filter(UserPermission.user_id == user_id).first()
+    
+    def update_user_permissions(self, user_id: str, role: UserRole, permissions: List[str],
+                               can_approve: bool = False, can_delete: bool = False,
+                               can_export: bool = False) -> UserPermission:
+        """Update user permissions."""
+        try:
+            user_perm = self.get_user_permissions(user_id)
+            
+            if user_perm:
+                # Update existing permissions
+                user_perm.role = role
+                user_perm.permissions = permissions
+                user_perm.can_approve = can_approve
+                user_perm.can_delete = can_delete
+                user_perm.can_export = can_export
+            else:
+                # Create new permissions
+                user_perm = UserPermission(
+                    user_id=user_id,
+                    role=role,
+                    permissions=permissions,
+                    can_approve=can_approve,
+                    can_delete=can_delete,
+                    can_export=can_export
+                )
+                self.db.add(user_perm)
+            
+            self.db.commit()
+            self.db.refresh(user_perm)
+            
+            logger.info(f"Updated permissions for user: {user_id}")
+            return user_perm
+            
+        except Exception as e:
+            logger.error(f"Error updating user permissions for {user_id}: {str(e)}")
+            raise
+    
+    def get_users_by_role(self, role: UserRole) -> List[UserPermission]:
+        """Get all users with a specific role."""
+        return self.db.query(UserPermission).filter(UserPermission.role == role).all()
+    
+    def delete_user_permissions(self, user_id: str) -> bool:
+        """Delete user permissions."""
+        try:
+            user_perm = self.get_user_permissions(user_id)
+            if user_perm:
+                self.db.delete(user_perm)
+                self.db.commit()
+                logger.info(f"Deleted permissions for user: {user_id}")
+                return True
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error deleting user permissions for {user_id}: {str(e)}")
+            raise

@@ -1,0 +1,201 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ project_name }}-deployment
+  labels:
+    app: {{ project_name }}
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: {{ project_name }}
+  template:
+    metadata:
+      labels:
+        app: {{ project_name }}
+        version: v1
+    spec:
+      containers:
+      - name: {{ project_name }}
+        image: {{ project_name }}:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ project_name }}-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ project_name }}-secrets
+              key: redis-url
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+        - name: config
+          mountPath: /app/config
+      volumes:
+      - name: logs
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: {{ project_name }}-config
+      imagePullSecrets:
+      - name: {{ project_name }}-registry-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ project_name }}-service
+  labels:
+    app: {{ project_name }}
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: {{ project_name }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ project_name }}-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - {{ project_name }}.example.com
+    secretName: {{ project_name }}-tls
+  rules:
+  - host: {{ project_name }}.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ project_name }}-service
+            port:
+              number: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ project_name }}-config
+data:
+  config.yaml: |
+    environment: production
+    debug: false
+    log_level: INFO
+    database:
+      pool_size: 20
+      max_overflow: 30
+    redis:
+      pool_size: 10
+      max_connections: 20
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ project_name }}-secrets
+type: Opaque
+data:
+  database-url: <base64-encoded-database-url>
+  redis-url: <base64-encoded-redis-url>
+  jwt-secret: <base64-encoded-jwt-secret>
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ project_name }}-service-account
+  labels:
+    app: {{ project_name }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ project_name }}-role
+  labels:
+    app: {{ project_name }}
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ project_name }}-role-binding
+  labels:
+    app: {{ project_name }}
+subjects:
+- kind: ServiceAccount
+  name: {{ project_name }}-service-account
+  namespace: default
+roleRef:
+  kind: Role
+  name: {{ project_name }}-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ project_name }}-hpa
+  labels:
+    app: {{ project_name }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ project_name }}-deployment
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

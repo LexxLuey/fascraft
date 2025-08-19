@@ -1,0 +1,214 @@
+"""Performance tests for {{ module_name }} event-driven module."""
+
+import pytest
+import time
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from {{ module_name }}.models import Base, {{ module_name_title }}Event
+from {{ module_name }}.services import {{ module_name_title }}Service, EventProcessor
+from {{ module_name }}.schemas import {{ module_name_title }}Create
+
+
+class Test{{ module_name_title }}EventPerformance:
+    """Performance tests for {{ module_name_title }} event-driven module."""
+    
+    @pytest.fixture
+    def db_session(self):
+        """Create in-memory database session for testing."""
+        engine = create_engine(
+            "sqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+        TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        Base.metadata.create_all(bind=engine)
+        
+        session = TestingSessionLocal()
+        try:
+            yield session
+        finally:
+            session.close()
+            Base.metadata.drop_all(bind=engine)
+    
+    @pytest.fixture
+    def {{ module_name }}_service(self, db_session):
+        """Create {{ module_name }} service with test database."""
+        return {{ module_name_title }}Service(db_session)
+    
+    @pytest.fixture
+    def event_processor(self, db_session):
+        """Create event processor with test database."""
+        return EventProcessor(db_session)
+    
+    def test_bulk_event_creation_performance(self, {{ module_name }}_service, event_processor):
+        """Test performance of bulk event creation."""
+        start_time = time.time()
+        
+        # Create 100 {{ module_name }}s (each triggers an event)
+        for i in range(100):
+            {{ module_name }}_data = {{ module_name_title }}Create(name=f"{{ module_name_title }} {i}", description=f"Description {i}")
+            {{ module_name }}_service.create({{ module_name }}_data)
+        
+        end_time = time.time()
+        creation_time = end_time - start_time
+        
+        # Should complete within 2 seconds
+        assert creation_time < 2.0, f"Bulk event creation took {creation_time:.2f}s, expected < 2.0s"
+        
+        # Verify events were created
+        total_events = event_processor.get_total_event_count()
+        assert total_events >= 100
+    
+    def test_event_processing_performance(self, {{ module_name }}_service, event_processor):
+        """Test performance of event processing."""
+        # Create test data
+        for i in range(50):
+            {{ module_name }}_data = {{ module_name_title }}Create(name=f"{{ module_name_title }} {i}", description=f"Desc {i}")
+            {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Test processing performance
+        start_time = time.time()
+        processed_events = event_processor.process_pending_events()
+        end_time = time.time()
+        
+        processing_time = end_time - start_time
+        
+        # Should complete within 1 second
+        assert processing_time < 1.0, f"Event processing took {processing_time:.2f}s, expected < 1.0s"
+        assert len(processed_events) >= 50
+    
+    def test_event_retrieval_performance(self, {{ module_name }}_service, event_processor):
+        """Test performance of event retrieval operations."""
+        # Create test data
+        for i in range(30):
+            {{ module_name }}_data = {{ module_name_title }}Create(name=f"{{ module_name_title }} {i}", description=f"Desc {i}")
+            {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Test retrieval performance
+        start_time = time.time()
+        
+        # Retrieve events by type
+        creation_events = event_processor.get_events_by_type("{{ module_name }}_created")
+        end_time = time.time()
+        
+        retrieval_time = end_time - start_time
+        
+        # Should complete within 0.5 seconds
+        assert retrieval_time < 0.5, f"Event retrieval took {retrieval_time:.2f}s, expected < 0.5s"
+        assert len(creation_events) >= 30
+    
+    def test_event_filtering_performance(self, {{ module_name }}_service, event_processor):
+        """Test performance of event filtering operations."""
+        # Create test data with metadata
+        for i in range(25):
+            {{ module_name }}_data = {{ module_name_title }}Create(
+                name=f"{{ module_name_title }} {i}", 
+                description=f"Description {i}",
+                metadata={"category": f"cat_{i % 5}", "priority": i % 3}
+            )
+            {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Test filtering performance
+        start_time = time.time()
+        
+        # Filter by metadata
+        high_priority_events = event_processor.get_events_by_metadata({"priority": 2})
+        category_events = event_processor.get_events_by_metadata({"category": "cat_0"})
+        
+        end_time = time.time()
+        filtering_time = end_time - start_time
+        
+        # Should complete within 0.3 seconds
+        assert filtering_time < 0.3, f"Event filtering took {filtering_time:.2f}s, expected < 0.3s"
+        
+        # Verify filtering results
+        assert len(high_priority_events) >= 8  # 25 items, priority 0,1,2
+        assert len(category_events) >= 5  # 25 items, 5 categories
+    
+    def test_concurrent_event_processing(self, {{ module_name }}_service, event_processor):
+        """Test performance under concurrent event processing."""
+        import threading
+        
+        # Create test data
+        for i in range(20):
+            {{ module_name }}_data = {{ module_name_title }}Create(name=f"{{ module_name_title }} {i}", description=f"Desc {i}")
+            {{ module_name }}_service.create({{ module_name }}_data)
+        
+        results = []
+        errors = []
+        
+        def process_events():
+            try:
+                start_time = time.time()
+                processed = event_processor.process_pending_events()
+                end_time = time.time()
+                
+                if processed:
+                    results.append(end_time - start_time)
+                else:
+                    errors.append("No events processed")
+            except Exception as e:
+                errors.append(str(e))
+        
+        # Create 3 concurrent threads
+        threads = []
+        for _ in range(3):
+            thread = threading.Thread(target=process_events)
+            threads.append(thread)
+            thread.start()
+        
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
+        
+        # Verify no errors
+        assert len(errors) == 0, f"Concurrent processing had errors: {errors}"
+        
+        # Verify all threads completed
+        assert len(results) == 3, f"Expected 3 results, got {len(results)}"
+        
+        # Verify performance is reasonable
+        avg_time = sum(results) / len(results)
+        assert avg_time < 0.5, f"Average processing time {avg_time:.2f}s, expected < 0.5s"
+    
+    def test_event_storage_efficiency(self, {{ module_name }}_service, event_processor):
+        """Test memory and storage efficiency of events."""
+        import psutil
+        import os
+        
+        process = psutil.Process(os.getpid())
+        initial_memory = process.memory_info().rss / 1024 / 1024  # MB
+        
+        # Create 300 {{ module_name }}s (each creates an event)
+        for i in range(300):
+            {{ module_name }}_data = {{ module_name_title }}Create(
+                name=f"{{ module_name_title }} {i}", 
+                description=f"Description {i}",
+                metadata={"index": i, "category": f"cat_{i % 10}"}
+            )
+            {{ module_name }}_service.create({{ module_name }}_data)
+        
+        # Process all events
+        event_processor.process_pending_events()
+        
+        # Check memory usage
+        final_memory = process.memory_info().rss / 1024 / 1024  # MB
+        memory_increase = final_memory - initial_memory
+        
+        # Memory increase should be reasonable (< 150MB)
+        assert memory_increase < 150, f"Memory increased by {memory_increase:.1f}MB, expected < 150MB"
+        
+        # Verify event count
+        total_events = event_processor.get_total_event_count()
+        assert total_events >= 300
+        
+        # Test event cleanup performance
+        start_time = time.time()
+        cleaned_count = event_processor.cleanup_old_events(days=0)  # Clean all
+        cleanup_time = time.time() - start_time
+        
+        # Cleanup should be fast
+        assert cleanup_time < 0.5, f"Event cleanup took {cleanup_time:.2f}s, expected < 0.5s"
+        assert cleaned_count >= 300
