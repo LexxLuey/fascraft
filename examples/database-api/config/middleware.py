@@ -1,10 +1,11 @@
 """Common middleware for database-api."""
 
 import time
-from typing import Callable
+from collections.abc import Callable
 
 from fastapi import Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+
 try:
     from starlette.middleware.base import BaseHTTPMiddleware
 except ImportError:
@@ -20,22 +21,22 @@ except ImportError:
 
 class TimingMiddleware(BaseHTTPMiddleware):
     """Middleware to add timing information to responses."""
-    
+
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         start_time = time.time()
-        
+
         response = await call_next(request)
-        
+
         process_time = time.time() - start_time
         response.headers["X-Process-Time"] = str(process_time)
-        
+
         return response
 
 
 def setup_middleware(app):
     """Setup all middleware for the application."""
     settings = get_settings()
-    
+
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
@@ -44,6 +45,6 @@ def setup_middleware(app):
         allow_methods=settings.cors_allow_methods,
         allow_headers=settings.cors_allow_headers,
     )
-    
+
     # Add timing middleware
     app.add_middleware(TimingMiddleware)

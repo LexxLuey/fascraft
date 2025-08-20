@@ -450,7 +450,7 @@ class TestRenderProjectTemplatesWithProgress:
 
         # Verify progress was tracked
         mock_progress.add_task.assert_called_once()
-        assert mock_render_single.call_count == 18  # Number of templates
+        assert mock_render_single.call_count == 26  # Number of templates
 
     @patch("fascraft.commands.new.render_single_template")
     @patch("fascraft.commands.new.Progress")

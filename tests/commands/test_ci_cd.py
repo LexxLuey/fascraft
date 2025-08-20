@@ -1,6 +1,7 @@
 """Tests for the CI/CD command."""
 
 from unittest.mock import MagicMock, patch
+import typer
 
 import pytest
 
@@ -152,15 +153,21 @@ class TestCICDCommand:
         project_path.mkdir()
         # No main.py file
 
-        with pytest.raises(FileSystemError, match="Not a FastAPI project"):
+        with pytest.raises(typer.Exit) as exc_info:
             add_ci_cd(project_path, platform="github", force=False)
+        
+        # Check that it's an exit exception with code 1
+        assert exc_info.value.exit_code == 1
 
     def test_ci_cd_project_not_exists(self, tmp_path):
         """Test CI/CD fails for non-existent projects."""
         project_path = tmp_path / "non-existent"
 
-        with pytest.raises(FileSystemError, match="Project path does not exist"):
+        with pytest.raises(typer.Exit) as exc_info:
             add_ci_cd(project_path, platform="github", force=False)
+        
+        # Check that it's an exit exception with code 1
+        assert exc_info.value.exit_code == 1
 
     def test_ci_cd_invalid_platform(self, tmp_path):
         """Test CI/CD fails for invalid platform."""
@@ -168,5 +175,8 @@ class TestCICDCommand:
         project_path.mkdir()
         (project_path / "main.py").write_text("# FastAPI app")
 
-        with pytest.raises(FileSystemError, match="Invalid platform"):
+        with pytest.raises(typer.Exit) as exc_info:
             add_ci_cd(project_path, platform="invalid", force=False)
+        
+        # Check that it's an exit exception with code 1
+        assert exc_info.value.exit_code == 1

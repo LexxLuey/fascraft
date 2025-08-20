@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+import typer
 
 from fascraft.commands.generate import (
     ensure_config_structure,
@@ -79,24 +80,31 @@ class TestGenerateModule:
     """Test the generate_module function."""
 
     @patch("fascraft.commands.generate.Environment")
-    def test_generate_module_success(self, mock_env, tmp_path):
+    @patch("fascraft.commands.generate.template_registry")
+    def test_generate_module_success(self, mock_registry, mock_env, tmp_path):
         """Test successful domain module generation."""
         # Create a valid FastAPI project
         main_py = tmp_path / "main.py"
         main_py.write_text("from fastapi import FastAPI\napp = FastAPI()")
 
-        # Mock Jinja2 environment
+        # Mock template registry
         mock_template = MagicMock()
-        mock_template.render.return_value = "rendered content"
+        mock_template.display_name = "Basic CRUD"
+        mock_template.description = "Simple CRUD operations"
+        mock_registry.get_template.return_value = mock_template
+
+        # Mock Jinja2 environment
+        mock_template_instance = MagicMock()
+        mock_template_instance.render.return_value = "rendered content"
         mock_env_instance = MagicMock()
-        mock_env_instance.get_template.return_value = mock_template
+        mock_env_instance.get_template.return_value = mock_template_instance
         mock_env.return_value = mock_env_instance
 
         # Generate module
-        generate_module("customers", str(tmp_path))
+        generate_module("customers", path=str(tmp_path), template="basic", depends_on=None)
 
         # Verify templates were rendered
-        assert mock_template.render.call_count == 7  # 7 template files
+        assert mock_template_instance.render.call_count == 7  # 7 template files
 
         # Check that module directory was created
         module_dir = tmp_path / "customers"
@@ -118,18 +126,11 @@ class TestGenerateModule:
     def test_generate_module_invalid_project(self, tmp_path):
         """Test module generation in an invalid project."""
         # Create an empty directory (not a FastAPI project)
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(typer.Exit) as exc_info:
             generate_module("customers", str(tmp_path))
-
+        
         # Check that it's an exit exception with code 1
-        exception = exc_info.value
-        if hasattr(exception, "code"):
-            assert exception.code == 1
-        elif hasattr(exception, "exit_code"):
-            assert exception.exit_code == 1
-        else:
-            # For typer.Exit, just verify it's an exit exception
-            assert isinstance(exception, Exception)
+        assert exc_info.value.exit_code == 1
 
     def test_generate_module_already_exists(self, tmp_path):
         """Test module generation when module already exists."""
@@ -141,63 +142,35 @@ class TestGenerateModule:
         module_dir = tmp_path / "customers"
         module_dir.mkdir()
 
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(typer.Exit) as exc_info:
             generate_module("customers", str(tmp_path))
-
+        
         # Check that it's an exit exception with code 1
-        exception = exc_info.value
-        if hasattr(exception, "code"):
-            assert exception.code == 1
-        elif hasattr(exception, "exit_code"):
-            assert exception.exit_code == 1
-        else:
-            # For typer.Exit, just verify it's an exit exception
-            assert isinstance(exception, Exception)
+        assert exc_info.value.exit_code == 1
 
     def test_generate_module_empty_name(self):
         """Test module generation with empty name."""
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(typer.Exit) as exc_info:
             generate_module("")
-
+        
         # Check that it's an exit exception with code 1
-        exception = exc_info.value
-        if hasattr(exception, "code"):
-            assert exception.code == 1
-        elif hasattr(exception, "exit_code"):
-            assert exception.exit_code == 1
-        else:
-            # For typer.Exit, just verify it's an exit exception
-            assert isinstance(exception, Exception)
+        assert exc_info.value.exit_code == 1
 
     def test_generate_module_whitespace_name(self):
         """Test module generation with whitespace name."""
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(typer.Exit) as exc_info:
             generate_module("   ")
-
+        
         # Check that it's an exit exception with code 1
-        exception = exc_info.value
-        if hasattr(exception, "code"):
-            assert exception.code == 1
-        elif hasattr(exception, "exit_code"):
-            assert exception.exit_code == 1
-        else:
-            # For typer.Exit, just verify it's an exit exception
-            assert isinstance(exception, Exception)
+        assert exc_info.value.exit_code == 1
 
     def test_generate_module_nonexistent_path(self):
         """Test module generation with nonexistent path."""
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(typer.Exit) as exc_info:
             generate_module("customers", "/nonexistent/path")
-
+        
         # Check that it's an exit exception with code 1
-        exception = exc_info.value
-        if hasattr(exception, "code"):
-            assert exception.code == 1
-        elif hasattr(exception, "exit_code"):
-            assert exception.exit_code == 1
-        else:
-            # For typer.Exit, just verify it's an exit exception
-            assert isinstance(exception, Exception)
+        assert exc_info.value.exit_code == 1
 
 
 class TestGenerateModuleIntegration:
@@ -236,16 +209,25 @@ async def health_check():
 """
         )
 
-        # Mock the Jinja2 environment to avoid template loading issues
-        with patch("fascraft.commands.generate.Environment") as mock_env:
+        # Mock the template registry and Jinja2 environment to avoid template loading issues
+        with patch("fascraft.commands.generate.template_registry") as mock_registry, \
+             patch("fascraft.commands.generate.Environment") as mock_env:
+            
+            # Mock template registry
             mock_template = MagicMock()
-            mock_template.render.return_value = "rendered content"
+            mock_template.display_name = "Basic CRUD"
+            mock_template.description = "Simple CRUD operations"
+            mock_registry.get_template.return_value = mock_template
+            
+            # Mock Jinja2 environment
+            mock_template_instance = MagicMock()
+            mock_template_instance.render.return_value = "rendered content"
             mock_env_instance = MagicMock()
-            mock_env_instance.get_template.return_value = mock_template
+            mock_env_instance.get_template.return_value = mock_template_instance
             mock_env.return_value = mock_env_instance
 
             # Generate module
-            generate_module("customers", str(tmp_path))
+            generate_module("customers", path=str(tmp_path), template="basic", depends_on=None)
 
             # Check that domain structure was created
             customers_dir = tmp_path / "customers"

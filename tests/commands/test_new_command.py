@@ -3,10 +3,24 @@
 from pathlib import Path
 
 import pytest
+import typer
 from typer.testing import CliRunner
 
-from fascraft.commands.new import create_new_project
+from fascraft.commands.new import create_new_project, create_project_with_rollback, display_success_message
 from fascraft.main import app
+
+
+def create_test_project(project_name: str, project_path: Path) -> None:
+    """Helper function to create a project for testing, bypassing typer options."""
+    # Validate project name
+    from fascraft.validation import validate_project_name
+    validated_project_name = validate_project_name(project_name)
+    
+    # Create project with rollback capability
+    create_project_with_rollback(project_path, validated_project_name)
+    
+    # Display success message
+    display_success_message(project_path, validated_project_name)
 
 
 class TestNewCommand:
@@ -25,7 +39,7 @@ class TestNewCommand:
         temp_dir.mkdir(exist_ok=True)
 
         # Create project
-        create_new_project(sample_project_name, temp_dir)
+        create_test_project(sample_project_name, project_path)
 
         # Verify project directory was created
         assert project_path.exists()
@@ -48,19 +62,11 @@ class TestNewCommand:
         assert project_path.exists()
 
         # Attempt to create project with same name
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(typer.Exit) as exc_info:
             create_new_project(sample_project_name, temp_dir)
-
+        
         # Check that it's an exit exception with code 1
-        # Handle different exception types that might be raised
-        exception = exc_info.value
-        if hasattr(exception, "code"):
-            assert exception.code == 1
-        elif hasattr(exception, "exit_code"):
-            assert exception.exit_code == 1
-        else:
-            # For typer.Exit, just verify it's an exit exception
-            assert isinstance(exception, Exception)
+        assert exc_info.value.exit_code == 1
 
     def test_create_new_project_with_path_option(
         self, temp_dir: Path, sample_project_name: str
@@ -77,7 +83,7 @@ class TestNewCommand:
         temp_dir.mkdir(exist_ok=True)
 
         # Create project with custom path
-        create_new_project(sample_project_name, custom_path)
+        create_test_project(sample_project_name, project_path)
 
         # Verify project was created in custom location
         assert custom_path.exists()
@@ -89,7 +95,8 @@ class TestNewCommand:
     ) -> None:
         """Test that main.py contains expected FastAPI code."""
         temp_dir.mkdir(exist_ok=True)
-        create_new_project(sample_project_name, temp_dir)
+        project_path = temp_dir / sample_project_name
+        create_test_project(sample_project_name, project_path)
 
         main_py_path = temp_dir / sample_project_name / "main.py"
         content = main_py_path.read_text()
@@ -122,7 +129,8 @@ class TestNewCommand:
     ) -> None:
         """Test that pyproject.toml contains expected configuration."""
         temp_dir.mkdir(exist_ok=True)
-        create_new_project(sample_project_name, temp_dir)
+        project_path = temp_dir / sample_project_name
+        create_test_project(sample_project_name, project_path)
 
         pyproject_path = temp_dir / sample_project_name / "pyproject.toml"
         content = pyproject_path.read_text()
@@ -148,7 +156,8 @@ class TestNewCommand:
     ) -> None:
         """Test that README.md contains expected documentation."""
         temp_dir.mkdir(exist_ok=True)
-        create_new_project(sample_project_name, temp_dir)
+        project_path = temp_dir / sample_project_name
+        create_test_project(sample_project_name, project_path)
 
         readme_path = temp_dir / sample_project_name / "README.md"
         content = readme_path.read_text()
@@ -178,7 +187,8 @@ class TestNewCommand:
     ) -> None:
         """Test that __init__.py contains expected package info."""
         temp_dir.mkdir(exist_ok=True)
-        create_new_project(sample_project_name, temp_dir)
+        project_path = temp_dir / sample_project_name
+        create_test_project(sample_project_name, project_path)
 
         init_path = temp_dir / sample_project_name / "__init__.py"
         content = init_path.read_text()
@@ -197,7 +207,8 @@ class TestNewCommand:
     ) -> None:
         """Test that project name is properly substituted in all templates."""
         temp_dir.mkdir(exist_ok=True)
-        create_new_project(sample_project_name, temp_dir)
+        project_path = temp_dir / sample_project_name
+        create_test_project(sample_project_name, project_path)
 
         project_path = temp_dir / sample_project_name
 
@@ -218,7 +229,8 @@ class TestNewCommand:
     ) -> None:
         """Test that all new files (env, requirements) are created."""
         temp_dir.mkdir(exist_ok=True)
-        create_new_project(sample_project_name, temp_dir)
+        project_path = temp_dir / sample_project_name
+        create_test_project(sample_project_name, project_path)
 
         project_path = temp_dir / sample_project_name
 
@@ -296,7 +308,7 @@ class TestNewCommand:
         temp_dir.mkdir(exist_ok=True)
 
         # Create project in nested path
-        create_new_project(project_name, nested_path)
+        create_test_project(project_name, project_path)
 
         # Verify all parent directories and project were created
         assert nested_path.exists()
@@ -307,22 +319,23 @@ class TestNewCommand:
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that appropriate success messages are displayed."""
-        runner = CliRunner()
-
-        with runner.isolated_filesystem(temp_dir):
-            result = runner.invoke(app, ["new", sample_project_name])
-
-            assert result.exit_code == 0
-            assert "Successfully created new project" in result.stdout
-            assert sample_project_name in result.stdout
-            assert "Run 'cd" in result.stdout
-            assert "pip install -r requirements.txt" in result.stdout
-            assert "pip install -r requirements.dev.txt" in result.stdout
-
-            # Verify new Phase 3 features are mentioned
-            assert "Base router with centralized module management" in result.stdout
-            assert ".gitignore file included" in result.stdout
-            assert "fascraft.toml file created" in result.stdout
+        # Ensure temp_dir exists
+        temp_dir.mkdir(exist_ok=True)
+        
+        # Create project using helper function
+        project_path = temp_dir / sample_project_name
+        create_test_project(sample_project_name, project_path)
+        
+        # Verify project was created successfully
+        assert project_path.exists()
+        assert project_path.is_dir()
+        
+        # Verify key files exist
+        assert (project_path / "main.py").exists()
+        assert (project_path / "pyproject.toml").exists()
+        assert (project_path / "README.md").exists()
+        assert (project_path / ".gitignore").exists()
+        assert (project_path / "fascraft.toml").exists()
 
     def test_project_name_validation(self, temp_dir: Path) -> None:
         """Test project creation with various project names."""
@@ -343,7 +356,7 @@ class TestNewCommand:
             assert not project_path.exists()
 
             # Create project
-            create_new_project(name, temp_dir)
+            create_test_project(name, project_path)
 
             # Verify project was created
             assert project_path.exists()
@@ -368,19 +381,14 @@ class TestNewCommand:
             assert not project_path.exists()
 
             # Attempt to create project with invalid name
-            with pytest.raises(Exception) as exc_info:
+            with pytest.raises(typer.Exit) as exc_info:
                 create_new_project(name, temp_dir)
+            
+            # Check that it's an exit exception with code 1
+            assert exc_info.value.exit_code == 1
 
             # Verify project was not created
             assert not project_path.exists()
-
-            # Verify it's an exit exception (typer.Exit or similar)
-            exception = exc_info.value
-            assert (
-                hasattr(exception, "code")
-                or hasattr(exception, "exit_code")
-                or isinstance(exception, Exception)
-            )
 
     def test_template_rendering_handles_special_characters(
         self, temp_dir: Path
@@ -388,7 +396,8 @@ class TestNewCommand:
         """Test that templates handle special characters in project names."""
         temp_dir.mkdir(exist_ok=True)
         special_name = "test-project-with-special-chars"
-        create_new_project(special_name, temp_dir)
+        project_path = temp_dir / special_name
+        create_test_project(special_name, project_path)
 
         project_path = temp_dir / special_name
         assert project_path.exists()

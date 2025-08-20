@@ -269,16 +269,24 @@ class DependencyGraph:
             return 0
 
         visited = {}
+        recursion_stack = set()
 
         def dfs(node: str) -> int:
             if node in visited:
                 return visited[node]
-
+            
+            # Detect cycles to prevent infinite recursion
+            if node in recursion_stack:
+                return 0  # Return 0 for circular dependencies
+            
+            recursion_stack.add(node)
             max_depth = 0
+            
             for dependency in self.dependency_matrix[node]:
                 depth = dfs(dependency)
                 max_depth = max(max_depth, depth + 1)
 
+            recursion_stack.remove(node)
             visited[node] = max_depth
             return max_depth
 
@@ -289,12 +297,8 @@ class DependencyGraph:
         return [name for name, deps in self.dependency_matrix.items() if not deps]
 
     def get_root_modules(self) -> list[str]:
-        """Get modules that are not depended upon by any other module."""
-        all_dependents = set()
-        for deps in self.reverse_dependencies.values():
-            all_dependents.update(deps)
-
-        return [name for name in self.modules if name not in all_dependents]
+        """Get modules with no dependents (root nodes)."""
+        return [name for name in self.modules if not self.reverse_dependencies[name]]
 
     def export_graph(self, file_path: Path) -> None:
         """Export the dependency graph to a JSON file."""
