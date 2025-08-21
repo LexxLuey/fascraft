@@ -2,6 +2,12 @@
 
 from unittest.mock import mock_open, patch
 
+# Handle tomllib import for Python 3.10 compatibility
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
+
 from fascraft.version import get_version, get_version_from_git, get_version_info
 
 
