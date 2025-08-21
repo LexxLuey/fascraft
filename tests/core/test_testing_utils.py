@@ -1,4 +1,4 @@
-"""Tests for the testing utilities module."""
+"""Tests for testing utilities."""
 
 import json
 import time
@@ -7,12 +7,12 @@ from pathlib import Path
 import pytest
 
 from fascraft.testing_utils import (
+    CoverageReporter,
     DatabaseFixtureGenerator,
     MockDataGenerator,
-    TestConfig,
-    TestCoverageReporter,
-    TestPerformanceMonitor,
-    TestUtilities,
+    PerformanceMonitor,
+    TestingConfig,
+    TestingUtilities,
     create_test_config,
     create_test_utilities,
     generate_mock_data,
@@ -24,7 +24,7 @@ class TestTestConfig:
 
     def test_test_config_defaults(self):
         """Test TestConfig default values."""
-        config = TestConfig()
+        config = TestingConfig()
 
         assert config.database_url == "sqlite:///:memory:"
         assert config.test_timeout == 30
@@ -34,7 +34,7 @@ class TestTestConfig:
 
     def test_test_config_custom_values(self):
         """Test TestConfig with custom values."""
-        config = TestConfig(
+        config = TestingConfig(
             database_url="postgresql://test:test@localhost/test",
             test_timeout=60,
             coverage_enabled=False,
@@ -50,7 +50,7 @@ class TestDatabaseFixtureGenerator:
 
     def test_create_test_database(self):
         """Test creating test database configuration."""
-        config = TestConfig()
+        config = TestingConfig()
         generator = DatabaseFixtureGenerator(config)
 
         db_config = generator.create_test_database("test_module")
@@ -62,7 +62,7 @@ class TestDatabaseFixtureGenerator:
 
     def test_create_test_session(self):
         """Test creating test session configuration."""
-        config = TestConfig()
+        config = TestingConfig()
         generator = DatabaseFixtureGenerator(config)
 
         session_config = generator.create_test_session("test_module")
@@ -73,7 +73,7 @@ class TestDatabaseFixtureGenerator:
 
     def test_create_test_engine(self):
         """Test creating test engine configuration."""
-        config = TestConfig()
+        config = TestingConfig()
         generator = DatabaseFixtureGenerator(config)
 
         engine_config = generator.create_test_engine("test_module")
@@ -88,7 +88,7 @@ class TestMockDataGenerator:
 
     def test_generate_user_data_single(self):
         """Test generating single user data."""
-        config = TestConfig()
+        config = TestingConfig()
         generator = MockDataGenerator(config)
 
         user_data = generator.generate_user_data(1)
@@ -100,7 +100,7 @@ class TestMockDataGenerator:
 
     def test_generate_user_data_multiple(self):
         """Test generating multiple user data."""
-        config = TestConfig()
+        config = TestingConfig()
         generator = MockDataGenerator(config)
 
         users_data = generator.generate_user_data(3)
@@ -113,7 +113,7 @@ class TestMockDataGenerator:
 
     def test_generate_product_data_single(self):
         """Test generating single product data."""
-        config = TestConfig()
+        config = TestingConfig()
         generator = MockDataGenerator(config)
 
         product_data = generator.generate_product_data(1)
@@ -125,7 +125,7 @@ class TestMockDataGenerator:
 
     def test_generate_order_data_single(self):
         """Test generating single order data."""
-        config = TestConfig()
+        config = TestingConfig()
         generator = MockDataGenerator(config)
 
         order_data = generator.generate_order_data(1)
@@ -137,7 +137,7 @@ class TestMockDataGenerator:
 
     def test_generate_custom_data(self):
         """Test generating custom data with template."""
-        config = TestConfig()
+        config = TestingConfig()
         generator = MockDataGenerator(config)
 
         template = {
@@ -159,8 +159,8 @@ class TestTestCoverageReporter:
 
     def test_start_coverage(self):
         """Test starting coverage measurement."""
-        config = TestConfig()
-        reporter = TestCoverageReporter(config)
+        config = TestingConfig()
+        reporter = CoverageReporter(config)
 
         reporter.start_coverage("test_module")
 
@@ -169,8 +169,8 @@ class TestTestCoverageReporter:
 
     def test_stop_coverage(self):
         """Test stopping coverage measurement."""
-        config = TestConfig()
-        reporter = TestCoverageReporter(config)
+        config = TestingConfig()
+        reporter = CoverageReporter(config)
 
         reporter.start_coverage("test_module")
         time.sleep(0.1)  # Small delay to ensure different timestamps
@@ -182,8 +182,8 @@ class TestTestCoverageReporter:
 
     def test_get_coverage_summary(self):
         """Test getting coverage summary."""
-        config = TestConfig()
-        reporter = TestCoverageReporter(config)
+        config = TestingConfig()
+        reporter = CoverageReporter(config)
 
         # Add some coverage data
         reporter.coverage_data["module1"] = {
@@ -212,7 +212,7 @@ class TestTestPerformanceMonitor:
 
     def test_start_test(self):
         """Test starting test monitoring."""
-        monitor = TestPerformanceMonitor()
+        monitor = PerformanceMonitor()
 
         monitor.start_test("test_function")
 
@@ -221,7 +221,7 @@ class TestTestPerformanceMonitor:
 
     def test_stop_test(self):
         """Test stopping test monitoring."""
-        monitor = TestPerformanceMonitor()
+        monitor = PerformanceMonitor()
 
         monitor.start_test("test_function")
         time.sleep(0.1)  # Small delay
@@ -232,7 +232,7 @@ class TestTestPerformanceMonitor:
 
     def test_get_performance_summary(self):
         """Test getting performance summary."""
-        monitor = TestPerformanceMonitor()
+        monitor = PerformanceMonitor()
 
         # Add some performance data
         monitor.performance_data["test1"] = {"duration": 1.0}
@@ -252,8 +252,8 @@ class TestTestUtilities:
 
     def test_create_test_environment(self):
         """Test creating test environment."""
-        config = TestConfig()
-        utils = TestUtilities(config)
+        config = TestingConfig()
+        utils = TestingUtilities(config)
 
         env = utils.create_test_environment("test_module")
 
@@ -265,8 +265,8 @@ class TestTestUtilities:
 
     def test_start_test_session(self):
         """Test starting test session."""
-        config = TestConfig()
-        utils = TestUtilities(config)
+        config = TestingConfig()
+        utils = TestingUtilities(config)
 
         utils.start_test_session("test_module::test_function")
 
@@ -278,8 +278,8 @@ class TestTestUtilities:
 
     def test_end_test_session(self):
         """Test ending test session."""
-        config = TestConfig()
-        utils = TestUtilities(config)
+        config = TestingConfig()
+        utils = TestingUtilities(config)
 
         utils.start_test_session("test_module::test_function")
         time.sleep(0.1)
@@ -291,8 +291,8 @@ class TestTestUtilities:
 
     def test_generate_test_report(self, tmp_path):
         """Test generating test report."""
-        config = TestConfig()
-        utils = TestUtilities(config)
+        config = TestingConfig()
+        utils = TestingUtilities(config)
 
         # Add some test data
         utils.start_test_session("test_module::test_function")
@@ -318,12 +318,12 @@ class TestConvenienceFunctions:
         """Test create_test_utilities function."""
         utils = create_test_utilities()
 
-        assert isinstance(utils, TestUtilities)
+        assert isinstance(utils, TestingUtilities)
         assert utils.config.database_url == "sqlite:///:memory:"
 
     def test_create_test_utilities_custom_config(self):
         """Test create_test_utilities with custom config."""
-        config = TestConfig(database_url="custom://url")
+        config = TestingConfig(database_url="custom://url")
         utils = create_test_utilities(config)
 
         assert utils.config.database_url == "custom://url"

@@ -11,7 +11,10 @@ base_router = APIRouter(prefix="/api/v1")
 
 # Include all module routers
 # base_router.include_router(user_routers.router, prefix="/users", tags=["users"])
-# base_router.include_router(product_routers.router, prefix="/products", tags=["products"])
+# base_router.include_router(
+#     product_routers.router, prefix="/products", tags=["products"]
+# )
+
 
 # Health check endpoint
 @base_router.get("/health")

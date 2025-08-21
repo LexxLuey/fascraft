@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+import typer
 
 from fascraft.commands.list_templates import list_templates
 from fascraft.template_registry import TemplateMetadata
@@ -49,8 +50,8 @@ class TestListTemplatesCommand:
                     "api_first",
                 ]
 
-                # Call the function directly
-                list_templates()
+                # Call the function directly with explicit parameters
+                list_templates(category=None, verbose=False)
 
                 # Verify console.print was called for the table
                 mock_console.print.assert_called()
@@ -82,7 +83,7 @@ class TestListTemplatesCommand:
                 mock_registry.list_templates.return_value = mock_templates
 
                 # Call with category filter
-                list_templates(category="api_first")
+                list_templates(category="api_first", verbose=False)
 
                 # Verify category filter was applied
                 mock_registry.list_templates.assert_called_once_with(
@@ -112,7 +113,7 @@ class TestListTemplatesCommand:
                 mock_registry.get_template_categories.return_value = ["crud"]
 
                 # Call with verbose flag
-                list_templates(verbose=True)
+                list_templates(category=None, verbose=True)
 
                 # Verify verbose output was generated
                 mock_console.print.assert_called()
@@ -129,7 +130,7 @@ class TestListTemplatesCommand:
                 mock_registry.list_templates.return_value = []
 
                 # Call the function
-                list_templates()
+                list_templates(category=None, verbose=False)
 
                 # Verify appropriate message was displayed
                 mock_console.print.assert_called()
@@ -150,7 +151,7 @@ class TestListTemplatesCommand:
                 mock_registry.list_templates.return_value = []
 
                 # Call with category filter
-                list_templates(category="nonexistent")
+                list_templates(category="nonexistent", verbose=False)
 
                 # Verify appropriate message was displayed
                 mock_console.print.assert_called()
@@ -170,8 +171,8 @@ class TestListTemplatesCommand:
                 mock_registry.list_templates.side_effect = Exception("Registry error")
 
                 # Call the function and expect it to raise typer.Exit
-                with pytest.raises(SystemExit):
-                    list_templates()
+                with pytest.raises(typer.Exit):
+                    list_templates(category=None, verbose=False)
 
                 # Verify error message was displayed
                 mock_console.print.assert_called()
@@ -225,7 +226,7 @@ class TestListTemplatesCommand:
                 mock_registry.get_template_categories.return_value = ["test"]
 
                 # Call the function
-                list_templates()
+                list_templates(category=None, verbose=False)
 
                 # Verify console.print was called (table generation)
                 mock_console.print.assert_called()
@@ -253,7 +254,7 @@ class TestListTemplatesCommand:
                 mock_registry.get_template_categories.return_value = ["crud"]
 
                 # Call the function
-                list_templates()
+                list_templates(category=None, verbose=False)
 
                 # Verify usage instructions were displayed
                 mock_console.print.assert_called()
@@ -284,7 +285,7 @@ class TestListTemplatesCommand:
                 mock_registry.get_template_categories.return_value = ["crud"]
 
                 # Call the function
-                list_templates()
+                list_templates(category=None, verbose=False)
 
                 # Verify template selection tips were displayed
                 mock_console.print.assert_called()

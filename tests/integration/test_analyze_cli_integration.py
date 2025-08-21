@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from fascraft.commands.analyze import analyze_project
+import fascraft.commands.analyze as analyze_module
 
 
 class TestAnalyzeCLIIntegration:
@@ -30,15 +30,21 @@ class TestAnalyzeCLIIntegration:
                         "has_readme": True,
                         "has_changelog": False,
                         "has_api_docs": False,
+                        "has_project_docs": False,
+                        "has_module_docs": False,
+                        "docs_directory": False,
                         "readme_quality": 70,
                         "changelog_quality": 0,
                         "api_docs_quality": 0,
                         "missing_docs": ["CHANGELOG.md", "API Documentation"],
                         "doc_suggestions": ["Add a CHANGELOG.md file"],
+                        "version_info": {"version_consistency": True},
                     }
 
                     # Call with docs_only=True
-                    analyze_project(str(tmp_path), docs_only=True)
+                    analyze_module.analyze_project(
+                        path=str(tmp_path), docs_only=True, version_report=False
+                    )
 
                     # Verify documentation analysis was called
                     mock_doc_analysis.assert_called_once_with(tmp_path)
@@ -71,7 +77,9 @@ class TestAnalyzeCLIIntegration:
                     }
 
                     # Call with version_report=True
-                    analyze_project(str(tmp_path), version_report=True)
+                    analyze_module.analyze_project(
+                        path=str(tmp_path), docs_only=False, version_report=True
+                    )
 
                     # Verify version report was called
                     mock_version_report.assert_called_once_with(tmp_path)
@@ -96,15 +104,33 @@ class TestAnalyzeCLIIntegration:
                 ) as mock_recommend:
                     mock_structure.return_value = {
                         "project_name": "test",
+                        "structure": {},
+                        "modules": [],
+                        "routers": [],
+                        "config_files": [],
+                        "missing_components": [],
+                        "suggestions": [],
+                        "main_py": {},
                         "documentation": {
                             "has_readme": True,
                             "has_changelog": False,
+                            "has_api_docs": False,
+                            "has_project_docs": False,
+                            "has_module_docs": False,
+                            "docs_directory": False,
+                            "readme_quality": 70,
+                            "changelog_quality": 0,
+                            "api_docs_quality": 0,
+                            "missing_docs": [],
                             "doc_suggestions": ["Add a CHANGELOG.md file"],
+                            "version_info": {"version_consistency": True},
                         },
                     }
 
                     # Call without any special options (full analysis)
-                    analyze_project(str(tmp_path))
+                    analyze_module.analyze_project(
+                        path=str(tmp_path), docs_only=False, version_report=False
+                    )
 
                     # Verify all analysis functions were called
                     mock_structure.assert_called_once_with(tmp_path)
@@ -124,10 +150,18 @@ class TestAnalyzeCLIIntegration:
             with patch(
                 "fascraft.commands.analyze.analyze_documentation_quality"
             ) as mock_doc_analysis:
-                mock_version_report.return_value = {}
+                mock_version_report.return_value = {
+                    "timestamp": "2024-01-01T00:00:00",
+                    "project_path": str(tmp_path),
+                    "version_sources": {},
+                    "consistency_issues": [],
+                    "recommendations": [],
+                }
 
                 # Call with both options - version_report should take priority
-                analyze_project(str(tmp_path), docs_only=True, version_report=True)
+                analyze_module.analyze_project(
+                    path=str(tmp_path), docs_only=True, version_report=True
+                )
 
                 # Verify only version report was called
                 mock_version_report.assert_called_once_with(tmp_path)

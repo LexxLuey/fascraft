@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+import typer
 
 from fascraft.commands.environment import (
     create,
@@ -22,7 +23,6 @@ from fascraft.commands.environment import (
     validate_environments,
     validate_single_environment,
 )
-from fascraft.exceptions import FileSystemError
 
 
 class TestEnvironmentCommand:
@@ -95,6 +95,12 @@ class TestEnvironmentCommand:
         project_path = tmp_path / "test-project"
         project_path.mkdir()
 
+        # Create the config directory structure
+        config_dir = project_path / "config"
+        config_dir.mkdir()
+        env_config_dir = config_dir / "environments"
+        env_config_dir.mkdir()
+
         create_environment_config_yaml(project_path, ["dev", "staging"], "test-project")
 
         # Verify main config was created
@@ -110,10 +116,10 @@ class TestEnvironmentCommand:
         env_config_dir = tmp_path / "config" / "environments"
         env_config_dir.mkdir(parents=True)
 
-        create_individual_env_config(env_config_dir, "dev", "test-project")
+        create_individual_env_config(env_config_dir, "development", "test-project")
 
         # Verify config file was created
-        config_file = env_config_dir / "dev.yml"
+        config_file = env_config_dir / "development.yml"
         assert config_file.exists()
 
         # Verify content structure
@@ -122,7 +128,7 @@ class TestEnvironmentCommand:
         with open(config_file) as f:
             config = yaml.safe_load(f)
 
-        assert config["environment"] == "dev"
+        assert config["environment"] == "development"
         assert config["project"] == "test-project"
         assert config["app"]["debug"] is True
         assert config["database"]["pool_size"] == 5
@@ -348,15 +354,21 @@ class TestEnvironmentCommand:
         project_path.mkdir()
         # No main.py file
 
-        with pytest.raises(FileSystemError, match="Not a FastAPI project"):
+        with pytest.raises(typer.Exit) as exc_info:
             init(project_path, environments="dev", force=False)
+
+        # Check that it's an exit exception with code 1
+        assert exc_info.value.exit_code == 1
 
     def test_environment_project_not_exists(self, tmp_path):
         """Test environment init fails for non-existent projects."""
         project_path = tmp_path / "non-existent"
 
-        with pytest.raises(FileSystemError, match="Project path does not exist"):
+        with pytest.raises(typer.Exit) as exc_info:
             init(project_path, environments="dev", force=False)
+
+        # Check that it's an exit exception with code 1
+        assert exc_info.value.exit_code == 1
 
     def test_environment_invalid_environments(self, tmp_path):
         """Test environment init fails for invalid environment list."""
@@ -364,8 +376,11 @@ class TestEnvironmentCommand:
         project_path.mkdir()
         (project_path / "main.py").write_text("# FastAPI app")
 
-        with pytest.raises(FileSystemError, match="No valid environments specified"):
+        with pytest.raises(typer.Exit) as exc_info:
             init(project_path, environments="", force=False)
+
+        # Check that it's an exit exception with code 1
+        assert exc_info.value.exit_code == 1
 
     def test_environment_switch_not_found(self, tmp_path):
         """Test environment switch fails for non-existent environment."""
@@ -373,8 +388,11 @@ class TestEnvironmentCommand:
         project_path.mkdir()
         (project_path / "main.py").write_text("# FastAPI app")
 
-        with pytest.raises(FileSystemError, match="not found"):
+        with pytest.raises(typer.Exit) as exc_info:
             switch(project_path, environment="missing")
+
+        # Check that it's an exit exception with code 1
+        assert exc_info.value.exit_code == 1
 
     def test_environment_create_invalid_template(self, tmp_path):
         """Test environment create fails for invalid template."""
@@ -382,5 +400,8 @@ class TestEnvironmentCommand:
         project_path.mkdir()
         (project_path / "main.py").write_text("# FastAPI app")
 
-        with pytest.raises(FileSystemError, match="Invalid template"):
+        with pytest.raises(typer.Exit) as exc_info:
             create(project_path, name="custom", template="invalid", force=False)
+
+        # Check that it's an exit exception with code 1
+        assert exc_info.value.exit_code == 1

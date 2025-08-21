@@ -239,9 +239,15 @@ class TestAnalyzeProject:
                 with patch(
                     "fascraft.commands.analyze.provide_recommendations"
                 ) as mock_recommend:
-                    mock_analyze.return_value = {"project_name": "test"}
+                    with patch(
+                        "fascraft.commands.analyze.is_fastapi_project"
+                    ) as mock_is_fastapi:
+                        mock_is_fastapi.return_value = True
+                        mock_analyze.return_value = {"project_name": "test"}
 
-                    analyze_project(str(tmp_path))
+                        analyze_project(
+                            str(tmp_path), version_report=False, docs_only=False
+                        )
 
                     mock_analyze.assert_called_once()
                     mock_display.assert_called_once()

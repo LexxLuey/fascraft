@@ -3,13 +3,13 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+import typer
 
 from fascraft.commands.dockerize import (
     add_docker,
     add_docker_support,
     render_docker_template,
 )
-from fascraft.exceptions import FileSystemError
 
 
 class TestDockerizeCommand:
@@ -43,8 +43,11 @@ class TestDockerizeCommand:
         (project_path / "main.py").write_text("# FastAPI app")
         (project_path / "Dockerfile").write_text("# existing dockerfile")
 
-        with pytest.raises(FileSystemError):
-            add_docker_support(project_path, force=False)
+        with pytest.raises(typer.Exit) as exc_info:
+            add_docker(project_path, force=False)
+
+        # Check that it's an exit exception with code 1
+        assert exc_info.value.exit_code == 1
 
     def test_add_docker_existing_files_with_force(self, tmp_path):
         """Test Docker addition succeeds when files exist and force=True."""
@@ -93,12 +96,18 @@ class TestDockerizeCommand:
         project_path.mkdir()
         # No main.py file
 
-        with pytest.raises(FileSystemError, match="Not a FastAPI project"):
+        with pytest.raises(typer.Exit) as exc_info:
             add_docker(project_path, force=False)
+
+        # Check that it's an exit exception with code 1
+        assert exc_info.value.exit_code == 1
 
     def test_dockerize_project_not_exists(self, tmp_path):
         """Test dockerize fails for non-existent projects."""
         project_path = tmp_path / "non-existent"
 
-        with pytest.raises(FileSystemError, match="Project path does not exist"):
+        with pytest.raises(typer.Exit) as exc_info:
             add_docker(project_path, force=False)
+
+        # Check that it's an exit exception with code 1
+        assert exc_info.value.exit_code == 1

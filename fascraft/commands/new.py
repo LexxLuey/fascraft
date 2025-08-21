@@ -2,17 +2,16 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import typer
 from jinja2 import Environment, PackageLoader, select_autoescape
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.text import Text
-from rich.prompt import Prompt, Confirm, IntPrompt
 from rich.panel import Panel
-from rich.table import Table
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.prompt import Confirm, Prompt
 from rich.syntax import Syntax
+from rich.table import Table
+from rich.text import Text
 
 from fascraft.exceptions import (
     CorruptedTemplateError,
@@ -38,7 +37,7 @@ console = Console(width=None, soft_wrap=False)
 
 
 def create_new_project(
-    project_name: Optional[str] = typer.Argument(
+    project_name: str | None = typer.Argument(
         None, help="🏗️ The name of the new FastAPI project"
     ),
     path: str = typer.Option(
@@ -105,9 +104,9 @@ def interactive_project_setup() -> tuple:
     project_name = Prompt.ask(
         "📝 [bold cyan]Project Name[/bold cyan]",
         default="my-fastapi-app",
-        show_default=True
+        show_default=True,
     )
-    
+
     # Validate project name
     try:
         validate_project_name(project_name)
@@ -115,14 +114,12 @@ def interactive_project_setup() -> tuple:
         console.print(f"❌ Invalid project name: {e.message}", style="red")
         project_name = Prompt.ask(
             "📝 [bold cyan]Project Name[/bold cyan] (use only letters, numbers, hyphens, underscores)",
-            default="my-fastapi-app"
+            default="my-fastapi-app",
         )
 
     # Project path
     path = Prompt.ask(
-        "📁 [bold cyan]Project Path[/bold cyan]",
-        default=".",
-        show_default=True
+        "📁 [bold cyan]Project Path[/bold cyan]", default=".", show_default=True
     )
 
     # Project type selection
@@ -130,20 +127,22 @@ def interactive_project_setup() -> tuple:
         "🏗️ [bold cyan]Project Type[/bold cyan]",
         choices=["basic", "ecommerce", "auth", "database", "custom"],
         default="basic",
-        show_default=True
+        show_default=True,
     )
 
     # Additional features
     features = []
     if Confirm.ask("🐳 [bold cyan]Include Docker support?[/bold cyan]", default=True):
         features.append("docker")
-    
+
     if Confirm.ask("🚀 [bold cyan]Include CI/CD workflows?[/bold cyan]", default=True):
         features.append("ci-cd")
-    
-    if Confirm.ask("🗄️ [bold cyan]Include database configuration?[/bold cyan]", default=True):
+
+    if Confirm.ask(
+        "🗄️ [bold cyan]Include database configuration?[/bold cyan]", default=True
+    ):
         features.append("database")
-    
+
     if Confirm.ask("🧪 [bold cyan]Include testing setup?[/bold cyan]", default=True):
         features.append("testing")
 
@@ -153,70 +152,88 @@ def interactive_project_setup() -> tuple:
     return project_name, path
 
 
-def display_interactive_summary(project_name: str, path: str, project_type: str, features: list):
+def display_interactive_summary(
+    project_name: str, path: str, project_type: str, features: list
+):
     """Display summary of interactive choices."""
     console.print("\n📋 [bold green]Project Setup Summary[/bold green]")
-    
+
     summary_table = Table(show_header=True, header_style="bold magenta")
     summary_table.add_column("Setting", style="cyan")
     summary_table.add_column("Value", style="white")
-    
+
     summary_table.add_row("Project Name", project_name)
     summary_table.add_row("Project Path", path)
     summary_table.add_row("Project Type", project_type)
     summary_table.add_row("Features", ", ".join(features) if features else "None")
-    
+
     console.print(summary_table)
-    
-    if not Confirm.ask("\n✅ [bold green]Proceed with these settings?[/bold green]", default=True):
+
+    if not Confirm.ask(
+        "\n✅ [bold green]Proceed with these settings?[/bold green]", default=True
+    ):
         raise typer.Exit(code=0)
 
 
 def confirm_project_creation(project_path: Path, project_name: str) -> bool:
     """Confirm project creation with user."""
     console.print("\n🔍 [bold yellow]Project Creation Summary[/bold yellow]")
-    
+
     # Check if directory exists
     if project_path.exists():
-        console.print(f"⚠️ [bold red]Warning: Directory '{project_path}' already exists![/bold red]")
-        if not Confirm.ask("🗑️ [bold red]This will overwrite existing content. Continue?[/bold red]", default=False):
+        console.print(
+            f"⚠️ [bold red]Warning: Directory '{project_path}' already exists![/bold red]"
+        )
+        if not Confirm.ask(
+            "🗑️ [bold red]This will overwrite existing content. Continue?[/bold red]",
+            default=False,
+        ):
             return False
-    
+
     # Show what will be created
     creation_table = Table(show_header=True, header_style="bold blue")
     creation_table.add_column("Component", style="cyan")
     creation_table.add_column("Description", style="white")
-    
+
     creation_table.add_row("📁 Project Structure", "config/, routers/, .github/")
     creation_table.add_row("🐍 Python Files", "main.py, __init__.py, settings.py")
     creation_table.add_row("📦 Dependencies", "requirements.txt, requirements.dev.txt")
     creation_table.add_row("🐳 Docker", "Dockerfile, docker-compose.yml")
     creation_table.add_row("🚀 CI/CD", "GitHub Actions, GitLab CI")
     creation_table.add_row("📝 Documentation", "README.md, .env.sample")
-    
+
     console.print(creation_table)
-    
+
     # Show disk space info
     try:
         import shutil
+
         total, used, free = shutil.disk_usage(project_path.parent)
         free_gb = free // (1024**3)
         console.print(f"💾 [bold blue]Available disk space: {free_gb} GB[/bold blue]")
-    except:
+    except OSError:
+        # Disk space check failed, continue without showing space info
         pass
-    
-    return Confirm.ask("\n✅ [bold green]Create project with these settings?[/bold green]", default=True)
+
+    return Confirm.ask(
+        "\n✅ [bold green]Create project with these settings?[/bold green]",
+        default=True,
+    )
 
 
 def perform_dry_run(project_path: Path, project_name: str) -> None:
     """Perform dry run to preview changes."""
     console.print("\n🔍 [bold blue]DRY RUN MODE - No changes will be made[/bold blue]")
-    
+
     # Show what would be created
-    console.print(f"\n📁 [bold cyan]Project would be created at:[/bold cyan] {project_path}")
-    
+    console.print(
+        f"\n📁 [bold cyan]Project would be created at:[/bold cyan] {project_path}"
+    )
+
     # Show directory structure
-    console.print("\n📂 [bold cyan]Directory structure that would be created:[/bold cyan]")
+    console.print(
+        "\n📂 [bold cyan]Directory structure that would be created:[/bold cyan]"
+    )
     structure_tree = f"""
 {project_name}/
 ├── config/
@@ -243,10 +260,10 @@ def perform_dry_run(project_path: Path, project_name: str) -> None:
 └── README.md
 """
     console.print(Syntax(structure_tree, "text", theme="monokai"))
-    
+
     # Show template previews
     console.print("\n📄 [bold cyan]Key files that would be generated:[/bold cyan]")
-    
+
     # Preview main.py
     try:
         env = Environment(
@@ -254,22 +271,29 @@ def perform_dry_run(project_path: Path, project_name: str) -> None:
             autoescape=select_autoescape(),
         )
         template = env.get_template("main.py.jinja2")
-        main_content = template.render(project_name=project_name, author_name="Lutor Iyornumbe")
-        
+        main_content = template.render(
+            project_name=project_name, author_name="Lutor Iyornumbe"
+        )
+
         preview_panel = Panel(
-            Syntax(main_content[:500] + "..." if len(main_content) > 500 else main_content, 
-                   "python", theme="monokai"),
+            Syntax(
+                main_content[:500] + "..." if len(main_content) > 500 else main_content,
+                "python",
+                theme="monokai",
+            ),
             title="main.py preview",
-            border_style="blue"
+            border_style="blue",
         )
         console.print(preview_panel)
     except Exception as e:
         console.print(f"⚠️ Could not preview main.py: {e}", style="yellow")
-    
+
     # Show next steps
     console.print("\n🚀 [bold green]To create the project, run:[/bold green]")
-    console.print(f"  fascraft new {project_name} --path {project_path.parent}", style="cyan")
-    
+    console.print(
+        f"  fascraft new {project_name} --path {project_path.parent}", style="cyan"
+    )
+
     console.print("\n✨ [bold yellow]Dry run completed![/bold yellow]")
 
 
@@ -282,7 +306,7 @@ def create_project_structure(project_path: Path, project_name: str) -> None:
         # Create main directories (DDA approach - only essential folders)
         (project_path / "config").mkdir(parents=True, exist_ok=True)
         (project_path / "routers").mkdir(parents=True, exist_ok=True)
-        
+
         # Create CI/CD directory structure
         (project_path / ".github" / "workflows").mkdir(parents=True, exist_ok=True)
 
@@ -379,69 +403,69 @@ def display_success_message(project_path: Path, project_name: str) -> None:
 def display_next_steps(project_path: Path, project_name: str) -> None:
     """Display next steps for the user."""
     console.print("\n⚡ [bold yellow]Next Steps:[/bold yellow]")
-    
+
     # Create a table for next steps
     steps_table = Table(show_header=True, header_style="bold green")
     steps_table.add_column("Step", style="cyan", width=20)
     steps_table.add_column("Command", style="white", width=40)
     steps_table.add_column("Description", style="white")
-    
+
+    steps_table.add_row("1. Navigate", f"cd {project_name}", "Enter project directory")
     steps_table.add_row(
-        "1. Navigate", 
-        f"cd {project_name}", 
-        "Enter project directory"
+        "2. Install Dependencies",
+        "pip install -r requirements.txt",
+        "Install production dependencies",
     )
     steps_table.add_row(
-        "2. Install Dependencies", 
-        "pip install -r requirements.txt", 
-        "Install production dependencies"
+        "3. Install Dev Dependencies",
+        "pip install -r requirements.dev.txt",
+        "Install development tools",
     )
     steps_table.add_row(
-        "3. Install Dev Dependencies", 
-        "pip install -r requirements.dev.txt", 
-        "Install development tools"
+        "4. Run Application", "python main.py", "Start the FastAPI server"
     )
     steps_table.add_row(
-        "4. Run Application", 
-        "python main.py", 
-        "Start the FastAPI server"
+        "5. View API Docs",
+        "http://localhost:8000/docs",
+        "Interactive API documentation",
     )
-    steps_table.add_row(
-        "5. View API Docs", 
-        "http://localhost:8000/docs", 
-        "Interactive API documentation"
-    )
-    
+
     console.print(steps_table)
-    
+
     # Additional guidance
     console.print("\n🛠️ [bold blue]Development Commands:[/bold blue]")
     console.print("  • [cyan]pytest[/cyan] - Run tests")
     console.print("  • [cyan]black .[/cyan] - Format code")
     console.print("  • [cyan]ruff check .[/cyan] - Lint code")
-    
+
     console.print("\n🐳 [bold blue]Docker Commands:[/bold blue]")
     console.print("  • [cyan]docker-compose up --build[/cyan] - Run with Docker")
-    console.print("  • [cyan]docker-compose --profile production up[/cyan] - Production mode")
+    console.print(
+        "  • [cyan]docker-compose --profile production up[/cyan] - Production mode"
+    )
 
 
 def display_project_features() -> None:
     """Display information about project features."""
     console.print("\n🔧 [bold blue]Project Features:[/bold blue]")
-    
+
     features_table = Table(show_header=True, header_style="bold blue")
     features_table.add_column("Feature", style="cyan", width=20)
     features_table.add_column("Description", style="white")
-    
-    features_table.add_row("🏗️ Architecture", "Domain-Driven Design (DDA) with clean structure")
-    features_table.add_row("⚙️ Configuration", "Environment-based settings with Pydantic")
+
+    features_table.add_row(
+        "🏗️ Architecture", "Domain-Driven Design (DDA) with clean structure"
+    )
+    features_table.add_row(
+        "⚙️ Configuration", "Environment-based settings with Pydantic"
+    )
     features_table.add_row("🗄️ Database", "SQLAlchemy ORM with migration support")
     features_table.add_row("🔄 Routing", "Modular router system for scalability")
     features_table.add_row("🐳 Docker", "Multi-stage production-ready containers")
     features_table.add_row("🚀 CI/CD", "GitHub Actions, GitLab CI, pre-commit hooks")
     features_table.add_row("🧪 Testing", "Pytest setup with coverage support")
     features_table.add_row("📝 Documentation", "Auto-generated API docs with FastAPI")
-    
+
     console.print(features_table)
 
 
@@ -457,7 +481,10 @@ def display_best_wishes() -> None:
     console.print("  • Join our community for support!")
 
     console.print("\n✨ [bold yellow]Happy coding![/bold yellow]")
-    console.print("Your modular architecture will make future you very grateful!", style="bold cyan")
+    console.print(
+        "Your modular architecture will make future you very grateful!",
+        style="bold cyan",
+    )
 
 
 def display_error_message(error: FasCraftError) -> None:
@@ -482,7 +509,7 @@ def display_error_message(error: FasCraftError) -> None:
 def display_error_recovery_guidance(error: FasCraftError) -> None:
     """Display specific recovery guidance based on error type."""
     console.print("\n🔧 [bold blue]Error Recovery Guidance:[/bold blue]")
-    
+
     if isinstance(error, PermissionError):
         display_permission_error_guidance()
     elif isinstance(error, DiskSpaceError):
@@ -500,35 +527,35 @@ def display_error_recovery_guidance(error: FasCraftError) -> None:
 def display_permission_error_guidance() -> None:
     """Display guidance for permission errors."""
     console.print("\n🔐 [bold yellow]Permission Error - Recovery Steps:[/bold yellow]")
-    
+
     guidance_table = Table(show_header=True, header_style="bold green")
     guidance_table.add_column("Step", style="cyan", width=15)
     guidance_table.add_column("Action", style="white", width=50)
     guidance_table.add_column("Details", style="white")
-    
+
     guidance_table.add_row(
-        "1. Check Path", 
-        "Verify target directory permissions", 
-        "Ensure you have write access"
+        "1. Check Path",
+        "Verify target directory permissions",
+        "Ensure you have write access",
     )
     guidance_table.add_row(
-        "2. Run as Admin", 
-        "Use administrator privileges", 
-        "Right-click terminal → Run as Administrator"
+        "2. Run as Admin",
+        "Use administrator privileges",
+        "Right-click terminal → Run as Administrator",
     )
     guidance_table.add_row(
-        "3. Change Location", 
-        "Try different directory", 
-        "Use --path ~/ or /tmp/ for testing"
+        "3. Change Location",
+        "Try different directory",
+        "Use --path ~/ or /tmp/ for testing",
     )
     guidance_table.add_row(
-        "4. Check Antivirus", 
-        "Disable antivirus temporarily", 
-        "Some antivirus software blocks file operations"
+        "4. Check Antivirus",
+        "Disable antivirus temporarily",
+        "Some antivirus software blocks file operations",
     )
-    
+
     console.print(guidance_table)
-    
+
     console.print("\n💡 [bold blue]Quick Fix:[/bold blue]")
     console.print("  Try: [cyan]poetry run fascraft new my-project --path ~/[/cyan]")
 
@@ -536,107 +563,105 @@ def display_permission_error_guidance() -> None:
 def display_disk_space_error_guidance() -> None:
     """Display guidance for disk space errors."""
     console.print("\n💾 [bold yellow]Disk Space Error - Recovery Steps:[/bold yellow]")
-    
+
     guidance_table = Table(show_header=True, header_style="bold green")
     guidance_table.add_column("Step", style="cyan", width=15)
     guidance_table.add_column("Action", style="white", width=50)
     guidance_table.add_column("Details", style="white")
-    
+
     guidance_table.add_row(
-        "1. Check Space", 
-        "Verify available disk space", 
-        "Run: df -h (Linux/Mac) or dir C:\\ (Windows)"
+        "1. Check Space",
+        "Verify available disk space",
+        "Run: df -h (Linux/Mac) or dir C:\\ (Windows)",
     )
     guidance_table.add_row(
-        "2. Free Space", 
-        "Remove unnecessary files", 
-        "Clear temp files, downloads, recycle bin"
+        "2. Free Space",
+        "Remove unnecessary files",
+        "Clear temp files, downloads, recycle bin",
     )
     guidance_table.add_row(
-        "3. Change Drive", 
-        "Use different disk/partition", 
-        "Try: --path D:\\projects\\ (Windows)"
+        "3. Change Drive",
+        "Use different disk/partition",
+        "Try: --path D:\\projects\\ (Windows)",
     )
     guidance_table.add_row(
-        "4. Clean System", 
-        "Use disk cleanup tools", 
-        "Windows: Disk Cleanup, Linux: apt autoremove"
+        "4. Clean System",
+        "Use disk cleanup tools",
+        "Windows: Disk Cleanup, Linux: apt autoremove",
     )
-    
+
     console.print(guidance_table)
-    
+
     console.print("\n💡 [bold blue]Quick Fix:[/bold blue]")
-    console.print("  Try: [cyan]poetry run fascraft new my-project --path D:\\projects\\[/cyan]")
+    console.print(
+        "  Try: [cyan]poetry run fascraft new my-project --path D:\\projects\\[/cyan]"
+    )
 
 
 def display_template_error_guidance() -> None:
     """Display guidance for template errors."""
     console.print("\n📄 [bold yellow]Template Error - Recovery Steps:[/bold yellow]")
-    
+
     guidance_table = Table(show_header=True, header_style="bold green")
     guidance_table.add_column("Step", style="cyan", width=15)
     guidance_table.add_column("Action", style="white", width=50)
     guidance_table.add_column("Details", style="white")
-    
+
     guidance_table.add_row(
-        "1. Reinstall", 
-        "Reinstall FasCraft", 
-        "pip uninstall fascraft && pip install fascraft"
+        "1. Reinstall",
+        "Reinstall FasCraft",
+        "pip uninstall fascraft && pip install fascraft",
     )
     guidance_table.add_row(
-        "2. Clear Cache", 
-        "Remove template cache", 
-        "rm -rf ~/.fascraft/templates/"
+        "2. Clear Cache", "Remove template cache", "rm -rf ~/.fascraft/templates/"
     )
     guidance_table.add_row(
-        "3. Check Version", 
-        "Verify FasCraft version", 
-        "poetry run fascraft --version"
+        "3. Check Version", "Verify FasCraft version", "poetry run fascraft --version"
     )
     guidance_table.add_row(
-        "4. Report Issue", 
-        "Create GitHub issue", 
-        "Include error details and environment"
+        "4. Report Issue",
+        "Create GitHub issue",
+        "Include error details and environment",
     )
-    
+
     console.print(guidance_table)
-    
+
     console.print("\n💡 [bold blue]Quick Fix:[/bold blue]")
-    console.print("  Try: [cyan]poetry install && poetry run fascraft new my-project[/cyan]")
+    console.print(
+        "  Try: [cyan]poetry install && poetry run fascraft new my-project[/cyan]"
+    )
 
 
 def display_validation_error_guidance() -> None:
     """Display guidance for validation errors."""
     console.print("\n✅ [bold yellow]Validation Error - Recovery Steps:[/bold yellow]")
-    
+
     guidance_table = Table(show_header=True, header_style="bold green")
     guidance_table.add_column("Step", style="cyan", width=15)
     guidance_table.add_column("Action", style="white", width=50)
     guidance_table.add_column("Details", style="white")
-    
+
     guidance_table.add_row(
-        "1. Check Input", 
-        "Verify project name", 
-        "Use only letters, numbers, hyphens, underscores"
+        "1. Check Input",
+        "Verify project name",
+        "Use only letters, numbers, hyphens, underscores",
     )
     guidance_table.add_row(
-        "2. Use Interactive", 
-        "Try interactive mode", 
-        "poetry run fascraft new --interactive"
+        "2. Use Interactive",
+        "Try interactive mode",
+        "poetry run fascraft new --interactive",
     )
     guidance_table.add_row(
-        "3. Check Path", 
-        "Verify project path", 
-        "Ensure path exists and is writable"
+        "3. Check Path", "Verify project path", "Ensure path exists and is writable"
     )
     guidance_table.add_row(
-        "4. Follow Naming", 
-        "Use valid naming conventions", 
-        "Examples: my-api, user-management, api_v1"
+        "4. Follow Naming",
+        "Use valid naming conventions",
+        "Examples: my-api, user-management, api_v1",
     )
-    
+
     console.print(guidance_table)
-    
+
     console.print("\n💡 [bold blue]Quick Fix:[/bold blue]")
     console.print("  Try: [cyan]poetry run fascraft new --interactive[/cyan]")
 
@@ -644,35 +669,31 @@ def display_validation_error_guidance() -> None:
 def display_file_system_error_guidance() -> None:
     """Display guidance for file system errors."""
     console.print("\n📁 [bold yellow]File System Error - Recovery Steps:[/bold yellow]")
-    
+
     guidance_table = Table(show_header=True, header_style="bold green")
     guidance_table.add_column("Step", style="cyan", width=15)
     guidance_table.add_column("Action", style="white", width=50)
     guidance_table.add_column("Details", style="white")
-    
+
     guidance_table.add_row(
-        "1. Check Path", 
-        "Verify directory exists", 
-        "Create parent directory if needed"
+        "1. Check Path", "Verify directory exists", "Create parent directory if needed"
     )
     guidance_table.add_row(
-        "2. Check Permissions", 
-        "Verify write permissions", 
-        "Ensure you can create files in target location"
+        "2. Check Permissions",
+        "Verify write permissions",
+        "Ensure you can create files in target location",
     )
     guidance_table.add_row(
-        "3. Try Different Path", 
-        "Use alternative location", 
-        "Try home directory or temp folder"
+        "3. Try Different Path",
+        "Use alternative location",
+        "Try home directory or temp folder",
     )
     guidance_table.add_row(
-        "4. Check Disk Health", 
-        "Verify disk integrity", 
-        "Run disk check tools"
+        "4. Check Disk Health", "Verify disk integrity", "Run disk check tools"
     )
-    
+
     console.print(guidance_table)
-    
+
     console.print("\n💡 [bold blue]Quick Fix:[/bold blue]")
     console.print("  Try: [cyan]poetry run fascraft new my-project --path ~/[/cyan]")
 
@@ -680,37 +701,35 @@ def display_file_system_error_guidance() -> None:
 def display_general_error_guidance() -> None:
     """Display general error recovery guidance."""
     console.print("\n🔍 [bold yellow]General Error - Recovery Steps:[/bold yellow]")
-    
+
     guidance_table = Table(show_header=True, header_style="bold green")
     guidance_table.add_column("Step", style="cyan", width=15)
     guidance_table.add_column("Action", style="white", width=50)
     guidance_table.add_column("Details", style="white")
-    
+
     guidance_table.add_row(
-        "1. Check Logs", 
-        "Review error details", 
-        "Look for specific error messages"
+        "1. Check Logs", "Review error details", "Look for specific error messages"
     )
     guidance_table.add_row(
-        "2. Restart Terminal", 
-        "Close and reopen terminal", 
-        "Sometimes resolves environment issues"
+        "2. Restart Terminal",
+        "Close and reopen terminal",
+        "Sometimes resolves environment issues",
     )
     guidance_table.add_row(
-        "3. Update Dependencies", 
-        "Update Python packages", 
-        "poetry update && poetry install"
+        "3. Update Dependencies",
+        "Update Python packages",
+        "poetry update && poetry install",
     )
     guidance_table.add_row(
-        "4. Get Help", 
-        "Check troubleshooting guide", 
-        "docs/troubleshooting.md"
+        "4. Get Help", "Check troubleshooting guide", "docs/troubleshooting.md"
     )
-    
+
     console.print(guidance_table)
-    
+
     console.print("\n💡 [bold blue]Quick Fix:[/bold blue]")
-    console.print("  Try: [cyan]poetry update && poetry run fascraft new my-project[/cyan]")
+    console.print(
+        "  Try: [cyan]poetry update && poetry run fascraft new my-project[/cyan]"
+    )
 
 
 def display_unexpected_error(error: Exception) -> None:
@@ -738,38 +757,40 @@ def display_unexpected_error(error: Exception) -> None:
 def display_unexpected_error_guidance(error: Exception) -> None:
     """Display guidance for unexpected errors."""
     console.print("\n🔧 [bold blue]Unexpected Error - Recovery Steps:[/bold blue]")
-    
+
     guidance_table = Table(show_header=True, header_style="bold green")
     guidance_table.add_column("Step", style="cyan", width=15)
     guidance_table.add_column("Action", style="white", width=50)
     guidance_table.add_column("Details", style="white")
-    
+
     guidance_table.add_row(
-        "1. Report Bug", 
-        "Create detailed issue report", 
-        "Include error traceback and environment"
+        "1. Report Bug",
+        "Create detailed issue report",
+        "Include error traceback and environment",
     )
     guidance_table.add_row(
-        "2. Check Environment", 
-        "Verify Python and dependencies", 
-        "python --version && poetry --version"
+        "2. Check Environment",
+        "Verify Python and dependencies",
+        "python --version && poetry --version",
     )
     guidance_table.add_row(
-        "3. Try Clean Install", 
-        "Remove and reinstall FasCraft", 
-        "poetry remove fascraft && poetry add fascraft"
+        "3. Try Clean Install",
+        "Remove and reinstall FasCraft",
+        "poetry remove fascraft && poetry add fascraft",
     )
     guidance_table.add_row(
-        "4. Get Community Help", 
-        "Ask in Discord or Discussions", 
-        "Real-time support from community"
+        "4. Get Community Help",
+        "Ask in Discord or Discussions",
+        "Real-time support from community",
     )
-    
+
     console.print(guidance_table)
-    
+
     console.print("\n💡 [bold blue]Immediate Actions:[/bold blue]")
     console.print("  1. [cyan]Join Discord[/cyan]: https://discord.gg/fascraft")
-    console.print("  2. [cyan]Check Issues[/cyan]: https://github.com/LexxLuey/fascraft/issues")
+    console.print(
+        "  2. [cyan]Check Issues[/cyan]: https://github.com/LexxLuey/fascraft/issues"
+    )
     console.print("  3. [cyan]Read Troubleshooting[/cyan]: docs/troubleshooting.md")
 
 
@@ -904,6 +925,11 @@ def render_essential_templates(project_path: Path, project_name: str) -> None:
         ("pyproject.toml.jinja2", "pyproject.toml"),
         ("requirements.txt.jinja2", "requirements.txt"),
         ("__init__.py.jinja2", "__init__.py"),
+        ("README.md.jinja2", "README.md"),
+        ("fascraft.toml.jinja2", "fascraft.toml"),
+        ("env.jinja2", ".env.sample"),
+        (".gitignore.jinja2", ".gitignore"),
+        (".dockerignore.jinja2", ".dockerignore"),
         ("config/__init__.py.jinja2", "config/__init__.py"),
         ("config/settings.py.jinja2", "config/settings.py"),
         ("routers/__init__.py.jinja2", "routers/__init__.py"),

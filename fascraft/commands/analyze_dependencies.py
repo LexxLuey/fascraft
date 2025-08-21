@@ -15,16 +15,10 @@ console = Console()
 
 
 def analyze_dependencies(
-    path: str = typer.Option(".", help="📁 The path to the FastAPI project to analyze"),
-    module: str | None = typer.Option(
-        None, "--module", "-m", help="🔍 Analyze specific module only"
-    ),
-    export: str | None = typer.Option(
-        None, "--export", help="💾 Export dependency graph to JSON file"
-    ),
-    verbose: bool = typer.Option(
-        False, "--verbose", "-v", help="📋 Show detailed dependency information"
-    ),
+    path: str = ".",
+    module: str | None = None,
+    export: str | None = None,
+    verbose: bool = False,
 ) -> None:
     """🔍 Analyze module dependencies in a FastAPI project."""
 
@@ -87,13 +81,39 @@ def analyze_dependencies(
             console.print(error_text)
 
 
+def analyze_dependencies_cli(
+    path: str = typer.Option(".", help="📁 The path to the FastAPI project to analyze"),
+    module: str | None = typer.Option(
+        None, "--module", "-m", help="🔍 Analyze specific module only"
+    ),
+    export: str | None = typer.Option(
+        None, "--export", help="💾 Export dependency graph to JSON file"
+    ),
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="📋 Show detailed dependency information"
+    ),
+) -> None:
+    """🔍 CLI wrapper for analyzing module dependencies in a FastAPI project."""
+    analyze_dependencies(path=path, module=module, export=export, verbose=verbose)
+
+
 def analyze_single_module(module_name: str) -> None:
     """Analyze dependencies for a single module."""
     console.print(f"🔍 Analyzing module: {module_name}", style="bold blue")
     console.print("=" * 60, style="blue")
 
-    # Get module health
-    health = dependency_analyzer.analyze_module_health(module_name)
+    # Get module health with error handling
+    try:
+        health = dependency_analyzer.analyze_module_health(module_name)
+
+        # Check if health analysis failed
+        if "error" in health:
+            console.print(f"❌ Error analyzing module: {health['error']}", style="red")
+            return
+
+    except Exception as e:
+        console.print(f"❌ Error analyzing module health: {str(e)}", style="red")
+        return
 
     # Create health summary table
     health_table = Table(title=f"📊 {module_name} Module Health")
@@ -154,8 +174,12 @@ def analyze_project_dependencies() -> None:
     console.print("🔍 Project Dependency Analysis", style="bold blue")
     console.print("=" * 60, style="blue")
 
-    # Get overall statistics
-    stats = dependency_analyzer.get_dependency_statistics()
+    # Get overall statistics with error handling
+    try:
+        stats = dependency_analyzer.get_dependency_statistics()
+    except Exception as e:
+        console.print(f"❌ Error getting dependency statistics: {str(e)}", style="red")
+        return
 
     # Create overview table
     overview_table = Table(title="📊 Project Overview")
@@ -241,6 +265,7 @@ def build_dependency_tree() -> Tree:
     root_modules = dependency_graph.get_root_modules()
 
     for root_module in root_modules:
+        # Make module name clearly visible
         module_tree = tree.add(f"🔧 {root_module}")
         add_module_dependencies(module_tree, root_module, set())
 
@@ -256,5 +281,7 @@ def add_module_dependencies(parent_tree: Tree, module_name: str, visited: set) -
     dependencies = dependency_graph.get_dependencies(module_name)
 
     for dep in dependencies:
+        # Make module name clearly visible in the tree
         dep_tree = parent_tree.add(f"📥 {dep.target_module}")
-        add_module_dependencies(dep_tree, dep.target_module, visited.copy())
+        # Use the same visited set to allow proper tracking
+        add_module_dependencies(dep_tree, dep.target_module, visited)

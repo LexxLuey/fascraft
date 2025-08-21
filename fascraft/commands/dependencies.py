@@ -204,7 +204,7 @@ def show_dependency_overview() -> None:
     stats = dependency_analyzer.get_dependency_statistics()
 
     # Create overview table
-    overview_table = Table(title="📊 Project Dependencies")
+    overview_table = Table(title="📊 Project Overview")
     overview_table.add_column("Metric", style="cyan", no_wrap=True)
     overview_table.add_column("Value", style="white")
 
