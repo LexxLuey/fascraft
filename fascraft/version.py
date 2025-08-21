@@ -21,14 +21,8 @@ def get_version() -> str:
         import importlib.metadata
 
         return importlib.metadata.version("fascraft")
-    except ImportError:
-        try:
-            # Fallback for older Python versions
-            import pkg_resources
-
-            return pkg_resources.get_distribution("fascraft").version
-        except Exception:
-            pass
+    except Exception:
+        pass
 
     # Final fallback - read from git tags or return unknown
     return get_version_from_git() or "unknown"
