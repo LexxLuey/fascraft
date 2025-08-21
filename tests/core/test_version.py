@@ -2,12 +2,6 @@
 
 from unittest.mock import mock_open, patch
 
-# Handle tomllib import for Python 3.10 compatibility
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib
-
 from fascraft.version import get_version, get_version_from_git, get_version_info
 
 
@@ -19,7 +13,7 @@ class TestVersionModule:
         mock_toml_data = {"tool": {"poetry": {"version": "1.2.3"}}}
 
         with patch("builtins.open", mock_open()):
-            with patch("tomllib.load", return_value=mock_toml_data):
+            with patch("fascraft.version.tomllib.load", return_value=mock_toml_data):
                 with patch("pathlib.Path.exists", return_value=True):
                     version = get_version()
                     assert version == "1.2.3"
@@ -92,7 +86,7 @@ class TestVersionModule:
         mock_toml_data = {"tool": {}}  # Missing poetry section
 
         with patch("builtins.open", mock_open()):
-            with patch("tomllib.load", return_value=mock_toml_data):
+            with patch("fascraft.version.tomllib.load", return_value=mock_toml_data):
                 with patch("pathlib.Path.exists", return_value=True):
                     with patch("importlib.metadata.version", return_value="7.0.0"):
                         version = get_version()
