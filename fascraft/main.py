@@ -69,11 +69,14 @@ def hello(name: str = typer.Argument("World", help="Name to greet")):
 @app.command()
 def version():
     """Show FasCraft version."""
+    from fascraft.version import get_version
+
+    version = get_version()
     version_text = Text()
     version_text.append("📦 ", style="bold yellow")
-    version_text.append("FasCraft ", style="bold cyan")
+    version_text.append("Fascraft ", style="bold cyan")
     version_text.append("version ", style="white")
-    version_text.append("", style="bold green")
+    version_text.append(version, style="bold green")
     console.print(version_text)
 
 

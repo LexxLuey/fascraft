@@ -26,7 +26,7 @@ class TestCLIIntegration:
         """Test the version command."""
         result = cli_runner.invoke(app, ["version"])
         assert result.exit_code == 0
-        assert "FasCraft version" in result.stdout
+        assert "📦 Fascraft version" in result.stdout
 
     def test_new_command_help(self, cli_runner: CliRunner) -> None:
         """Test the new command help."""
