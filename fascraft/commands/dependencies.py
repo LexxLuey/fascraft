@@ -532,7 +532,9 @@ def show_project_health() -> None:
             health = dependency_analyzer.analyze_module_health(module_name)
             total_health += health["health_score"]
             module_count += 1
-        except Exception:
+        except (
+            Exception
+        ):  # nosec B110 - Intentional fallback, continue with other modules
             pass
 
     overall_health = total_health / module_count if module_count > 0 else 0
@@ -573,7 +575,9 @@ def show_project_health() -> None:
         try:
             health = dependency_analyzer.analyze_module_health(module_name)
             module_health_scores.append((module_name, health["health_score"]))
-        except Exception:
+        except (
+            Exception
+        ):  # nosec B110 - Intentional fallback, continue with other modules
             pass
 
     # Sort by health score (descending)

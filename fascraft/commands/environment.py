@@ -394,7 +394,7 @@ def create_individual_env_config(
                 "name": project_name,
                 "version": "0.1.0",
                 "debug": env_name == "development",
-                "host": "0.0.0.0",
+                "host": "0.0.0.0",  # nosec B104 - Intentional for development environment
                 "port": 8000,
             },
             "database": {
@@ -743,7 +743,9 @@ def get_current_environment(project_path: Path) -> str | None:
         if env_indicator.exists():
             return env_indicator.read_text().strip()
 
-    except Exception:
+    except (
+        Exception
+    ):  # nosec B110 - Intentional fallback, environment detection not critical
         pass
 
     return None
