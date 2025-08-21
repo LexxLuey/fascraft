@@ -20,6 +20,7 @@ from fascraft.commands.docs import (
 )
 from fascraft.exceptions import ModuleNotFoundError
 
+
 # Helper function to bypass typer.Option issues when calling CLI functions directly
 def generate_documentation_helper(
     path: str,
@@ -33,12 +34,14 @@ def generate_documentation_helper(
     """Helper function to generate documentation without typer.Option issues."""
     # Import here to avoid circular imports
     from pathlib import Path
+
     from fascraft.commands.docs import console, get_project_info
-    
+
     # Convert string path to Path object
     path_obj = Path(path)
     if not path_obj.exists():
         from rich.text import Text
+
         error_text = Text()
         error_text.append("❌ ", style="bold red")
         error_text.append("Error: ", style="bold red")
@@ -49,6 +52,7 @@ def generate_documentation_helper(
     # Check if it's a FastAPI project
     if not is_fastapi_project(path_obj):
         from rich.text import Text
+
         error_text = Text()
         error_text.append("❌ ", style="bold red")
         error_text.append("Error: ", style="bold red")
@@ -98,14 +102,14 @@ def generate_documentation_helper(
                 readme_content = f"# {module.title()} Module\n\n{project_info.get('description', 'No description available')}\n\n"
             else:
                 readme_content = f"# {project_info['name']}\n\nVersion: {project_info['version']}\n\n{project_info['description']}\n\n"
-                
+
                 # Add modules list if available
                 if project_info.get("modules"):
                     readme_content += "**Modules:**\n"
                     for module_name in project_info["modules"]:
                         readme_content += f"- `{module_name}`\n"
                     readme_content += "\n"
-            
+
             readme_file = output_path / "README_template.md"
             readme_file.write_text(readme_content)
             generated_files.append("README Template")
@@ -123,7 +127,7 @@ def generate_documentation_helper(
                 changelog_content = f"# Changelog for {module.title()} Module\n\n## [Unreleased]\n\n### Added\n- Initial module implementation\n\n### Changed\n\n### Deprecated\n\n### Removed\n\n### Fixed\n\n### Security\n\n"
             else:
                 changelog_content = f"# Changelog for {project_info['name']}\n\n## [Unreleased]\n\n### Added\n- Initial project setup\n\n### Changed\n\n### Deprecated\n\n### Removed\n\n### Fixed\n\n### Security\n\n"
-            
+
             changelog_file = output_path / "CHANGELOG_template.md"
             changelog_file.write_text(changelog_content)
             generated_files.append("Changelog Template")
@@ -147,13 +151,13 @@ def generate_documentation_helper(
                     "path": str(path_obj / module),
                     "files": [],
                     "dependencies": [],
-                    "description": f"Module {module}"
+                    "description": f"Module {module}",
                 }
-            
+
             # Ensure we have the files from the mocked data
             if not module_info.get("files"):
                 module_info["files"] = ["models.py", "services.py"]
-            
+
             console.print(f"📦 Module: {module_info['name']}", style="bold cyan")
 
             # Generate module overview
@@ -378,7 +382,7 @@ class TestDocumentationGeneration:
         module_dir.mkdir()
         (module_dir / "models.py").write_text("# Test models")
         (module_dir / "services.py").write_text("# Test services")
-        
+
         readme = generate_readme_template(tmp_path, "test_module")
 
         assert "# Test_Module Module" in readme

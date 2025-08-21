@@ -45,6 +45,7 @@ class Settings(BaseSettings):
             try:
                 # Check if pydantic is available without importing
                 import importlib.util
+
                 return importlib.util.find_spec("pydantic") is not None
             except ImportError:
                 print("Warning: pydantic not available, using basic settings")

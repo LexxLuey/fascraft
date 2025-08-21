@@ -12,7 +12,6 @@ from fascraft.commands.deploy import (
     render_deployment_template,
     setup_monitoring_config,
 )
-from fascraft.exceptions import FileSystemError
 
 
 class TestDeployCommand:
@@ -172,7 +171,7 @@ class TestDeployCommand:
 
         with pytest.raises(typer.Exit) as exc_info:
             generate(project_path, platform="aws", force=False)
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -182,7 +181,7 @@ class TestDeployCommand:
 
         with pytest.raises(typer.Exit) as exc_info:
             generate(project_path, platform="aws", force=False)
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -194,6 +193,6 @@ class TestDeployCommand:
 
         with pytest.raises(typer.Exit) as exc_info:
             generate(project_path, platform="invalid", force=False)
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1

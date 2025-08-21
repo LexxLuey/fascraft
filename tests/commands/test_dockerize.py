@@ -10,8 +10,6 @@ from fascraft.commands.dockerize import (
     add_docker_support,
     render_docker_template,
 )
-import typer
-from fascraft.exceptions import FileSystemError
 
 
 class TestDockerizeCommand:
@@ -47,7 +45,7 @@ class TestDockerizeCommand:
 
         with pytest.raises(typer.Exit) as exc_info:
             add_docker(project_path, force=False)
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -100,7 +98,7 @@ class TestDockerizeCommand:
 
         with pytest.raises(typer.Exit) as exc_info:
             add_docker(project_path, force=False)
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -110,6 +108,6 @@ class TestDockerizeCommand:
 
         with pytest.raises(typer.Exit) as exc_info:
             add_docker(project_path, force=False)
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1

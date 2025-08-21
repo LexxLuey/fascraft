@@ -1,6 +1,5 @@
 """Main FastAPI application for ecommerce-api."""
 
-
 from fastapi import FastAPI, HTTPException
 
 try:

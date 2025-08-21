@@ -24,7 +24,7 @@ except ImportError:
 
 
 @dataclass
-class TestConfig:
+class TestingConfig:
     """Configuration for test utilities."""
 
     database_url: str = "sqlite:///:memory:"
@@ -38,10 +38,14 @@ class TestConfig:
             self.coverage_report_formats = ["term", "html", "xml"]
 
 
+# Mark as not a test class to prevent pytest collection warnings
+TestingConfig.__test__ = False
+
+
 class DatabaseFixtureGenerator:
     """Generate database fixtures for testing."""
 
-    def __init__(self, config: TestConfig):
+    def __init__(self, config: TestingConfig):
         self.config = config
 
     def create_test_database(self, module_name: str) -> dict[str, Any]:
@@ -71,10 +75,14 @@ class DatabaseFixtureGenerator:
         }
 
 
+# Mark as not a test class to prevent pytest collection warnings
+DatabaseFixtureGenerator.__test__ = False
+
+
 class MockDataGenerator:
     """Generate mock data for testing."""
 
-    def __init__(self, config: TestConfig):
+    def __init__(self, config: TestingConfig):
         self.config = config
         self._mock_data_cache = {}
 
@@ -193,10 +201,14 @@ class MockDataGenerator:
         return result
 
 
-class TestCoverageReporter:
+# Mark as not a test class to prevent pytest collection warnings
+MockDataGenerator.__test__ = False
+
+
+class CoverageReporter:
     """Handle test coverage reporting."""
 
-    def __init__(self, config: TestConfig):
+    def __init__(self, config: TestingConfig):
         self.config = config
         self.coverage_data = {}
         self.start_time = None
@@ -301,7 +313,7 @@ class TestCoverageReporter:
         }
 
 
-class TestPerformanceMonitor:
+class PerformanceMonitor:
     """Monitor test performance metrics."""
 
     def __init__(self):
@@ -396,15 +408,19 @@ class TestPerformanceMonitor:
         }
 
 
-class TestUtilities:
+# Mark as not a test class to prevent pytest collection warnings
+PerformanceMonitor.__test__ = False
+
+
+class TestingUtilities:
     """Main test utilities class that combines all functionality."""
 
-    def __init__(self, config: TestConfig | None = None):
-        self.config = config or TestConfig()
+    def __init__(self, config: TestingConfig | None = None):
+        self.config = config or TestingConfig()
         self.db_generator = DatabaseFixtureGenerator(self.config)
         self.mock_generator = MockDataGenerator(self.config)
-        self.coverage_reporter = TestCoverageReporter(self.config)
-        self.performance_monitor = TestPerformanceMonitor()
+        self.coverage_reporter = CoverageReporter(self.config)
+        self.performance_monitor = PerformanceMonitor()
 
     def create_test_environment(self, module_name: str) -> dict[str, Any]:
         """Create a complete test environment for a module."""
@@ -466,17 +482,22 @@ class TestUtilities:
         return str(report_file)
 
 
+# Mark as not a test class to prevent pytest collection warnings
+CoverageReporter.__test__ = False
+TestingUtilities.__test__ = False
+
+
 # Convenience functions for easy access
-def create_test_utilities(config: TestConfig | None = None) -> TestUtilities:
+def create_test_utilities(config: TestingConfig | None = None) -> TestingUtilities:
     """Create a test utilities instance."""
-    return TestUtilities(config)
+    return TestingUtilities(config)
 
 
 def generate_mock_data(
     data_type: str, count: int = 1
 ) -> dict[str, Any] | list[dict[str, Any]]:
     """Quick access to mock data generation."""
-    utils = TestUtilities()
+    utils = TestingUtilities()
     if data_type == "user":
         return utils.mock_generator.generate_user_data(count)
     elif data_type == "product":
@@ -487,6 +508,6 @@ def generate_mock_data(
         raise ValueError(f"Unknown data type: {data_type}")
 
 
-def create_test_config(**kwargs) -> TestConfig:
+def create_test_config(**kwargs) -> TestingConfig:
     """Create a test configuration with custom settings."""
-    return TestConfig(**kwargs)
+    return TestingConfig(**kwargs)

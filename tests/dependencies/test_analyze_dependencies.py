@@ -3,8 +3,9 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
 import click
+import pytest
+import typer
 
 from fascraft.commands.analyze_dependencies import (
     add_module_dependencies,
@@ -14,7 +15,6 @@ from fascraft.commands.analyze_dependencies import (
     build_dependency_tree,
 )
 from fascraft.module_dependencies import dependency_graph
-import typer
 
 
 class TestAnalyzeDependenciesCommand:
@@ -145,11 +145,15 @@ class TestAnalyzeSingleModule:
         calls = mock_console.print.call_args_list
         # Check if a Table object was printed (Rich Table objects will be passed as arguments)
         table_call = any(
-            len(call[0]) > 0 and hasattr(call[0][0], 'title') and 
-            "📊 order Module Health" in str(call[0][0].title) 
-            for call in calls if call[0] and len(call[0]) > 0
+            len(call[0]) > 0
+            and hasattr(call[0][0], "title")
+            and "📊 order Module Health" in str(call[0][0].title)
+            for call in calls
+            if call[0] and len(call[0]) > 0
         )
-        assert table_call, f"Expected Table with '📊 order Module Health' title in console calls. Actual calls: {[str(call) for call in calls]}"
+        assert (
+            table_call
+        ), f"Expected Table with '📊 order Module Health' title in console calls. Actual calls: {[str(call) for call in calls]}"
 
         # Verify dependencies were shown
         deps_call = any("📥 Dependencies:" in str(call) for call in calls)
@@ -198,20 +202,27 @@ class TestAnalyzeProjectDependencies:
         calls = mock_console.print.call_args_list
         # Check if a Table object with the expected title was printed
         overview_call = any(
-            len(call[0]) > 0 and hasattr(call[0][0], 'title') and 
-            "📊 Project Overview" in str(call[0][0].title) 
-            for call in calls if call[0] and len(call[0]) > 0
+            len(call[0]) > 0
+            and hasattr(call[0][0], "title")
+            and "📊 Project Overview" in str(call[0][0].title)
+            for call in calls
+            if call[0] and len(call[0]) > 0
         )
-        assert overview_call, f"Expected Table with '📊 Project Overview' title. Actual calls: {[str(call) for call in calls]}"
+        assert (
+            overview_call
+        ), f"Expected Table with '📊 Project Overview' title. Actual calls: {[str(call) for call in calls]}"
 
         # Verify statistics were shown
         # Since Rich Table objects are printed, we can verify that a Table object was printed
         # The "Total Modules" text is inside the Table object
         table_call = any(
             len(call[0]) > 0 and "rich.table.Table" in str(call[0][0])
-            for call in calls if call[0] and len(call[0]) > 0
+            for call in calls
+            if call[0] and len(call[0]) > 0
         )
-        assert table_call, f"Expected Rich Table object to be printed. Actual calls: {[str(call) for call in calls]}"
+        assert (
+            table_call
+        ), f"Expected Rich Table object to be printed. Actual calls: {[str(call) for call in calls]}"
 
         # Verify leaf and root modules were identified
         leaf_call = any("🍃 Leaf Modules" in str(call) for call in calls)

@@ -41,9 +41,7 @@ class TestModuleDependency:
     def test_module_dependency_defaults(self):
         """Test ModuleDependency with default values."""
         dependency = ModuleDependency(
-            source_module="user", 
-            target_module="auth", 
-            dependency_type="import"
+            source_module="user", target_module="auth", dependency_type="import"
         )
 
         assert dependency.source_module == "user"

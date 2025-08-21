@@ -131,9 +131,13 @@ class TestDocumentationSuggestions:
             "has_readme": False,
             "has_changelog": True,
             "has_api_docs": True,
+            "has_project_docs": False,
+            "has_module_docs": False,
+            "docs_directory": False,
             "readme_quality": 0,
             "changelog_quality": 90,
             "api_docs_quality": 85,
+            "version_info": {"version_consistency": True},
         }
 
         suggestions = generate_doc_suggestions(doc_analysis)

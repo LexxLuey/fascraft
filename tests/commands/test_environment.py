@@ -23,7 +23,6 @@ from fascraft.commands.environment import (
     validate_environments,
     validate_single_environment,
 )
-from fascraft.exceptions import FileSystemError
 
 
 class TestEnvironmentCommand:
@@ -95,7 +94,7 @@ class TestEnvironmentCommand:
         """Test successful environment configuration YAML creation."""
         project_path = tmp_path / "test-project"
         project_path.mkdir()
-        
+
         # Create the config directory structure
         config_dir = project_path / "config"
         config_dir.mkdir()
@@ -357,7 +356,7 @@ class TestEnvironmentCommand:
 
         with pytest.raises(typer.Exit) as exc_info:
             init(project_path, environments="dev", force=False)
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -367,7 +366,7 @@ class TestEnvironmentCommand:
 
         with pytest.raises(typer.Exit) as exc_info:
             init(project_path, environments="dev", force=False)
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -379,7 +378,7 @@ class TestEnvironmentCommand:
 
         with pytest.raises(typer.Exit) as exc_info:
             init(project_path, environments="", force=False)
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -391,7 +390,7 @@ class TestEnvironmentCommand:
 
         with pytest.raises(typer.Exit) as exc_info:
             switch(project_path, environment="missing")
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -403,6 +402,6 @@ class TestEnvironmentCommand:
 
         with pytest.raises(typer.Exit) as exc_info:
             create(project_path, name="custom", template="invalid", force=False)
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1

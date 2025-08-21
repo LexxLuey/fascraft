@@ -6,7 +6,11 @@ import pytest
 import typer
 from typer.testing import CliRunner
 
-from fascraft.commands.new import create_new_project, create_project_with_rollback, display_success_message
+from fascraft.commands.new import (
+    create_new_project,
+    create_project_with_rollback,
+    display_success_message,
+)
 from fascraft.main import app
 
 
@@ -14,11 +18,12 @@ def create_test_project(project_name: str, project_path: Path) -> None:
     """Helper function to create a project for testing, bypassing typer options."""
     # Validate project name
     from fascraft.validation import validate_project_name
+
     validated_project_name = validate_project_name(project_name)
-    
+
     # Create project with rollback capability
     create_project_with_rollback(project_path, validated_project_name)
-    
+
     # Display success message
     display_success_message(project_path, validated_project_name)
 
@@ -64,7 +69,7 @@ class TestNewCommand:
         # Attempt to create project with same name
         with pytest.raises(typer.Exit) as exc_info:
             create_new_project(sample_project_name, temp_dir)
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -321,15 +326,15 @@ class TestNewCommand:
         """Test that appropriate success messages are displayed."""
         # Ensure temp_dir exists
         temp_dir.mkdir(exist_ok=True)
-        
+
         # Create project using helper function
         project_path = temp_dir / sample_project_name
         create_test_project(sample_project_name, project_path)
-        
+
         # Verify project was created successfully
         assert project_path.exists()
         assert project_path.is_dir()
-        
+
         # Verify key files exist
         assert (project_path / "main.py").exists()
         assert (project_path / "pyproject.toml").exists()
@@ -383,7 +388,7 @@ class TestNewCommand:
             # Attempt to create project with invalid name
             with pytest.raises(typer.Exit) as exc_info:
                 create_new_project(name, temp_dir)
-            
+
             # Check that it's an exit exception with code 1
             assert exc_info.value.exit_code == 1
 

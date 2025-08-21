@@ -327,8 +327,8 @@ class TestRenderEssentialTemplates:
 
         render_essential_templates(project_path, project_name)
 
-        # Verify essential templates were rendered (8 templates total)
-        assert mock_render_single.call_count == 8
+        # Verify essential templates were rendered (13 templates total)
+        assert mock_render_single.call_count == 13
         mock_render_single.assert_any_call(
             project_path, project_name, "main.py.jinja2", "main.py"
         )
@@ -340,6 +340,21 @@ class TestRenderEssentialTemplates:
         )
         mock_render_single.assert_any_call(
             project_path, project_name, "__init__.py.jinja2", "__init__.py"
+        )
+        mock_render_single.assert_any_call(
+            project_path, project_name, "README.md.jinja2", "README.md"
+        )
+        mock_render_single.assert_any_call(
+            project_path, project_name, "fascraft.toml.jinja2", "fascraft.toml"
+        )
+        mock_render_single.assert_any_call(
+            project_path, project_name, "env.jinja2", ".env.sample"
+        )
+        mock_render_single.assert_any_call(
+            project_path, project_name, ".gitignore.jinja2", ".gitignore"
+        )
+        mock_render_single.assert_any_call(
+            project_path, project_name, ".dockerignore.jinja2", ".dockerignore"
         )
         mock_render_single.assert_any_call(
             project_path,
@@ -371,12 +386,17 @@ class TestRenderEssentialTemplates:
         project_path = tmp_path / "test_project"
         project_name = "test_project"
 
-        # Mock partial template failures (8 templates total)
+        # Mock partial template failures (13 templates total)
         mock_render_single.side_effect = [
             None,  # main.py.jinja2 succeeds
             None,  # pyproject.toml.jinja2 succeeds
             None,  # requirements.txt.jinja2 succeeds
             None,  # __init__.py.jinja2 succeeds
+            None,  # README.md.jinja2 succeeds
+            None,  # fascraft.toml.jinja2 succeeds
+            None,  # env.jinja2 succeeds
+            None,  # .gitignore.jinja2 succeeds
+            None,  # .dockerignore.jinja2 succeeds
             None,  # config/__init__.py.jinja2 succeeds
             TemplateError("config/settings.py.jinja2 failed"),  # This one fails
             None,  # routers/__init__.py.jinja2 succeeds

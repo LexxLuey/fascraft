@@ -274,14 +274,14 @@ class DependencyGraph:
         def dfs(node: str) -> int:
             if node in visited:
                 return visited[node]
-            
+
             # Detect cycles to prevent infinite recursion
             if node in recursion_stack:
                 return 0  # Return 0 for circular dependencies
-            
+
             recursion_stack.add(node)
             max_depth = 0
-            
+
             for dependency in self.dependency_matrix[node]:
                 depth = dfs(dependency)
                 max_depth = max(max_depth, depth + 1)

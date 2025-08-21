@@ -107,7 +107,12 @@ class TestEnhancedGenerateCommand:
         dependency_graph.reverse_dependencies.clear()
 
         # Generate module with dependencies
-        generate_module("order", path=str(mock_project_path), template="basic", depends_on="user,auth")
+        generate_module(
+            "order",
+            path=str(mock_project_path),
+            template="basic",
+            depends_on="user,auth",
+        )
 
         # Verify module was added to dependency graph
         assert "order" in dependency_graph.modules
@@ -133,8 +138,13 @@ class TestEnhancedGenerateCommand:
     ):
         """Test generating module with non-existent dependency."""
         with pytest.raises(typer.Exit) as exc_info:
-            generate_module("order", path=str(mock_project_path), template="basic", depends_on="nonexistent")
-        
+            generate_module(
+                "order",
+                path=str(mock_project_path),
+                template="basic",
+                depends_on="nonexistent",
+            )
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -186,8 +196,12 @@ class TestEnhancedGenerateCommand:
         mock_dependency_graph.find_circular_dependencies = MagicMock(return_value=[])
 
         # Mock dependency analyzer
-        mock_dependency_analyzer.analyze_module_health = MagicMock(return_value={"health_score": 85})
-        mock_dependency_analyzer.suggest_dependency_optimizations = MagicMock(return_value=[])
+        mock_dependency_analyzer.analyze_module_health = MagicMock(
+            return_value={"health_score": 85}
+        )
+        mock_dependency_analyzer.suggest_dependency_optimizations = MagicMock(
+            return_value=[]
+        )
 
         # Mock is_fastapi_project
         mock_is_fastapi.return_value = True
@@ -195,11 +209,13 @@ class TestEnhancedGenerateCommand:
         # Patch the module existence check to allow dependency validation to proceed
         with patch("fascraft.commands.generate.Path") as mock_path_class:
             mock_project_path_obj = MagicMock()
-            mock_project_path_obj.exists.return_value = True  # Project path should exist
-            
+            mock_project_path_obj.exists.return_value = (
+                True  # Project path should exist
+            )
+
             # Create a call counter to differentiate between the two different exists() checks
             call_count = 0
-            
+
             def exists_side_effect():
                 nonlocal call_count
                 call_count += 1
@@ -209,15 +225,20 @@ class TestEnhancedGenerateCommand:
                 else:
                     # Subsequent calls: dependency existence checks (should return True)
                     return True
-            
+
             mock_path_result = MagicMock()
             mock_path_result.exists.side_effect = exists_side_effect
-            
+
             mock_project_path_obj.__truediv__.return_value = mock_path_result
             mock_path_class.return_value = mock_project_path_obj
-            
+
             with pytest.raises(typer.Exit) as exc_info:
-                generate_module("order", path=str(mock_project_path), template="basic", depends_on="order")
+                generate_module(
+                    "order",
+                    path=str(mock_project_path),
+                    template="basic",
+                    depends_on="order",
+                )
 
             # Check that it's an exit exception with code 1
             assert exc_info.value.exit_code == 1
@@ -229,12 +250,12 @@ class TestEnhancedGenerateCommand:
             error_call = any(
                 "Module cannot depend on itself" in str(call) for call in calls
             )
-            assert error_call, f"Expected 'Module cannot depend on itself' in console calls, but got: {calls}"
-            
+            assert (
+                error_call
+            ), f"Expected 'Module cannot depend on itself' in console calls, but got: {calls}"
+
             # Also check if any error message was printed
-            any_error = any(
-                "Error:" in str(call) for call in calls
-            )
+            any_error = any("Error:" in str(call) for call in calls)
             assert any_error, f"No error message found in console calls: {calls}"
 
     @patch("fascraft.commands.generate.console")
@@ -274,23 +295,31 @@ class TestEnhancedGenerateCommand:
         mock_dependency_graph.add_module = MagicMock()
         mock_dependency_graph.add_dependency = MagicMock()
         mock_dependency_graph.has_circular_dependencies = MagicMock(return_value=True)
-        mock_dependency_graph.find_circular_dependencies = MagicMock(return_value=[["user", "order", "user"]])
+        mock_dependency_graph.find_circular_dependencies = MagicMock(
+            return_value=[["user", "order", "user"]]
+        )
 
         # Mock dependency analyzer
-        mock_dependency_analyzer.analyze_module_health = MagicMock(return_value={"health_score": 85})
-        mock_dependency_analyzer.suggest_dependency_optimizations = MagicMock(return_value=[])
+        mock_dependency_analyzer.analyze_module_health = MagicMock(
+            return_value={"health_score": 85}
+        )
+        mock_dependency_analyzer.suggest_dependency_optimizations = MagicMock(
+            return_value=[]
+        )
 
-                # Mock is_fastapi_project
+        # Mock is_fastapi_project
         mock_is_fastapi.return_value = True
 
         # Patch the module existence check to allow dependency validation to proceed
         with patch("fascraft.commands.generate.Path") as mock_path_class:
             mock_project_path_obj = MagicMock()
-            mock_project_path_obj.exists.return_value = True  # Project path should exist
-            
+            mock_project_path_obj.exists.return_value = (
+                True  # Project path should exist
+            )
+
             # Create a call counter to differentiate between the two different exists() checks
             call_count = 0
-            
+
             def exists_side_effect():
                 nonlocal call_count
                 call_count += 1
@@ -300,10 +329,10 @@ class TestEnhancedGenerateCommand:
                 else:
                     # Subsequent calls: dependency existence checks (should return True)
                     return True
-            
+
             mock_path_result = MagicMock()
             mock_path_result.exists.side_effect = exists_side_effect
-            
+
             mock_project_path_obj.__truediv__.return_value = mock_path_result
             mock_path_class.return_value = mock_project_path_obj
 
@@ -316,21 +345,26 @@ class TestEnhancedGenerateCommand:
 
             # Now try to create order module that depends on user (circular!)
             # The function will detect circular dependencies but catch the exception and continue
-            generate_module("order", path=str(mock_project_path), template="basic", depends_on="user")
+            generate_module(
+                "order",
+                path=str(mock_project_path),
+                template="basic",
+                depends_on="user",
+            )
 
             # Verify circular dependency error was shown
             mock_console.print.assert_called()
             calls = mock_console.print.call_args_list
-            
+
             error_call = any(
                 "Circular dependencies detected" in str(call) for call in calls
             )
-            assert error_call, f"Expected 'Circular dependencies detected' in console calls, but got: {calls}"
-            
+            assert (
+                error_call
+            ), f"Expected 'Circular dependencies detected' in console calls, but got: {calls}"
+
             # Also check if any error message was printed
-            any_error = any(
-                "Error:" in str(call) for call in calls
-            )
+            any_error = any("Error:" in str(call) for call in calls)
             assert any_error, f"No error message found in console calls: {calls}"
 
     @patch("fascraft.commands.generate.console")
@@ -410,7 +444,9 @@ class TestEnhancedGenerateCommand:
         dependency_graph.reverse_dependencies.clear()
 
         # Generate module without dependencies
-        generate_module("order", path=str(mock_project_path), template="basic", depends_on=None)
+        generate_module(
+            "order", path=str(mock_project_path), template="basic", depends_on=None
+        )
 
         # Verify module was added to dependency graph
         assert "order" in dependency_graph.modules
@@ -454,7 +490,12 @@ class TestEnhancedGenerateCommand:
         dependency_graph.reverse_dependencies.clear()
 
         # Generate module with dependencies
-        generate_module("order", path=str(mock_project_path), template="basic", depends_on="user,auth")
+        generate_module(
+            "order",
+            path=str(mock_project_path),
+            template="basic",
+            depends_on="user,auth",
+        )
 
         # Verify template was rendered with dependency context
         mock_template_instance.render.assert_called()

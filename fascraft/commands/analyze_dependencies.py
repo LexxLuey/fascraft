@@ -15,7 +15,7 @@ console = Console()
 
 
 def analyze_dependencies(
-    path: str = ".", 
+    path: str = ".",
     module: str | None = None,
     export: str | None = None,
     verbose: bool = False,
@@ -105,12 +105,12 @@ def analyze_single_module(module_name: str) -> None:
     # Get module health with error handling
     try:
         health = dependency_analyzer.analyze_module_health(module_name)
-        
+
         # Check if health analysis failed
         if "error" in health:
             console.print(f"❌ Error analyzing module: {health['error']}", style="red")
             return
-            
+
     except Exception as e:
         console.print(f"❌ Error analyzing module health: {str(e)}", style="red")
         return

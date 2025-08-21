@@ -101,7 +101,9 @@ class TestGenerateModule:
         mock_env.return_value = mock_env_instance
 
         # Generate module
-        generate_module("customers", path=str(tmp_path), template="basic", depends_on=None)
+        generate_module(
+            "customers", path=str(tmp_path), template="basic", depends_on=None
+        )
 
         # Verify templates were rendered
         assert mock_template_instance.render.call_count == 7  # 7 template files
@@ -128,7 +130,7 @@ class TestGenerateModule:
         # Create an empty directory (not a FastAPI project)
         with pytest.raises(typer.Exit) as exc_info:
             generate_module("customers", str(tmp_path))
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -144,7 +146,7 @@ class TestGenerateModule:
 
         with pytest.raises(typer.Exit) as exc_info:
             generate_module("customers", str(tmp_path))
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -152,7 +154,7 @@ class TestGenerateModule:
         """Test module generation with empty name."""
         with pytest.raises(typer.Exit) as exc_info:
             generate_module("")
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -160,7 +162,7 @@ class TestGenerateModule:
         """Test module generation with whitespace name."""
         with pytest.raises(typer.Exit) as exc_info:
             generate_module("   ")
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -168,7 +170,7 @@ class TestGenerateModule:
         """Test module generation with nonexistent path."""
         with pytest.raises(typer.Exit) as exc_info:
             generate_module("customers", "/nonexistent/path")
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -210,15 +212,17 @@ async def health_check():
         )
 
         # Mock the template registry and Jinja2 environment to avoid template loading issues
-        with patch("fascraft.commands.generate.template_registry") as mock_registry, \
-             patch("fascraft.commands.generate.Environment") as mock_env:
-            
+        with (
+            patch("fascraft.commands.generate.template_registry") as mock_registry,
+            patch("fascraft.commands.generate.Environment") as mock_env,
+        ):
+
             # Mock template registry
             mock_template = MagicMock()
             mock_template.display_name = "Basic CRUD"
             mock_template.description = "Simple CRUD operations"
             mock_registry.get_template.return_value = mock_template
-            
+
             # Mock Jinja2 environment
             mock_template_instance = MagicMock()
             mock_template_instance.render.return_value = "rendered content"
@@ -227,7 +231,9 @@ async def health_check():
             mock_env.return_value = mock_env_instance
 
             # Generate module
-            generate_module("customers", path=str(tmp_path), template="basic", depends_on=None)
+            generate_module(
+                "customers", path=str(tmp_path), template="basic", depends_on=None
+            )
 
             # Check that domain structure was created
             customers_dir = tmp_path / "customers"

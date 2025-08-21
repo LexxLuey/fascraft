@@ -245,7 +245,9 @@ class TestAnalyzeProject:
                         mock_is_fastapi.return_value = True
                         mock_analyze.return_value = {"project_name": "test"}
 
-                        analyze_project(str(tmp_path), version_report=False, docs_only=False)
+                        analyze_project(
+                            str(tmp_path), version_report=False, docs_only=False
+                        )
 
                     mock_analyze.assert_called_once()
                     mock_display.assert_called_once()

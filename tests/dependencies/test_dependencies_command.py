@@ -22,13 +22,15 @@ class TestDependenciesCommand:
     def test_dependencies_app_exists(self):
         """Test that the dependencies app is properly configured."""
         assert dependencies_app is not None
-        
+
         # Typer apps store commands in registered_commands attribute
         assert hasattr(dependencies_app, "registered_commands")
 
         # Check that all expected commands exist
         # Commands are registered as functions, so we can check by function names
-        command_functions = [cmd.callback.__name__ for cmd in dependencies_app.registered_commands]
+        command_functions = [
+            cmd.callback.__name__ for cmd in dependencies_app.registered_commands
+        ]
         expected_commands = ["show", "check", "resolve", "health"]
 
         for expected in expected_commands:
@@ -72,11 +74,15 @@ class TestShowDependencyOverview:
 
         # Verify statistics table was shown (check for Table object)
         stats_call = any(
-            len(call[0]) > 0 and hasattr(call[0][0], 'title') and 
-            "📊 Project Overview" in str(call[0][0].title) 
-            for call in calls if call[0] and len(call[0]) > 0
+            len(call[0]) > 0
+            and hasattr(call[0][0], "title")
+            and "📊 Project Overview" in str(call[0][0].title)
+            for call in calls
+            if call[0] and len(call[0]) > 0
         )
-        assert stats_call, f"Expected Table with statistics. Actual calls: {[str(call) for call in calls]}"
+        assert (
+            stats_call
+        ), f"Expected Table with statistics. Actual calls: {[str(call) for call in calls]}"
 
     @patch("fascraft.commands.dependencies.console")
     def test_show_dependency_overview_with_circular(self, mock_console):
@@ -146,7 +152,9 @@ class TestShowDetailedAnalysis:
         assert detailed_call
 
         # Verify modules with most dependencies were shown
-        deps_call = any("📥 Modules with Most Dependencies" in str(call) for call in calls)
+        deps_call = any(
+            "📥 Modules with Most Dependencies" in str(call) for call in calls
+        )
         assert deps_call
 
         # Verify modules with most dependents were shown
@@ -239,7 +247,7 @@ class TestValidateDependencies:
                     "strong",
                     f"API depends on {dep_module}",
                 )
-        
+
         # Add one more module to ensure we have > 10 dependencies
         dependency_graph.add_module("extra", Path("modules/extra"))
         dependency_graph.add_dependency(
@@ -260,7 +268,9 @@ class TestValidateDependencies:
             (issue for issue in issues if issue["type"] == "high_dependency_count"),
             None,
         )
-        assert high_count_issue is not None, f"Expected high_dependency_count issue, got: {issues}"
+        assert (
+            high_count_issue is not None
+        ), f"Expected high_dependency_count issue, got: {issues}"
         assert high_count_issue["severity"] == "warning"
 
 
@@ -416,20 +426,27 @@ class TestShowModuleHealth:
         calls = mock_console.print.call_args_list
         # Check if a Table object with the expected title was printed
         health_call = any(
-            len(call[0]) > 0 and hasattr(call[0][0], 'title') and 
-            "📊 user Health Metrics" in str(call[0][0].title) 
-            for call in calls if call[0] and len(call[0]) > 0
+            len(call[0]) > 0
+            and hasattr(call[0][0], "title")
+            and "📊 user Health Metrics" in str(call[0][0].title)
+            for call in calls
+            if call[0] and len(call[0]) > 0
         )
-        assert health_call, f"Expected Table with '📊 user Health Metrics' title. Actual calls: {[str(call) for call in calls]}"
+        assert (
+            health_call
+        ), f"Expected Table with '📊 user Health Metrics' title. Actual calls: {[str(call) for call in calls]}"
 
         # Verify health score was shown
         # Since Rich Table objects are printed, we can verify that a Table object was printed
         # The "Health Score" text is inside the Table object
         table_call = any(
             len(call[0]) > 0 and "rich.table.Table" in str(call[0][0])
-            for call in calls if call[0] and len(call[0]) > 0
+            for call in calls
+            if call[0] and len(call[0]) > 0
         )
-        assert table_call, f"Expected Rich Table object to be printed. Actual calls: {[str(call) for call in calls]}"
+        assert (
+            table_call
+        ), f"Expected Rich Table object to be printed. Actual calls: {[str(call) for call in calls]}"
 
     @patch("fascraft.commands.dependencies.console")
     def test_show_module_health_not_found(self, mock_console):
@@ -484,14 +501,20 @@ class TestShowProjectHealth:
 
         # Verify overall health metrics were shown (check for Table object)
         metrics_call = any(
-            len(call[0]) > 0 and hasattr(call[0][0], 'title') and 
-            "📊 Overall Health Metrics" in str(call[0][0].title) 
-            for call in calls if call[0] and len(call[0]) > 0
+            len(call[0]) > 0
+            and hasattr(call[0][0], "title")
+            and "📊 Overall Health Metrics" in str(call[0][0].title)
+            for call in calls
+            if call[0] and len(call[0]) > 0
         )
-        assert metrics_call, f"Expected Table with '📊 Overall Health Metrics' title. Actual calls: {[str(call) for call in calls]}"
+        assert (
+            metrics_call
+        ), f"Expected Table with '📊 Overall Health Metrics' title. Actual calls: {[str(call) for call in calls]}"
 
         # Verify top modules were shown
-        top_modules_call = any("🏆 Top Modules by Health" in str(call) for call in calls)
+        top_modules_call = any(
+            "🏆 Top Modules by Health" in str(call) for call in calls
+        )
         assert top_modules_call
 
 
@@ -503,10 +526,14 @@ class TestDependenciesCommandIntegration:
         # This test verifies that the dependencies command is accessible
         # through the main fascraft app
         assert hasattr(dependencies_app, "registered_commands")
-        assert len(dependencies_app.registered_commands) >= 4  # show, check, resolve, health
+        assert (
+            len(dependencies_app.registered_commands) >= 4
+        )  # show, check, resolve, health
 
         # Verify command names
-        command_functions = [cmd.callback.__name__ for cmd in dependencies_app.registered_commands]
+        command_functions = [
+            cmd.callback.__name__ for cmd in dependencies_app.registered_commands
+        ]
         expected_commands = ["show", "check", "resolve", "health"]
 
         for expected in expected_commands:

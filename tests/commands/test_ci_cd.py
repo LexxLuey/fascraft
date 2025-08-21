@@ -1,9 +1,9 @@
 """Tests for the CI/CD command."""
 
 from unittest.mock import MagicMock, patch
-import typer
 
 import pytest
+import typer
 
 from fascraft.commands.ci_cd import (
     add_ci_cd,
@@ -12,7 +12,6 @@ from fascraft.commands.ci_cd import (
     render_ci_cd_template,
     setup_ci_cd_environments,
 )
-from fascraft.exceptions import FileSystemError
 
 
 class TestCICDCommand:
@@ -155,7 +154,7 @@ class TestCICDCommand:
 
         with pytest.raises(typer.Exit) as exc_info:
             add_ci_cd(project_path, platform="github", force=False)
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -165,7 +164,7 @@ class TestCICDCommand:
 
         with pytest.raises(typer.Exit) as exc_info:
             add_ci_cd(project_path, platform="github", force=False)
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1
 
@@ -177,6 +176,6 @@ class TestCICDCommand:
 
         with pytest.raises(typer.Exit) as exc_info:
             add_ci_cd(project_path, platform="invalid", force=False)
-        
+
         # Check that it's an exit exception with code 1
         assert exc_info.value.exit_code == 1

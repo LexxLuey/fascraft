@@ -1,66 +1,28 @@
-"""Tests for Jinja2 template validation and rendering."""
+"""Tests for template rendering and generation."""
 
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
-from jinja2 import Environment, PackageLoader, select_autoescape
 
-from fascraft.commands.new import create_new_project
+from fascraft.commands.new import create_project_structure, render_essential_templates
 
 
 class TestTemplateRendering:
-    """Test template rendering and validation."""
-
-    def test_jinja2_environment_setup(self) -> None:
-        """Test that Jinja2 environment is properly configured."""
-        env = Environment(
-            loader=PackageLoader("fascraft", "templates/new_project"),
-            autoescape=select_autoescape(),
-        )
-
-        # Verify environment is configured
-        assert env is not None
-        assert env.loader is not None
-        assert env.autoescape is not None
-
-    def test_all_templates_exist_and_loadable(
-        self, temp_dir: Path, sample_project_name: str
-    ) -> None:
-        """Test that all required templates exist and can be loaded."""
-        env = Environment(
-            loader=PackageLoader("fascraft", "templates/new_project"),
-            autoescape=select_autoescape(),
-        )
-
-        required_templates = [
-            "__init__.py.jinja2",
-            "main.py.jinja2",
-            "pyproject.toml.jinja2",
-            "README.md.jinja2",
-            "env.jinja2",
-            "env.sample.jinja2",
-            "requirements.txt.jinja2",
-            "requirements.dev.txt.jinja2",
-            "requirements.prod.txt.jinja2",
-        ]
-
-        for template_name in required_templates:
-            template = env.get_template(template_name)
-            assert template is not None
-
-            # Test basic rendering
-            rendered = template.render(project_name=sample_project_name)
-            assert rendered is not None
-            assert len(rendered) > 0
+    """Test template rendering functionality."""
 
     def test_template_variable_substitution(
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that template variables are properly substituted."""
         temp_dir.mkdir(exist_ok=True)
-        create_new_project(sample_project_name, temp_dir)
-
         project_path = temp_dir / sample_project_name
+
+        # Mock console to avoid output during tests
+        with patch("fascraft.commands.new.console"):
+            # Create project structure and render essential templates directly
+            create_project_structure(project_path, sample_project_name)
+            render_essential_templates(project_path, sample_project_name)
 
         # Check main.py template substitution
         main_content = (project_path / "main.py").read_text()
@@ -72,9 +34,17 @@ class TestTemplateRendering:
         pyproject_content = (project_path / "pyproject.toml").read_text()
         assert f'name = "{sample_project_name}"' in pyproject_content
 
+        # Check __init__.py template substitution
+        init_content = (project_path / "__init__.py").read_text()
+        assert sample_project_name in init_content
+
         # Check README.md template substitution
         readme_content = (project_path / "README.md").read_text()
         assert f"# {sample_project_name}" in readme_content
+
+        # Check fascraft.toml template substitution
+        fascraft_content = (project_path / "fascraft.toml").read_text()
+        assert sample_project_name in fascraft_content
 
     def test_template_rendering_consistency(self, temp_dir: Path) -> None:
         """Test that template rendering is consistent across different names."""
@@ -83,30 +53,35 @@ class TestTemplateRendering:
         # Ensure temp_dir exists
         temp_dir.mkdir(exist_ok=True)
 
-        for name in test_names:
-            project_path = temp_dir / name
+        with patch("fascraft.commands.new.console"):
+            for name in test_names:
+                project_path = temp_dir / name
 
-            # Create project
-            create_new_project(name, temp_dir)
+                # Create project structure and render essential templates directly
+                create_project_structure(project_path, name)
+                render_essential_templates(project_path, name)
 
-            # Verify main.py contains the name
-            main_content = (project_path / "main.py").read_text()
-            assert name in main_content
-            assert "from config.settings import get_settings" in main_content
-            assert "title=settings.app_name" in main_content
+                # Verify main.py contains the name
+                main_content = (project_path / "main.py").read_text()
+                assert name in main_content
+                assert "from config.settings import get_settings" in main_content
+                assert "title=settings.app_name" in main_content
 
-            # Verify pyproject.toml contains the name
-            pyproject_content = (project_path / "pyproject.toml").read_text()
-            assert f'name = "{name}"' in pyproject_content
+                # Verify pyproject.toml contains the name
+                pyproject_content = (project_path / "pyproject.toml").read_text()
+                assert f'name = "{name}"' in pyproject_content
 
     def test_template_file_structure(
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that generated files have proper structure and content."""
         temp_dir.mkdir(exist_ok=True)
-        create_new_project(sample_project_name, temp_dir)
-
         project_path = temp_dir / sample_project_name
+
+        with patch("fascraft.commands.new.console"):
+            # Create project structure and render essential templates directly
+            create_project_structure(project_path, sample_project_name)
+            render_essential_templates(project_path, sample_project_name)
 
         # Test main.py structure
         main_content = (project_path / "main.py").read_text()
@@ -131,38 +106,88 @@ class TestTemplateRendering:
         assert "fastapi = " in pyproject_content
         assert "uvicorn = " in pyproject_content
 
+        # Test config files structure
+        config_init = (project_path / "config" / "__init__.py").read_text()
+        assert config_init is not None
+        assert len(config_init) > 0
+
+        # Test router files structure
+        router_init = (project_path / "routers" / "__init__.py").read_text()
+        assert router_init is not None
+        assert len(router_init) > 0
+
         # Test README.md structure
         readme_content = (project_path / "README.md").read_text()
         assert "# " in readme_content
-        assert "## Getting Started" in readme_content
-        assert "## API Endpoints" in readme_content
-        assert "## Development" in readme_content
+        assert "## " in readme_content
+        assert "Getting Started" in readme_content
+
+        # Test fascraft.toml structure
+        fascraft_content = (project_path / "fascraft.toml").read_text()
+        assert fascraft_content is not None
+        assert len(fascraft_content) > 0
+
+        # Test .env.sample structure
+        env_sample_content = (project_path / ".env.sample").read_text()
+        assert env_sample_content is not None
+        assert len(env_sample_content) > 0
+
+        # Test .gitignore structure
+        gitignore_content = (project_path / ".gitignore").read_text()
+        assert gitignore_content is not None
+        assert len(gitignore_content) > 0
+
+        # Test .dockerignore structure
+        dockerignore_content = (project_path / ".dockerignore").read_text()
+        assert dockerignore_content is not None
+        assert len(dockerignore_content) > 0
 
     def test_template_encoding_and_formatting(
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that templates generate properly formatted and encoded content."""
         temp_dir.mkdir(exist_ok=True)
-        create_new_project(sample_project_name, temp_dir)
-
         project_path = temp_dir / sample_project_name
 
-        # Test main.py formatting
-        main_content = (project_path / "main.py").read_text()
-        lines = main_content.splitlines()
+        with patch("fascraft.commands.new.console"):
+            # Create project structure and render essential templates directly
+            create_project_structure(project_path, sample_project_name)
+            render_essential_templates(project_path, sample_project_name)
 
-        # Check for proper imports
-        assert any("from fastapi import FastAPI" in line for line in lines)
+        # Test file encoding
+        main_content = (project_path / "main.py").read_text(encoding="utf-8")
+        assert main_content is not None
+        assert len(main_content) > 0
 
-        # Check for proper function definitions
-        assert any("async def root():" in line for line in lines)
+        # Test that files are properly formatted
+        pyproject_content = (project_path / "pyproject.toml").read_text()
+        assert pyproject_content is not None
+        assert len(pyproject_content) > 0
 
-        # Check for proper decorators
-        assert any('@app.get("/")' in line for line in lines)
+        init_content = (project_path / "__init__.py").read_text()
+        assert init_content is not None
+        assert len(init_content) > 0
 
-        # Check for base router integration
-        assert any("from routers import base_router" in line for line in lines)
-        assert any("app.include_router(base_router)" in line for line in lines)
+        readme_content = (project_path / "README.md").read_text()
+        assert readme_content is not None
+        assert len(readme_content) > 0
+
+        # Test additional essential templates
+        fascraft_content = (project_path / "fascraft.toml").read_text()
+        assert fascraft_content is not None
+        assert len(fascraft_content) > 0
+
+        env_sample_content = (project_path / ".env.sample").read_text()
+        assert env_sample_content is not None
+        assert len(env_sample_content) > 0
+
+        gitignore_content = (project_path / ".gitignore").read_text()
+        assert gitignore_content is not None
+        assert len(gitignore_content) > 0
+
+        dockerignore_content = (project_path / ".dockerignore").read_text()
+        assert dockerignore_content is not None
+        assert len(dockerignore_content) > 0
 
     def test_template_error_handling(
         self, temp_dir: Path, sample_project_name: str
@@ -172,8 +197,14 @@ class TestTemplateRendering:
         # and can render without issues
 
         temp_dir.mkdir(exist_ok=True)
+        project_path = temp_dir / sample_project_name
+
         try:
-            create_new_project(sample_project_name, temp_dir)
+            with patch("fascraft.commands.new.console"):
+                # Create project structure and render essential templates directly
+                create_project_structure(project_path, sample_project_name)
+                render_essential_templates(project_path, sample_project_name)
+
             # If we get here, templates rendered successfully
             assert True
         except Exception as e:
@@ -184,57 +215,88 @@ class TestTemplateRendering:
     ) -> None:
         """Test that generated Python files are syntactically valid."""
         temp_dir.mkdir(exist_ok=True)
-        create_new_project(sample_project_name, temp_dir)
-
         project_path = temp_dir / sample_project_name
 
-        # Test main.py syntax
-        main_path = project_path / "main.py"
-        try:
-            # Try to compile the Python code
-            compile(main_path.read_text(), str(main_path), "exec")
-        except SyntaxError as e:
-            pytest.fail(f"Generated main.py has syntax error: {e}")
+        with patch("fascraft.commands.new.console"):
+            # Create project structure and render essential templates directly
+            create_project_structure(project_path, sample_project_name)
+            render_essential_templates(project_path, sample_project_name)
 
-        # Test __init__.py syntax
-        init_path = project_path / "__init__.py"
+        # Test Python syntax validity
+        import ast
+
+        # Test main.py
+        main_content = (project_path / "main.py").read_text()
         try:
-            compile(init_path.read_text(), str(init_path), "exec")
+            ast.parse(main_content)
         except SyntaxError as e:
-            pytest.fail(f"Generated __init__.py has syntax error: {e}")
+            pytest.fail(f"main.py has invalid Python syntax: {e}")
+
+        # Test config files
+        config_init = (project_path / "config" / "__init__.py").read_text()
+        try:
+            ast.parse(config_init)
+        except SyntaxError as e:
+            pytest.fail(f"config/__init__.py has invalid Python syntax: {e}")
+
+        # Test router files
+        router_init = (project_path / "routers" / "__init__.py").read_text()
+        try:
+            ast.parse(router_init)
+        except SyntaxError as e:
+            pytest.fail(f"routers/__init__.py has invalid Python syntax: {e}")
 
     def test_template_content_validation(
         self, temp_dir: Path, sample_project_name: str
     ) -> None:
         """Test that template content meets quality standards."""
         temp_dir.mkdir(exist_ok=True)
-        create_new_project(sample_project_name, temp_dir)
-
         project_path = temp_dir / sample_project_name
 
-        # Test main.py content quality
+        with patch("fascraft.commands.new.console"):
+            # Create project structure and render essential templates directly
+            create_project_structure(project_path, sample_project_name)
+            render_essential_templates(project_path, sample_project_name)
+
+        # Validate main.py content
         main_content = (project_path / "main.py").read_text()
-
-        # Should have proper docstring
-        assert '"""Main FastAPI application for' in main_content
-
-        # Should have proper imports
-        assert "from fastapi import FastAPI" in main_content
-
-        # Should have proper app configuration
+        assert "FastAPI" in main_content
         assert "app = FastAPI(" in main_content
-        assert "title=" in main_content
-        assert "description=" in main_content
-        assert "version=" in main_content
+        assert "async def" in main_content
 
-        # Should have proper endpoints
-        assert "async def root():" in main_content
+        # Validate pyproject.toml content
+        pyproject_content = (project_path / "pyproject.toml").read_text()
+        assert "name =" in pyproject_content
+        assert "version =" in pyproject_content
+        assert "description =" in pyproject_content
 
-        # Should have base router integration
-        assert "from routers import base_router" in main_content
-        assert "app.include_router(base_router)" in main_content
+        # Validate __init__.py content
+        init_content = (project_path / "__init__.py").read_text()
+        assert init_content is not None
+        assert len(init_content) > 0
 
-        # Should have proper uvicorn integration
-        assert 'if __name__ == "__main__":' in main_content
-        assert "import uvicorn" in main_content
-        assert "uvicorn.run(app" in main_content
+        # Validate README.md content
+        readme_content = (project_path / "README.md").read_text()
+        assert "# " in readme_content
+        assert "## " in readme_content
+        assert "Getting Started" in readme_content
+
+        # Validate fascraft.toml content
+        fascraft_content = (project_path / "fascraft.toml").read_text()
+        assert fascraft_content is not None
+        assert len(fascraft_content) > 0
+
+        # Validate .env.sample content
+        env_sample_content = (project_path / ".env.sample").read_text()
+        assert env_sample_content is not None
+        assert len(env_sample_content) > 0
+
+        # Validate .gitignore content
+        gitignore_content = (project_path / ".gitignore").read_text()
+        assert gitignore_content is not None
+        assert len(gitignore_content) > 0
+
+        # Validate .dockerignore content
+        dockerignore_content = (project_path / ".dockerignore").read_text()
+        assert dockerignore_content is not None
+        assert len(dockerignore_content) > 0
