@@ -29,28 +29,8 @@ def get_version() -> str:
     except Exception:  # nosec B110 - Intentional fallback, don't expose internal errors
         pass
 
-    # Final fallback - read from git tags or return unknown
-    return get_version_from_git() or "unknown"
-
-
-def get_version_from_git() -> str | None:
-    """Try to get version from git tags."""
-    try:
-        import subprocess  # nosec B404 - Safe usage for git version detection
-
-        result = (
-            subprocess.run(  # nosec B607,B603 - Safe git command, no shell execution
-                ["git", "describe", "--tags", "--abbrev=0"],
-                capture_output=True,
-                text=True,
-                cwd=Path(__file__).parent.parent,
-            )
-        )
-        if result.returncode == 0:
-            return result.stdout.strip().lstrip("v")
-    except (subprocess.SubprocessError, FileNotFoundError):
-        pass
-    return None
+    # Final fallback - return unknown
+    return "unknown"
 
 
 def get_version_info() -> dict:

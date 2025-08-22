@@ -2,7 +2,7 @@
 
 from unittest.mock import mock_open, patch
 
-from fascraft.version import get_version, get_version_from_git, get_version_info
+from fascraft.version import get_version, get_version_info
 
 
 class TestVersionModule:
@@ -25,46 +25,12 @@ class TestVersionModule:
                 version = get_version()
                 assert version == "2.0.0"
 
-    def test_get_version_fallback_to_git(self):
-        """Test fallback to git when importlib.metadata fails."""
-        with patch("pathlib.Path.exists", return_value=False):
-            with patch("importlib.metadata.version", side_effect=Exception()):
-                with patch(
-                    "fascraft.version.get_version_from_git", return_value="3.0.0"
-                ):
-                    version = get_version()
-                    assert version == "3.0.0"
-
-    def test_get_version_from_git_success(self):
-        """Test getting version from git tags successfully."""
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value.returncode = 0
-            mock_run.return_value.stdout = "v4.5.6"
-
-            version = get_version_from_git()
-            assert version == "4.5.6"
-
-    def test_get_version_from_git_failure(self):
-        """Test getting version from git tags when it fails."""
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value.returncode = 1
-
-            version = get_version_from_git()
-            assert version is None
-
-    def test_get_version_from_git_exception(self):
-        """Test getting version from git tags when subprocess fails."""
-        with patch("subprocess.run", side_effect=FileNotFoundError()):
-            version = get_version_from_git()
-            assert version is None
-
     def test_get_version_final_fallback(self):
         """Test final fallback when all methods fail."""
         with patch("pathlib.Path.exists", return_value=False):
             with patch("importlib.metadata.version", side_effect=Exception()):
-                with patch("fascraft.version.get_version_from_git", return_value=None):
-                    version = get_version()
-                    assert version == "unknown"
+                version = get_version()
+                assert version == "unknown"
 
     def test_get_version_info(self):
         """Test getting comprehensive version information."""

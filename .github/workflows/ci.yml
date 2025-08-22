@@ -43,7 +43,7 @@ jobs:
     - name: Run security scanning
       run: |
         poetry run bandit -r fascraft/ -f txt
-        poetry run safety check
+        poetry run pip-audit
 
     - name: Test CLI
       run: |
