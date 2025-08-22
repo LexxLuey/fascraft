@@ -30,7 +30,9 @@ jobs:
         version: "2.1.4"
 
     - name: Install dependencies
-      run: poetry install
+      run: |
+        $env:PATH += ";$env:USERPROFILE\.local\bin"
+        poetry install
 
     - name: Run tests
       run: poetry run pytest
