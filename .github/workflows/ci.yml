@@ -30,12 +30,9 @@ jobs:
         version: "2.1.4"
 
     - name: Install dependencies
+      shell: bash
       run: |
-        if ("$env:RUNNER_OS" -eq "Windows") {
-          $env:PATH += ";$env:USERPROFILE\.local\bin"
-        } else {
-          export PATH="$HOME/.local/bin:$PATH"
-        }
+        export PATH="$HOME/.local/bin:$PATH"
         poetry install
 
     - name: Run tests
