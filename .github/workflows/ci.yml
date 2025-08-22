@@ -36,19 +36,23 @@ jobs:
         poetry install
 
     - name: Run tests
+      shell: bash
       run: poetry run pytest
 
     - name: Run linting
+      shell: bash
       run: |
         poetry run ruff check .
         poetry run black --check .
 
     - name: Run security scanning
+      shell: bash
       run: |
         poetry run bandit -r fascraft/ -f txt
         poetry run pip-audit
 
     - name: Test CLI
+      shell: bash
       run: |
         poetry run fascraft --help
         poetry run fascraft version
