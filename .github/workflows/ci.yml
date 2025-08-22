@@ -31,8 +31,16 @@ jobs:
 
     - name: Install dependencies
       shell: bash
+      env:
+        PYTHONIOENCODING: utf-8
+        PYTHONUTF8: 1
+        CHCP: 65001
       run: |
         export PATH="$HOME/.local/bin:$PATH"
+        # Force UTF-8 encoding on Windows
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          chcp 65001 > /dev/null 2>&1 || true
+        fi
         poetry install
 
     - name: Run tests
@@ -53,6 +61,14 @@ jobs:
 
     - name: Test CLI
       shell: bash
+      env:
+        PYTHONIOENCODING: utf-8
+        PYTHONUTF8: 1
+        CHCP: 65001
       run: |
+        # Force UTF-8 encoding on Windows
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          chcp 65001 > /dev/null 2>&1 || true
+        fi
         poetry run fascraft --help
         poetry run fascraft version
