@@ -31,11 +31,11 @@ jobs:
 
     - name: Install dependencies
       run: |
-        if [ "$RUNNER_OS" = "Windows" ]; then
+        if ("$env:RUNNER_OS" -eq "Windows") {
           $env:PATH += ";$env:USERPROFILE\.local\bin"
-        else
+        } else {
           export PATH="$HOME/.local/bin:$PATH"
-        fi
+        }
         poetry install
 
     - name: Run tests
