@@ -31,7 +31,11 @@ jobs:
 
     - name: Install dependencies
       run: |
-        $env:PATH += ";$env:USERPROFILE\.local\bin"
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          $env:PATH += ";$env:USERPROFILE\.local\bin"
+        else
+          export PATH="$HOME/.local/bin:$PATH"
+        fi
         poetry install
 
     - name: Run tests
