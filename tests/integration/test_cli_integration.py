@@ -99,9 +99,16 @@ class TestCLIIntegration:
             assert project_name in result.stdout
         else:
             # If it failed, it should be due to validation, not unexpected errors
-            assert any(msg in result.stdout for msg in [
-                "already exists", "permission", "validation", "Error", "Invalid"
-            ])
+            assert any(
+                msg in result.stdout
+                for msg in [
+                    "already exists",
+                    "permission",
+                    "validation",
+                    "Error",
+                    "Invalid",
+                ]
+            )
 
     def test_generate_command_validation(self, cli_runner: CliRunner, temp_dir) -> None:
         """Test generate command with validation - expect current behavior."""
