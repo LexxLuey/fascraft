@@ -1,6 +1,11 @@
 """Version information for FasCraft."""
 
-import tomllib
+try:
+    import tomllib
+except ImportError:
+    # Fallback for Python < 3.11
+    import tomli as tomllib
+
 from pathlib import Path
 
 
@@ -21,35 +26,11 @@ def get_version() -> str:
         import importlib.metadata
 
         return importlib.metadata.version("fascraft")
-    except ImportError:
-        try:
-            # Fallback for older Python versions
-            import pkg_resources
-
-            return pkg_resources.get_distribution("fascraft").version
-        except Exception:
-            pass
-
-    # Final fallback - read from git tags or return unknown
-    return get_version_from_git() or "unknown"
-
-
-def get_version_from_git() -> str | None:
-    """Try to get version from git tags."""
-    try:
-        import subprocess
-
-        result = subprocess.run(
-            ["git", "describe", "--tags", "--abbrev=0"],
-            capture_output=True,
-            text=True,
-            cwd=Path(__file__).parent.parent,
-        )
-        if result.returncode == 0:
-            return result.stdout.strip().lstrip("v")
-    except (subprocess.SubprocessError, FileNotFoundError):
+    except Exception:  # nosec B110 - Intentional fallback, don't expose internal errors
         pass
-    return None
+
+    # Final fallback - return unknown
+    return "unknown"
 
 
 def get_version_info() -> dict:

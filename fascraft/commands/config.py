@@ -1,6 +1,11 @@
 """Command for managing FasCraft project configuration."""
 
-import tomllib
+try:
+    import tomllib
+except ImportError:
+    # Fallback for Python < 3.11
+    import tomli as tomllib
+
 from pathlib import Path
 
 import tomli_w

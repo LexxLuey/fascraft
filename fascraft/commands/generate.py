@@ -385,7 +385,7 @@ def generate_module(
                 style="bold cyan",
             )
             console.print(graph_info_text)
-        except Exception:
+        except Exception:  # nosec B110 - Silently fail if dependency analysis fails
             pass  # Silently fail if dependency analysis fails
 
 
